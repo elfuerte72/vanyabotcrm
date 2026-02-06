@@ -1,0 +1,614 @@
+{
+  "name": "DAYS_ru",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📅 <b>День 5 — «Мягкий дедлайн»</b>\n\nСегодня — последний день, когда тренировка доступна за <b>990₽</b>.\n\nДальше цена вернётся.\nИ да… именно такие маленькие откладывания чаще всего мешают девушкам получить своё тело мечты.\n\nТы можешь начать путь к:\n✔️ лёгким ногам\n✔️ минусу в животе\n✔️ уменьшению «ушек»\n✔️ лучшей осанке\n✔️ более упругим ягодицам\n✔️ уменьшению целлюлита\n\nвсего за 20 минут в день.\n\nГотова забрать тренировку?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Да, беру!",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "Напомни позже",
+                    "additionalFields": {
+                      "callback_data": "remind_later"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        144
+      ],
+      "id": "9841a9d6-22f9-4da7-ac16-f69bcde2bd78",
+      "name": "Send Day 5",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📅 <b>Цена как повод купить</b>\n\nЕсли бы я проводил такую тренировку лично, это стоило бы 1500–3000₽.\nНо я хочу, чтобы любая девушка могла себе это позволить.\n\nПоэтому в боте она стоит всего <b>990₽</b>.\nЭто меньше, чем:\n• ужин\n• новая тушь\n• одна кофейня\n• доставка еды\n\nА эффект как после 2-3 персональных тренировок.\nИ главное — 20 минут, можно дома, без инвентаря.\n\nХочешь забрать по цене «для своих»?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Хочу скидку",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "Мне не подходит",
+                    "additionalFields": {
+                      "callback_data": "none"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -48
+      ],
+      "id": "b04ceb1c-041a-482c-b6a1-9d360f6711f9",
+      "name": "Send Day 4",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📅 <b>Боль → решение</b>\n\nДавай честно.\n90% девушек сталкиваются с одними и теми же проблемами:\n• отёчное лицо и тело\n• «уши» на бёдрах\n• всегда напряжённый низ живота\n• дряблые руки\n• сутулость\n• мокрые следы от целлюлита\n\nИ причина почти всегда одна:\n👉 неправильная работа лимфы\n👉 неактивные глубокие мышцы\n👉 слабая осанка\n\nМоя <b>20-минутная тренировка</b> исправляет всё это разом — мягко и эффективно.\n\nХочешь начать сегодня?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Да!",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "Что в программе?",
+                    "additionalFields": {
+                      "callback_data": "show_info"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -224
+      ],
+      "id": "713960c1-9231-4784-909e-3918906a6041",
+      "name": "Send Day 3",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition \nSET \n  funnel_stage = funnel_stage + 1, \n  last_funnel_msg_at = NOW()\nWHERE chat_id = {{ $('Loop Over Items').item.json.chat_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1456,
+        -224
+      ],
+      "id": "8b97c270-5b27-4ddd-85ef-114a20af8bec",
+      "name": "Update Stage",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        544,
+        -240
+      ],
+      "id": "24bdbdeb-54e8-4f7a-9622-fe2c47bf7ae1",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "d7c40ecf-3771-460a-b0be-7af6593cdffa"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6162541b-2fe2-4a24-8e55-4e11bdb2fd2f",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f95ddd6e-c1f2-4561-bd67-53f82d412e1b",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fb7c11b1-9830-480f-a025-dbb2a5d6e4ac",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 4"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b67e5b83-9c85-4202-aaa3-d566d60eb81e",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        720,
+        -272
+      ],
+      "id": "ce640dcd-c3a2-4b11-9bdf-b1ffb0ad5dae",
+      "name": "Check Stage"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=<b>Социальное доказательство</b>\n\nТы не представляешь, сколько сообщений я получаю после этой тренировки 🙈\n\nВот несколько типичных:\n✨ «Ушли отёки — ноги стали суше за три дня»\n✨ «Живот стал меньше, хотя вес почти не менялся»\n✨ «Целлюлит стал мягче и менее заметен»\n✨ «Пропала тяжесть в теле»\n\nЭто <b>НЕ магия</b> — это правильная работа с лимфой + мышцами, о которой обычно никто не говорит.\n\nХочешь попробовать так же?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Да, хочу результат!",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "Тренировка подойдёт мне?",
+                    "additionalFields": {
+                      "callback_data": "check_suitability"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -400
+      ],
+      "id": "d9ce326d-448a-433f-ba99-08d826dad016",
+      "name": "Send Day 2",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=<b>Почему питание ≠ тело мечты</b>\n\nТы знала, что 80% девушек не видят результата только на питании?\nОно отлично убирает лишний вес, но не решает:\n• отёки\n• опущенный живот\n• целлюлит\n• слабую осанку\n• «ушки»\n\nДля этого нужна точечная работа, а не часовые тренировки.\n\nТа самая тренировка проблемных зон🔥 за <b>990₽</b> делает именно это:\nпоправляет осанку, включает глубокие мышцы, убирает застои и делает тело «дорогим» визуально.\n\nХочешь посмотреть примеры результатов?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Да, покажи!",
+                    "additionalFields": {
+                      "callback_data": "show_results"
+                    }
+                  },
+                  {
+                    "text": "А что внутри тренировки?",
+                    "additionalFields": {
+                      "callback_data": "show_info"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -576
+      ],
+      "id": "a663b212-0c63-4212-9ae9-e923a0cca452",
+      "name": "Send Day 1",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT chat_id, funnel_stage, language\nFROM users_nutrition \nWHERE (is_buyer IS FALSE OR is_buyer IS NULL)\n  AND CAST(funnel_stage AS INTEGER) >= 0 \n  AND CAST(funnel_stage AS INTEGER) <= 4;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        -240
+      ],
+      "id": "746a849c-cc77-49ed-9d37-62e30c5f30fd",
+      "name": "get_id",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -240
+      ],
+      "id": "4947270b-789d-4d72-bc79-e92edf0b47c7",
+      "name": "start"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Stage": {
+      "main": [
+        [
+          {
+            "node": "Send Day 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 1": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 2": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 3": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 4": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 5": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_id": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start": {
+      "main": [
+        [
+          {
+            "node": "get_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "855bb352-1305-4aaa-adfc-2a3b38387b3c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "QRyEmX54Z5pUXix2",
+  "tags": []
+}

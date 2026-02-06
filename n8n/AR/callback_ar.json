@@ -1,0 +1,1275 @@
+{
+  "name": "callback_ar",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2416,
+        -480
+      ],
+      "id": "709f1ea4-a310-40fe-ba60-cbc8b4694c10",
+      "name": "Mark as Buyer ( EN) 99 AED",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 ممتاز! كمل عملية الدفع:</b>\n\nاضغط على الزر تحت عشان تستلم تمرينك.\n<b>الوصول بيفتح لك تلقائي مباشرة بعد الدفع! ✅</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/lV86A6Qwd"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2208,
+        -480
+      ],
+      "id": "c32cda99-e28e-4aee-8f92-3a8e2272db30",
+      "name": "99AED",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2400,
+        -688
+      ],
+      "id": "f058ec64-a0c7-42a4-9328-b0b18ea6d0b9",
+      "name": "Mark as Buyer ( EN) 79AED",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 ممتاز! كمل عملية الدفع:</b>\n\nاضغط على الزر تحت عشان تستلم تمرينك.\n<b>الوصول بيفتح لك تلقائي مباشرة بعد الدفع! ✅</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/lV86A6Qwd"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2208,
+        -688
+      ],
+      "id": "b622c891-bac7-4ffe-9ae5-55542c89c2e9",
+      "name": "79AED",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=بعد الدفع <b>يوصلك الوصول مباشرة ✅</b>\n\nبتحصل:\n✅ <b>تمرين كامل مرتب</b>\n✅ تمارين <b>بالبار + دنابل + وزن الجسم</b>\n✅ شرح واضح <b>كيف تتمرن عشان تنشف وتحافظ على العضل</b>\n✅ <b>بدون أجهزة / بدون تعقيد</b>\n\nهذا معمول للرجال اللي يبون ينزلون دهون… <b>بدون ما يخسرون شكلهم وقوتهم.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ ليش السعر 49 بس؟",
+                    "additionalFields": {
+                      "callback_data": "price"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -912
+      ],
+      "id": "bc71be04-2031-4352-969a-637d90e311c1",
+      "name": "access",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>لا ما تحتاج جيم خاص ✅</b>\n\nأي جيم عادي في أبوظبي أو دبي يكفي.\n\n<b>لأنك ما بتحتاج أجهزة.</b>\nبس تحتاج:\n✅ <b>بار + أوزان (plates)</b>\n✅ <b>دنابل</b>\n✅ <b>وزن جسمك</b>\n\nوالأهم من الأدوات… هو <b>“طريقة التمرين”</b> اللي داخل البرنامج\n<b>عشان جسمك يحافظ على العضل حتى وأنت على عجز سعرات.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أنا مبتدئ… ينفع لي؟",
+                    "additionalFields": {
+                      "callback_data": "beginner"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -1104
+      ],
+      "id": "2b6fcdc8-9781-4987-be09-00aed4ff4ef7",
+      "name": "gym",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>الخيار 1: تصحيح التكنيك — 79 درهم ✅</b>\nارسل لي 3-5 فيديوهات لتمرينك. <b>بصحح أدائك وأعطيك الملاحظات عشان تتمرن صح.</b>\n\n\n<b>الخيار 2: متابعة شخصية لمدة 7 أيام — 99 درهم ✅</b>\n<b>دعم يومي ومتابعة</b> + تعديل تمارينك وأكلك <b>عشان تخسر دهون وتحافظ على العضل بشكل أسرع.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Upgrade - 79 AED",
+                    "additionalFields": {
+                      "callback_data": "upgrade_79"
+                    }
+                  },
+                  {
+                    "text": "✅ Upgrade - 99 AED",
+                    "additionalFields": {
+                      "callback_data": "upgrade_99"
+                    }
+                  },
+                  {
+                    "text": "⬅️ Back",
+                    "additionalFields": {
+                      "callback_data": "help"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -1280
+      ],
+      "id": "a1c4de33-b5ee-4f0c-b249-674ba7dc3c51",
+      "name": "coaching",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=إذا هدفك تنشيف… بس ما تبي تخسر عضل — هذا التمرين لك ✅\n\nتمرين جيم واضح.\nاستراتيجية ذكية.\nمناسب للرجال اللي يقللون سعراتهم ويبون يحافظون على شكلهم.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أبي كوتشنغ",
+                    "additionalFields": {
+                      "callback_data": "coaching"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -1472
+      ],
+      "id": "8a2f91b4-8e9b-46f2-a76e-de9e4af394a1",
+      "name": "help",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>لأني أبيه يكون سهل ومتاح للجميع ✅</b>\n\n49 درهم <b>أقل من عشاء واحد…</b>\nبس ممكن يوفر عليك <b>شهور من تمارين غلط.</b>\n\nأنت مو تدفع عشان “تمرين وخلاص”\nأنت تدفع عشان <b>طريقة تخليك تنشف بدون ما تخسر جسمك.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أبي مساعدتك شخصيًا",
+                    "additionalFields": {
+                      "callback_data": "help"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -1648
+      ],
+      "id": "344c81f2-6b32-4e20-8a5d-dcb9c8e77b06",
+      "name": "price",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Start').item.json.callback_query_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1392,
+        -1776
+      ],
+      "id": "0f2c6c38-8170-4c75-876d-74d875f2edc1",
+      "name": "Answer Callback ( EN)",
+      "webhookId": "9d631b1f-cfcd-47de-9096-b92ebf8d53f8",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>ينفع لك وبقوة ✅</b>\nالمبتدئين أصلاً <b>يطلعون نتائج أسرع.</b>\n\nكل شيء مشروح <b>خطوة بخطوة:</b>\nوش تسوي + كيف تتمرن + كيف تحس بالتمرين\n\n<b>ما فيه لخبطة ولا تمارين عشوائية.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ وش بيجيني بعد ما آخذ الوصول؟",
+                    "additionalFields": {
+                      "callback_data": "access"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -1824
+      ],
+      "id": "d47c4fd1-6f94-4eb0-af04-5b8f69d01b58",
+      "name": "beginner",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "buy_now",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cb48ff30-15ad-40ee-899a-dcedf304fe14"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Buy"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a89fe2ee-0d09-4d90-a46f-52689afdc0f6",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "nutrition_en",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nutrition_en"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "22957a71-0e2c-4909-ae1a-e61094216d4f",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "cardio_en",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cardio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba749850-8552-44e3-b1c2-e7296f8991da",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "different",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "different"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "682f201e-0c15-4a8e-981a-b7f0d8bd0756",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "beginner",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "beginner"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8fddc9ad-1d6e-4a6a-8882-be6338aaa659",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "price",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a0ff802b-2daf-4ad9-bdf8-2ffb82be66fc",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "help"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f2f0f2c3-ee8c-48db-ab05-41cede5ae222",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "coaching",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coaching"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7d0d1ab3-6668-45fa-8879-e326eae7a6df",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "gym",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gym"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19320d09-3c1b-4ec2-a144-0fffe5001a23",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "access",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "access"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b04cbc81-e111-443c-88a7-f194463048b4",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "=upgrade_79",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3e4819d8-fc5f-4013-bf56-9a9a45436fd6",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "upgrade_99",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -3360,
+        -1920
+      ],
+      "id": "c7f186a5-d67d-44b3-a0c2-210057109eb3",
+      "name": "Router ( EN)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=التمرين هذا مختلف <b>لسبب واحد قوي:</b>\n\nهو معمول عشان <b>يحافظ على العضل وقت التنشيف</b> باستخدام الأساسيات فقط:\n✅ <b>بار (Barbell)</b>\n✅ <b>دنابل (Dumbbells)</b>\n✅ <b>وزن الجسم (Bodyweight)</b>\n\n<b>ما نستخدم أجهزة.</b> ما نحتاج معدات معقدة.\nبس أقوى أدوات موجودة بأي جيم عادي.\n\nبساطة في الأدوات… <b>ونتيجة قوية جدًا.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أحتاج جيم خاص؟",
+                    "additionalFields": {
+                      "callback_data": "gym"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -2000
+      ],
+      "id": "6ba7f1fd-c7be-42d8-b893-8062878d08d2",
+      "name": "different",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=الكارديو يساعد تحرق سعرات ✅\n\nبس إذا الكارديو هو خطتك الأساسية… <b>غالبًا بتخسر:</b>\n❌ قوة\n❌ عضل\n❌ <b>شكل جسمك بيصير “أصغر” بدل ما يكون “أشد وأنشف”</b>\n\nإذا تبي تنشف وتحافظ على العضل، <b>لازم تتمرن بطريقة مقاومة معينة.</b>\n\n<b>وهذا بالضبط اللي موجود داخل هالتمرين.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ وش اللي يميز هالتمرين؟",
+                    "additionalFields": {
+                      "callback_data": "different"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -2192
+      ],
+      "id": "e1468ffd-ae8e-4e9d-bb9d-a2f7fc389aea",
+      "name": "cardio",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=فاهمك 100% ✅\n\nبس خلني أقولك شيء مهم:\n<b>حتى لو أكلك ممتاز… إذا تمرينك غلط، جسمك ممكن يخسر عضل.</b>\n\nأفضل نتيجة دايمًا تكون:\n<b>✅ نظام غذائي + ✅ تمارين مقاومة صح</b>\n\nالتمرين هذا يشرح لك طريقة تمرين <b>تخلي جسمك يحافظ على العضل وأنت تنزل وزن.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ يعني ما يكفي كارديو؟",
+                    "additionalFields": {
+                      "callback_data": "cardio_en"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -2384
+      ],
+      "id": "23310a12-3e64-4bf7-b520-85f285f45c59",
+      "name": "nutrition ( EN)",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2432,
+        -2544
+      ],
+      "id": "f0dd122a-ebfc-4d4a-bcb5-f8a355c0113e",
+      "name": "Mark as Buyer ( EN)",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 ممتاز! كمل عملية الدفع:</b>\n\nاضغط على الزر تحت عشان تستلم تمرينك.\n<b>الوصول بيفتح لك تلقائي مباشرة بعد الدفع! ✅</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/Zedmlqy08"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2128,
+        -2544
+      ],
+      "id": "4b36c04d-9855-4b5a-835e-714acdd844a5",
+      "name": "buy_messasge ( EN)",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "callback_query_data",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_message_chat_id",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_id",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_from_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "e4ed021a-aa48-476d-ac91-f0317434c8d2",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -3632,
+        -1760
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "access": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gym": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "coaching": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "help": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "price": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "beginner": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "different": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Mark as Buyer ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "nutrition ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cardio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "different",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "beginner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "help",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "coaching",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "gym",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "access",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Buyer ( EN) 79AED",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Buyer ( EN) 99 AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cardio": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "nutrition ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN)": {
+      "main": [
+        [
+          {
+            "node": "buy_messasge ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buy_messasge ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN) 79AED": {
+      "main": [
+        [
+          {
+            "node": "79AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "79AED": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN) 99 AED": {
+      "main": [
+        [
+          {
+            "node": "99AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "99AED": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Router ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "3133685e-dfb2-4add-91da-d504b30aa726",
+  "meta": {
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "jlwgyCM5RPUxTBhG",
+  "tags": []
+}

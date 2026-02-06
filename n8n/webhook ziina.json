@@ -1,0 +1,94 @@
+{
+  "name": "webhook ziina",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ziina",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        -176
+      ],
+      "id": "5d19b3a3-cf8c-4f2d-b9c7-90015505d9db",
+      "name": "Webhook",
+      "webhookId": "c70b534b-efa5-42c2-882d-460f17fc4376",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-v2.ziina.com/api/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer lxfEX+62f/axsOkeN7KI2lSpPpiqliqdEOg5KrGTv9+LPHIovjdD64hqYHo5rX2O"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "https://mxpkn8ns.ru/webhook-test/ziina"
+            },
+            {
+              "name": "secret",
+              "value": "my_super_secret_ivanbot_key_36484"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -48,
+        64
+      ],
+      "id": "777872d9-1c1a-4b4b-b470-442095ba334e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        64
+      ],
+      "id": "b32588b9-4e8d-4ece-b3c6-aabab68c58e7",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "87b8b11b-226a-455f-a9ac-5830efc740f3",
+  "meta": {
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "jSOx9aJWbcXDOKdUV0ZUi",
+  "tags": []
+}

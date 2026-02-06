@@ -1,0 +1,613 @@
+{
+  "name": "DAYS_ar",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=إذا هدفك تنشيف… بس ما تبي تخسر عضل — هذا التمرين لك ✅\n\nتمرين جيم واضح.\nاستراتيجية ذكية.\nمناسب للرجال اللي يقللون سعراتهم ويبون يحافظون على شكلهم.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أبي كوتشنغ",
+                    "additionalFields": {
+                      "callback_data": "coaching"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        752
+      ],
+      "id": "1a0edff2-c283-4d7c-bda5-cd57940384a3",
+      "name": "Send Day 5",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=بعد الدفع <b>يوصلك الوصول مباشرة ✅</b>\n\nبتحصل:\n✅ <b>تمرين كامل مرتب</b>\n✅ تمارين <b>بالبار + دنابل + وزن الجسم</b>\n✅ شرح واضح <b>كيف تتمرن عشان تنشف وتحافظ على العضل</b>\n✅ <b>بدون أجهزة / بدون تعقيد</b>\n\nهذا معمول للرجال اللي يبون ينزلون دهون… <b>بدون ما يخسرون شكلهم وقوتهم.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ ليش السعر 49 بس؟",
+                    "additionalFields": {
+                      "callback_data": "price"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        560
+      ],
+      "id": "6d84e03f-180b-4df5-b919-fd5b699fb1b7",
+      "name": "Send Day 4",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=<b>لا ما تحتاج جيم خاص ✅</b>\n\nأي جيم عادي في أبوظبي أو دبي يكفي.\n\n<b>لأنك ما بتحتاج أجهزة.</b>\nبس تحتاج:\n✅ <b>بار + أوزان (plates)</b>\n✅ <b>دنابل</b>\n✅ <b>وزن جسمك</b>\n\nوالأهم من الأدوات… هو <b>“طريقة التمرين”</b> اللي داخل البرنامج\n<b>عشان جسمك يحافظ على العضل حتى وأنت على عجز سعرات.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أنا مبتدئ… ينفع لي؟",
+                    "additionalFields": {
+                      "callback_data": "beginner"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        384
+      ],
+      "id": "95db4088-2f7e-49a6-aca1-6e62e6e5546a",
+      "name": "Send Day 3",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition \nSET \n  funnel_stage = funnel_stage + 1, \n  last_funnel_msg_at = NOW()\nWHERE chat_id = {{ $('Loop Over Items').item.json.chat_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1824,
+        384
+      ],
+      "id": "03d9e5cf-a318-4496-9627-c17d209b7226",
+      "name": "Update Stage",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        736,
+        368
+      ],
+      "id": "d9c1732e-2663-41f2-abbb-3f8dabca95bb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT chat_id, funnel_stage, language\nFROM users_nutrition \nWHERE (is_buyer IS FALSE OR is_buyer IS NULL)\n  AND CAST(funnel_stage AS INTEGER) >= 0 \n  AND CAST(funnel_stage AS INTEGER) <= 4;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        544,
+        368
+      ],
+      "id": "acf0aa38-551a-460d-82b4-b7266296af80",
+      "name": "get_id",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "d7c40ecf-3771-460a-b0be-7af6593cdffa"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6162541b-2fe2-4a24-8e55-4e11bdb2fd2f",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f95ddd6e-c1f2-4561-bd67-53f82d412e1b",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fb7c11b1-9830-480f-a025-dbb2a5d6e4ac",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 4"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b67e5b83-9c85-4202-aaa3-d566d60eb81e",
+                    "leftValue": "={{ $json.funnel_stage }}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DAY 5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        976,
+        336
+      ],
+      "id": "2026ee1d-6b9e-43b4-ba41-26a6a19e9891",
+      "name": "Check Stage"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=الكارديو يساعد تحرق سعرات ✅\n\nبس إذا الكارديو هو خطتك الأساسية… <b>غالبًا بتخسر:</b>\n❌ قوة\n❌ عضل\n❌ <b>شكل جسمك بيصير “أصغر” بدل ما يكون “أشد وأنشف”</b>\n\nإذا تبي تنشف وتحافظ على العضل، <b>لازم تتمرن بطريقة مقاومة معينة.</b>\n\n<b>وهذا بالضبط اللي موجود داخل هالتمرين.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ وش اللي يميز هالتمرين؟",
+                    "additionalFields": {
+                      "callback_data": "different"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        208
+      ],
+      "id": "89afa479-f8a0-460f-9c55-b7a8030b704c",
+      "name": "Send Day 2",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=هلا والله يا بطل 👊 احترام كبير إنك موجود هنا.\n\n<b>الأكل والنظام مهمين 100% ✅</b>\nبس أغلب الرجال لما ينزلون وزن يسوون غلط كبير:\n\nينزلون وزن… <b>ومعاه ينزلون عضل بعد.</b>\n\nلما تكون على عجز سعرات، إذا تمرينك غلط جسمك بيخسر عضل بسرعة وبيصير شكلك أصغر وأضعف.\n\nعشان كذا سويت لك هالتمرين:\n<b>✅ تنشيف بدون خسارة عضل</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ أنا أبي الأكل بس",
+                    "additionalFields": {
+                      "callback_data": "nutrition_en"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        32
+      ],
+      "id": "0d2f85ee-6f49-400a-81f8-f28e888ba775",
+      "name": "Send Day 1",
+      "webhookId": "fde6ecf0-0428-4dc5-861d-4d695c06c02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "7460ad58-98f2-4cc3-a6fd-a49ab13da83d",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        336,
+        368
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Send Day 5": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 4": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 3": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Stage": {
+      "main": [
+        [
+          {
+            "node": "Send Day 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Day 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 2": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Day 1": {
+      "main": [
+        [
+          {
+            "node": "Update Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_id": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "get_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "1d678a14-3eb0-4a4c-9984-01ce389edea9",
+  "meta": {
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "ZEcA2tebRTW20kgf",
+  "tags": []
+}

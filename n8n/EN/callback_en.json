@@ -1,0 +1,1275 @@
+{
+  "name": "callback_en",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>After payment you get instant access ✅</b>\n\nYou receive:\n<b>✅ full workout structure</b>\n<b>✅ exercises using barbell + dumbbells + bodyweight</b>\n<b>✅ clear explanation of how to train for fat loss + muscle retention</b>\n<b>✅ no machines needed</b>\n\nThis is built for men who want to cut fat and keep their physique.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "Why is it only 49 AED?",
+                    "additionalFields": {
+                      "callback_data": "price"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        1520
+      ],
+      "id": "d5b7eccc-4cbc-4fc0-9952-e4c85cc602d7",
+      "name": "access",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>No special gym needed</b>\n\nAny basic gym in Abu Dhabi is enough.\nBecause you won’t need machines.\n\nJust:\n<b>✅ barbell + plates</b>\n<b>✅ dumbbells</b>\n<b>✅ your bodyweight</b>\n\nAnd the training method inside is designed to keep your muscles <i>active</i> even in a calorie deficit.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ What if I’m a beginner?",
+                    "additionalFields": {
+                      "callback_data": "beginner"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        1328
+      ],
+      "id": "4b6e09e4-f4ad-4fc0-bd24-909812960f57",
+      "name": "gym",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>Option 1: Technique Check — 79 AED ✅</b>\nSend me 3–5 gym exercise videos. I’ll correct your form and give you fixes.\n\n\n<b>Option 2: 7-Day Coaching — 99 AED ✅</b>\nDaily support + workout & nutrition adjustments to lose fat and keep muscle faster.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Upgrade - 79 AED",
+                    "additionalFields": {
+                      "callback_data": "upgrade_79"
+                    }
+                  },
+                  {
+                    "text": "✅ Upgrade - 99 AED",
+                    "additionalFields": {
+                      "callback_data": "upgrade_99"
+                    }
+                  },
+                  {
+                    "text": "⬅️ Back",
+                    "additionalFields": {
+                      "callback_data": "help"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        1152
+      ],
+      "id": "b8be0d6a-1510-4fa8-b421-fe966afdd807",
+      "name": "coaching",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>If you want fat loss but you refuse to lose muscle — this is for you.</b>\n\nOne clear gym workout.\nOne smart training strategy.\nMade for men cutting calories.\n\n✅ Get Access — 49 AED\nStart training the right way today.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ I want coaching",
+                    "additionalFields": {
+                      "callback_data": "coaching"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        960
+      ],
+      "id": "2f854e86-39e9-4054-8b61-dbe83137d310",
+      "name": "help",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>Because I want it affordable ✅</b>\n\n49 AED is less than one dinner…\nbut it can save you months of wrong training.\n\nYou’re not paying for <i>“just a workout”</i>.\nYou’re paying for the method that helps you cut fat without losing your shape.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ I want personal help",
+                    "additionalFields": {
+                      "callback_data": "help"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        784
+      ],
+      "id": "8ff730eb-634e-43f0-b35f-fac4e37f9dad",
+      "name": "price",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>Perfect ✅ Beginners get results fast.</b>\n\nEverything is explained step-by-step.\nYou’ll know exactly what to do and how to train.\n\nNo confusion. No random exercises.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ What do I get after access?",
+                    "additionalFields": {
+                      "callback_data": "access"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        608
+      ],
+      "id": "2a35dab0-1b23-4bae-9983-649c7a90dc85",
+      "name": "beginner",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Start').item.json.callback_query_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2160,
+        656
+      ],
+      "id": "00cfd6e9-df2a-4599-b46c-9efc5b655368",
+      "name": "Answer Callback ( EN)",
+      "webhookId": "9d631b1f-cfcd-47de-9096-b92ebf8d53f8",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>What makes it different?</b>\n\nThis workout is unique for one reason:\n\n<b>It's built to keep muscle during fat loss using only the basics:</b>\n✅ barbell\n✅ dumbbells\n✅ bodyweight\n\nNo machines. No complicated equipment.\nJust the most effective tools in any normal gym.\n\n<b>Simple setup — serious results.</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ Do I need a special gym?",
+                    "additionalFields": {
+                      "callback_data": "gym"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        432
+      ],
+      "id": "c56e2831-5074-41d1-908d-cb69fb8a513c",
+      "name": "different",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "buy_now",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cb48ff30-15ad-40ee-899a-dcedf304fe14"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Buy"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a89fe2ee-0d09-4d90-a46f-52689afdc0f6",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "nutrition_en",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nutrition_en"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "22957a71-0e2c-4909-ae1a-e61094216d4f",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "cardio_en",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cardio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba749850-8552-44e3-b1c2-e7296f8991da",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "different",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "different"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "682f201e-0c15-4a8e-981a-b7f0d8bd0756",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "beginner",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "beginner"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8fddc9ad-1d6e-4a6a-8882-be6338aaa659",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "price",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a0ff802b-2daf-4ad9-bdf8-2ffb82be66fc",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "help"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f2f0f2c3-ee8c-48db-ab05-41cede5ae222",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "coaching",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coaching"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7d0d1ab3-6668-45fa-8879-e326eae7a6df",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "gym",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gym"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19320d09-3c1b-4ec2-a144-0fffe5001a23",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "access",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "access"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b04cbc81-e111-443c-88a7-f194463048b4",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "=upgrade_79",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3e4819d8-fc5f-4013-bf56-9a9a45436fd6",
+                    "leftValue": "={{ $('Start').item.json.callback_query_data }}",
+                    "rightValue": "upgrade_99",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        192,
+        624
+      ],
+      "id": "16d64521-a8de-4cf5-8a2a-c6a7533760c2",
+      "name": "Router ( EN)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_from_id }}",
+        "text": "=<b>Cardio vs Muscle</b>\n\nCardio can help you burn calories.\n\nBut if cardio is your main plan, you risk:\n❌ losing strength\n❌ losing muscle\n❌ looking smaller instead of lean\n\n<b>To keep muscle, you need a specific strength-focused training style.</b>\n\n✅ That's exactly what this workout gives you.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ What makes it different?",
+                    "additionalFields": {
+                      "callback_data": "different"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        240
+      ],
+      "id": "486de81a-9b0b-4268-9c84-42fa6e645f83",
+      "name": "cardio",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=Totally understood ✅\n\nBut here's the truth:\n<b>Even with perfect nutrition, if your training is wrong, your body will drop muscle.</b>\n\n<b>Best result = nutrition + correct strength training.</b>\n\n✅ This workout shows you the training mode that protects your muscles while you cut fat.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Get Access — 49 AED",
+                    "additionalFields": {
+                      "callback_data": "buy_now"
+                    }
+                  },
+                  {
+                    "text": "❓ Can I just do cardio?",
+                    "additionalFields": {
+                      "callback_data": "cardio_en"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        48
+      ],
+      "id": "a036f2d1-08f7-4783-8d61-32158955f523",
+      "name": "nutrition ( EN)",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -112
+      ],
+      "id": "d5573fe4-4b59-4d95-9ac4-761782cbe572",
+      "name": "Mark as Buyer ( EN)",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 Great! Proceed to payment:</b>\n\nClick the button below to get your workout. \nAccess will be granted automatically after the transaction is complete! ✅",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/Zedmlqy08"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        -112
+      ],
+      "id": "47f4228c-af5f-4369-bb85-6ab5fb5d01a7",
+      "name": "buy_messasge ( EN)",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "callback_query_data",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_message_chat_id",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_id",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_from_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "239c6bb4-a99d-4112-a95f-4b95cffcdf09",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -128,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1152,
+        1744
+      ],
+      "id": "da64b858-a987-445f-b46f-418b991f06a7",
+      "name": "Mark as Buyer ( EN) 79AED",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 Great! Proceed to payment:</b>\n\nClick the button below to get your workout. \nAccess will be granted automatically after the transaction is complete! ✅",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/lV86A6Qwd"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        1744
+      ],
+      "id": "3e4794ff-0aa6-4fea-a63d-88e6dc216ee5",
+      "name": "79AED",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1136,
+        1952
+      ],
+      "id": "a581282f-c7c7-4eb9-b497-c65cbf7575f5",
+      "name": "Mark as Buyer ( EN) 99 AED",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=<b>💳 Great! Proceed to payment:</b>\n\nClick the button below to get your workout. \nAccess will be granted automatically after the transaction is complete! ✅",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Pay Now",
+                    "additionalFields": {
+                      "url": "https://pay.ziina.com/train.with.iv10/lV86A6Qwd"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        1952
+      ],
+      "id": "50507bda-11c5-4d85-92f5-f6864a383b3d",
+      "name": "99AED",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Router ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Mark as Buyer ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "nutrition ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cardio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "different",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "beginner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "help",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "coaching",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "gym",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "access",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Buyer ( EN) 79AED",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Buyer ( EN) 99 AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN)": {
+      "main": [
+        [
+          {
+            "node": "buy_messasge ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buy_messasge ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "nutrition ( EN)": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cardio": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "different": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "beginner": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "price": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "help": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "coaching": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gym": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "access": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Router ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN) 79AED": {
+      "main": [
+        [
+          {
+            "node": "79AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "79AED": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer ( EN) 99 AED": {
+      "main": [
+        [
+          {
+            "node": "99AED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "99AED": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback ( EN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "91efa1f4-7720-448f-b596-a4662f7a5392",
+  "meta": {
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "B6QkQPsiMrigBfY4",
+  "tags": []
+}

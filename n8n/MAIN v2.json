@@ -1,0 +1,1705 @@
+{
+  "name": "MAIN v2",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ \n$json.text_response\n  // 1. Меняем <br> на перенос строки (Telegram их не понимает)\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  \n  // 2. Превращаем все знаки \"<\" в безопасный текст \"&lt;\",\n  // КРОМЕ тех случаев, когда это разрешенный тег (например <b>, </i>, </a>)\n  .replace(/<(?!\\/?(b|i|u|s|pre|code|a)(>|\\s))/gi, '&lt;') \n}}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1552,
+        32
+      ],
+      "id": "d321122b-93da-491c-83b2-044d2aa15977",
+      "name": "message for AI agent",
+      "webhookId": "a5019b38-550d-498b-9997-cd37605484b4",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        320
+      ],
+      "id": "158c449f-5a47-4388-9b55-7436cabd1599",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "AqF0QtsuHggFTOVX",
+          "name": "my openAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2544,
+        320
+      ],
+      "id": "5b532386-b797-4e3a-9f03-c8d4f1c3f0de",
+      "name": "Get a file",
+      "webhookId": "44c80709-3457-4b22-ae06-616657481f35",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "56ce6495-0633-443e-8f68-410829bb5a98"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2a3ff28a-7360-42d6-a9e4-32eafa69bf23",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2768,
+        160
+      ],
+      "id": "c362d945-17b2-47be-9faa-64b22411ff2d",
+      "name": "routher"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "member",
+        "chatId": "-1002504147240",
+        "userId": "={{ $json.user_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3392,
+        464
+      ],
+      "id": "10fd8832-1d91-45b8-b3c1-1d4d557667d6",
+      "name": "check follower",
+      "webhookId": "b07721fd-a7f0-4f54-9f2a-040c877699d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const tgData = $('Telegram Trigger').first().json;\n// Защита от null, если придет стикер или войс без текста\nconst text = tgData.message?.text || tgData.message?.caption || \"\"; \n\nlet detectedLang = 'en'; // Дефолт (Latin)\n\n// Проверка на Арабский (приоритет №1, так как RTL верстка может ломать интерфейс)\n// Диапазон включает стандартный арабский и расширения\nconst arabicRegex = /[\\u0600-\\u06FF\\u0750-\\u077F]/;\n\n// Проверка на Кириллицу\nconst cyrillicRegex = /[\\u0400-\\u04FF]/;\n\nif (arabicRegex.test(text)) {\n  detectedLang = 'ar';\n} else if (cyrillicRegex.test(text)) {\n  detectedLang = 'ru';\n}\n// Если ни то, ни другое — остается 'en'\n\nreturn {\n  user_id: tgData.message?.from?.id?.toString() || null,\n  username: tgData.message?.from?.username || \"unknown\",\n  message_text: text,\n  chat_id: tgData.message?.chat?.id,\n  language: detectedLang \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3536,
+        464
+      ],
+      "id": "6471a697-5cbd-42a5-90ae-6feca134b5a6",
+      "name": "formating"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "<b>RU:</b>\nЧтобы использовать бота, подпишись на канал: https://t.me/ivanfit_health\n\n<b>EN:</b>\nTo use the bot, please subscribe to the channel: https://t.me/ivanfit_health\n\n<b>AR:</b>\nلاستخدام البوت، يرجى الاشتراك في القناة: https://t.me/ivanfit_health",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2768,
+        464
+      ],
+      "id": "283d6caf-a6d3-4cb9-89e4-fec8de47a6ea",
+      "name": "message menu",
+      "webhookId": "e2bc9431-376c-4477-9b31-8dd003c637e0",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "859665c2-a0b5-4146-84ce-66085a9bf830",
+              "leftValue": "={{ $json.is_subscribed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3104,
+        272
+      ],
+      "id": "0212afd3-cb9c-419e-b5c4-a90195fb3d9b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "86257584-7cfe-4e0c-a813-665e84147f95",
+                    "leftValue": "={{ $json.route_type }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "conversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b8aa51a2-2ec6-4895-a7bc-ed9c2f281cc9",
+                    "leftValue": "={{ $json.route_type }}",
+                    "rightValue": "generate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "generate"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1776,
+        144
+      ],
+      "id": "d6a7ca93-673b-46d2-a901-1f7607730a5a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# ROLE\nYou are Ivan, a friendly and tactful AI nutrition consultant. Your communication style is warm, supportive, light, and positive. You address the user informally (like a good acquaintance) but always respectfully.\n\nYou use emojis (😊, ✨, 🍏, 👋) to create a cozy atmosphere, but moderately. Your main goal is to help the user become healthier and happier, regardless of their current shape. Avoid slang like \"bro\", \"bulking\", \"cutting\" unless the user uses it first; prefer neutral, kind wording.\n\n# CRITICAL LANGUAGE RULE (Very important)\nAlways reply in the SAME language as the user's LAST message.\n- If the user writes in English → reply in English.\n- If the user writes in Russian → reply in Russian.\n- If the user writes in Spanish → reply in Spanish.\nThis applies to ALL languages. Do not mention this rule to the user. Just follow it.\n\n# OBJECTIVE\nCarefully collect user data required to calculate nutrition targets. Keep the conversation simple and clear. Do not overload the user with complicated terms.\n\n# REQUIRED DATA (What you must collect)\n1. sex (male/female)\n2. weight (kg, number) — if the weight looks unrealistic, politely double-check.\n3. height (cm, number)\n4. age (years, number)\n5. activity_level (activity level). Interpret user answers as:\n   - sedentary (desk job, little movement)\n   - light (walks, light activity)\n   - moderate (workouts 3–4 times/week)\n   - high (active almost every day)\n   - extreme (pro athlete, heavy physical job)\n6. goal (goal). Interpret as:\n   - weight_loss (lose weight)\n   - maintenance (maintain)\n   - muscle_gain (gain muscle)\n7. allergies_and_preferences (allergies + foods the user avoids)\n\n# LOGIC & RULES\n1. Step 1 (Data collection): Ask 1–2 questions at a time. Do NOT send long lists of questions.\n   Example: \"Hi! Glad to see you 👋 First, tell me: are you male or female? And how old are you?\"\n2. Step 2 (Validation): If numbers look strange (weight 10 kg, age 150), react gently with light humor:\n   \"Wow, 10 kg? That looks like a typo 😊 Could you confirm your real weight?\"\n3. Step 3 (Off-topic handling): If the user goes off-topic, politely bring them back:\n   \"Interesting! But let's finish your nutrition plan first so I can help faster ✨ What is your height?\"\n4. Step 4 (Confirmation): When ALL required data is collected, show it as a neat list and ask:\n   \"Please confirm: did I get everything right?\"\n   - If the user says \"Yes / Correct\" → go to Step 5 (FINAL OUTPUT).\n   - If the user says \"No\" → ask what to fix, update data, and confirm again.\n\n# FINAL OUTPUT & DATA FORMAT\n1. DURING CONVERSATION (While collecting data):\n   - Only normal dialogue. NO JSON. Do not mention JSON, system output, or technical data.\n2. ONLY WHEN FINISHED (Only after the user confirmed \"Yes/Correct\"):\n   - Output MUST contain exactly ONE code block with valid JSON.\n   - No text before or after the JSON.\n\nExample of the final output format:\n```json\n{\n  \"is_finished\": true,\n  \"sex\": \"male\",\n  \"weight\": 85,\n  \"height\": 182,\n  \"age\": 30,\n  \"activity_level\": \"moderate\",\n  \"goal\": \"weight_loss\",\n  \"allergies\": \"none\",\n  \"excluded_foods\": \"fish\"\n}\n- “Return meal names and dish names in the same language as the user's last message”"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -2208,
+        144
+      ],
+      "id": "1ccda40f-b714-4dda-b2bd-a3349755941c",
+      "name": "AGENT MAIN"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d629d6d4-e486-4d35-a824-d1440cfc4e97",
+              "name": "text",
+              "value": "={{ $('formating').item.json.message_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2464,
+        144
+      ],
+      "id": "12951a94-b371-40c6-89ca-90ac99829845",
+      "name": "text"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Данные от Агента (вес, рост, цель и т.д.)\nconst agentData = $input.first().json;\n\n// 2. Данные пользователя (ID, username) из ноды 'formating'\nconst userData = $('formating').first().json;\n\n// --- Валидация чисел (чтобы не словить NaN и не писать мусор в БД) ---\nconst weight = Number(agentData.weight);\nconst height = Number(agentData.height);\nconst age = Number(agentData.age);\n\nif (!Number.isFinite(weight) || weight <= 0) throw new Error(`Некорректный вес: ${agentData.weight}`);\nif (!Number.isFinite(height) || height <= 0) throw new Error(`Некорректный рост: ${agentData.height}`);\nif (!Number.isFinite(age) || age <= 0) throw new Error(`Некорректный возраст: ${agentData.age}`);\n\n// 3. Формула Миффлина-Сан Жеора\nconst isMale = (agentData.sex === 'male' || agentData.sex === 'м');\n\nlet bmr;\nif (isMale) {\n  bmr = 10 * weight + 6.25 * height - 5 * age + 5;\n} else {\n  bmr = 10 * weight + 6.25 * height - 5 * age - 161;\n}\n\n// 4. Коэффициенты активности\nconst activityMap = {\n  sedentary: 1.2,\n  light: 1.375,\n  moderate: 1.55,\n  high: 1.725,\n  extreme: 1.9\n};\n\nconst multiplier = activityMap[agentData.activity_level] || 1.375;\nconst tdee = bmr * multiplier;\n\n// 5. Коррекция под цель (калории)\nlet targetCalories = tdee;\n\nif (agentData.goal === 'weight_loss') {\n  targetCalories *= 0.85;\n} else if (agentData.goal === 'muscle_gain') {\n  targetCalories *= 1.10;\n}\n\n// 6. Расчет БЖУ (НОВАЯ ЛОГИКА)\n// ЖИРЫ: 1 г / кг (фикс)\nconst fatG = weight * 1.0;\nconst fatCals = fatG * 9;\n\n// БЕЛОК: 1.3–1.5 г / кг\n// Выбираем коэффициент по цели, но строго в диапазоне.\nlet proteinCoeff = 1.4; // maintenance по умолчанию\n\nif (agentData.goal === 'weight_loss') proteinCoeff = 1.5;\nelse if (agentData.goal === 'muscle_gain') proteinCoeff = 1.5;\nelse proteinCoeff = 1.4;\n\n// clamp 1.3..1.5\nproteinCoeff = Math.max(1.3, Math.min(1.5, proteinCoeff));\n\nconst proteinG = weight * proteinCoeff;\nconst proteinCals = proteinG * 4;\n\n// УГЛЕВОДЫ: остаток калорий\nlet carbCals = targetCalories - proteinCals - fatCals;\n\n// Защита от отрицательных углей (если калории низкие, а жиры/белок съели всё)\nif (carbCals < 0) carbCals = 0;\n\nconst carbG = carbCals / 4;\n\n// 7. ФИНАЛЬНЫЙ ВЫВОД (Плоская структура для SQL)\nreturn {\n  json: {\n    chat_id: userData.chat_id,\n    username: userData.username,\n\n    sex: agentData.sex,\n    age,\n    weight,\n    height,\n    activity_level: agentData.activity_level,\n    goal: agentData.goal,\n    allergies: agentData.allergies || \"нет\",\n    excluded_foods: agentData.excluded_foods || \"нет\",\n\n    macros: {\n      calories: Math.round(targetCalories),\n      protein: Math.round(proteinG),\n      fats: Math.round(fatG),\n      carbs: Math.round(carbG)\n    },\n\n    calories: Math.round(targetCalories),\n    protein: Math.round(proteinG),\n    fats: Math.round(fatG),\n    carbs: Math.round(carbG)\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        256
+      ],
+      "id": "d15e55c2-54e1-4145-a475-00835e4f8801",
+      "name": "calculator macros"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Составь план питания на день, основываясь на КБЖУ и ограничениях, указанных в системной инструкции.\n",
+        "options": {
+          "systemMessage": "=# ROLE\nТы — нутрициолог-технолог. Твоя задача — составить меню в формате JSON.\n\n# INPUT DATA\nЦель: {{ $('calculator macros').item.json.macros.calories }} ккал\nБелки: {{ $('calculator macros').item.json.macros.protein }}\nЖиры: {{ $('calculator macros').item.json.macros.fats }}\nУглеводы: {{ $('calculator macros').item.json.macros.carbs }}\nИсключить: {{ $('calculator macros').item.json.excluded_foods }}\nАллергии: {{ $('calculator macros').item.json.allergies }}\n\n# STRICT RULES\n1. Выводи ТОЛЬКО валидный JSON.\n2. Если в \"Исключить\" или \"Аллергии\" есть продукт, он СТРОГО запрещен во всех блюдах.\n\n# INSTRUCTIONS\n1. **Структура:** СТРОГО 3 приема пищи: Завтрак, Обед, Ужин.\n2. **Запрет:** НИКАКИХ перекусов, полдников или вторых завтраков. Даже если калорий очень много (3000+), увеличивай порции в основных блюдах, но не добавляй новые приемы пищи.\n3. **Адаптация:** Используй продукты, доступные в масс-маркете.\n4. **Фильтр:** Исключи аллергены и нелюбимые продукты (из списка INPUT DATA).\n\n# OUTPUT JSON FORMAT\n{\n  \"meals\": [\n    {\n      \"name\": \"Завтрак\",\n      \"dish\": \"Омлет\",\n      \"ingredients\": [\n        // ВАЖНО: Ингредиенты — это массив ОБЪЕКТОВ, а не строк!\n        {\"name\": \"Яйцо\", \"weight_g\": 100, \"cals\": 150, \"p\": 12, \"f\": 10, \"c\": 1},\n        {\"name\": \"Молоко\", \"weight_g\": 50, \"cals\": 30, \"p\": 1, \"f\": 1, \"c\": 2}\n      ],\n      \"total_cals\": 180\n    }\n    // ... остальные приемы\n  ]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1040,
+        256
+      ],
+      "id": "17576549-15be-4cee-ab5a-c8e7c69c61d8",
+      "name": "AGENT FOOD"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "={{ $json.final_message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -416,
+        256
+      ],
+      "id": "5fb208c6-5a15-4de9-9e36-aca9183011d6",
+      "name": "message for AGENT FOOD",
+      "webhookId": "65a646d3-c60b-41c6-a48c-8efa6dff8b49",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=<b>RU:</b>\nПринял! Считаю твои калории и подбираю меню из базы, подожди пару секунд...\n\n<b>EN:</b>\nGot it! Calculating your calories and selecting a menu from the database, please wait a few seconds...\n\n<b>AR:</b>\nتم الاستلام! جاري حساب سعراتك الحرارية واختيار القائمة من قاعدة البيانات، يرجى الانتظار بضع ثوانٍ...",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1216,
+        256
+      ],
+      "id": "97a24003-60b3-43f1-bd92-a1c9a3ce7b19",
+      "name": "messge for ready diets",
+      "webhookId": "853b08df-d614-4a7c-90a2-a3cd378a00f0",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM users_nutrition WHERE chat_id = {{ $json.message.chat.id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3904,
+        272
+      ],
+      "id": "fa29b494-1380-445b-9811-aedcf79d40e6",
+      "name": "get db user",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "20737ee4-1d4c-496c-b9ed-e3344f954761",
+              "leftValue": "={{ $json.get_food }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3696,
+        272
+      ],
+      "id": "32a12021-126b-45c1-b43c-286489bf8d52",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "<b>RU:</b>\nЧемпион, извини. Я не могу второй раз тебе рассчитать КБЖУ.\n\n<b>EN:</b>\nChampion, I'm sorry. I cannot calculate your macros a second time.\n\n<b>AR:</b>\nبطل، اعتذر منك. لا يمكنني حساب السعرات والماكروز لك مرة ثانية..",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3488,
+        128
+      ],
+      "id": "ad8487be-5f64-494e-958d-9e7a5a36075d",
+      "name": "text message",
+      "webhookId": "f1fa3c03-201a-405e-82cf-5f9808fd2132",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO users_nutrition (\n    chat_id, username, sex, age, weight, height, \n    activity_level, goal, allergies, excluded_foods,\n    calories, protein, fats, carbs, language, updated_at\n) VALUES (\n    {{ $json.chat_id }}, \n    '{{ $json.username }}', \n    '{{ $json.sex }}', \n    {{ $json.age }}, \n    {{ $json.weight }}, \n    {{ $json.height }}, \n    '{{ $json.activity_level }}', \n    '{{ $json.goal }}', \n    '{{ $json.allergies }}', \n    '{{ $json.excluded_foods }}',\n    {{ $json.calories }}, \n    {{ $json.protein }}, \n    {{ $json.fats }}, \n    {{ $json.carbs }},\n    '{{ $('formating').first().json.language }}',\n    NOW()\n)\nON CONFLICT (chat_id) DO UPDATE SET \n    sex = EXCLUDED.sex,\n    weight = EXCLUDED.weight,\n    calories = EXCLUDED.calories,\n    protein = EXCLUDED.protein,\n    fats = EXCLUDED.fats,\n    carbs = EXCLUDED.carbs,\n    language = EXCLUDED.language,\n    get_food = FALSE, \n    updated_at = NOW();",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1392,
+        256
+      ],
+      "id": "77c3dee4-bdb3-42a6-9a78-0c0ac3394d1c",
+      "name": "save data user db",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition \nSET \n  get_food = TRUE,\n  funnel_stage = 0,       -- Явно ставим 0\n  last_funnel_msg_at = NOW() -- Это будет точка отсчета\nWHERE chat_id = {{ $('formating').first().json.user_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -256,
+        256
+      ],
+      "id": "c03f9e0d-3794-42ee-9827-79a26c0280e6",
+      "name": "get_food = True",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ПОЛУЧЕНИЕ ДАННЫХ\nconst agentResponse = $input.first().json.output; \n// Данные из калькулятора (цели)\nconst clientData = $('calculator macros').first().json;\nconst targets = clientData.macros || {}; // { calories, protein, fats, carbs }\n\nlet parsedMenu = null;\nlet validationError = null;\n\n// --- ФУНКЦИИ ---\n\nfunction cleanJson(text) {\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  return match ? match[0] : text;\n}\n\nfunction normalize(str) {\n  return str ? str.toLowerCase().trim() : \"\";\n}\n\n// --- ЛОГИКА ---\n\n// Счетчики для фактических значений\nlet totalStats = {\n  cals: 0,\n  p: 0,\n  f: 0,\n  c: 0\n};\n\ntry {\n  // 1. Парсинг\n  const jsonString = cleanJson(agentResponse);\n  parsedMenu = JSON.parse(jsonString);\n\n  // 2. Проверка на запрещенку\n  const forbiddenList = [\n    ...normalize(clientData.excluded_foods).split(/,|;/),\n    ...normalize(clientData.allergies).split(/,|;/)\n  ].filter(i => i.length > 2);\n\n  let foundForbidden = [];\n  \n  if (parsedMenu.meals && Array.isArray(parsedMenu.meals)) {\n    parsedMenu.meals.forEach(meal => {\n      if (meal.ingredients) {\n        meal.ingredients.forEach(ing => {\n          const ingName = normalize(ing.name);\n          \n          // Проверка запрещенки\n          forbiddenList.forEach(badWord => {\n            if (ingName.includes(badWord)) {\n              foundForbidden.push(`${ing.name} (содержит \"${badWord}\")`);\n            }\n          });\n\n          // 3. СУММИРОВАНИЕ БЖУ (Важное изменение)\n          // Используем || 0, чтобы код не падал, если ИИ забыл поле\n          totalStats.cals += Number(ing.cals) || 0;\n          totalStats.p    += Number(ing.p) || 0;\n          totalStats.f    += Number(ing.f) || 0;\n          totalStats.c    += Number(ing.c) || 0;\n        });\n      }\n    });\n  }\n\n  if (foundForbidden.length > 0) {\n    throw new Error(`В меню попали запрещенные продукты: ${foundForbidden.join(\", \")}`);\n  }\n\n  // 4. Валидация точности (Погрешность 10%)\n  // Мы проверяем главное - калории. БЖУ могут плавать сильнее, это нормально.\n  const targetCals = targets.calories || 2000;\n  const tolerance = 0.10; \n  const diff = Math.abs(totalStats.cals - targetCals);\n  \n  if (diff > (targetCals * tolerance)) {\n     throw new Error(`Калораж мимо кассы. Цель: ${targetCals}, Вышло: ${Math.round(totalStats.cals)}`);\n  }\n\n} catch (error) {\n  validationError = error.message;\n}\n\n// --- ВЫВОД ---\n\nreturn {\n  json: {\n    is_valid: (parsedMenu !== null && validationError === null),\n    error_reason: validationError,\n    \n    // Структура меню для рендера\n    menu_data: parsedMenu,\n    \n    // Фактически посчитанные цифры (округляем для красоты)\n    calculated_stats: {\n        calories: Math.round(totalStats.cals),\n        protein: Math.round(totalStats.p),\n        fats: Math.round(totalStats.f),\n        carbs: Math.round(totalStats.c)\n    },\n    \n    // Целевые цифры (для сравнения на следующем шаге)\n    target_stats: {\n        calories: targets.calories,\n        protein: targets.protein,\n        fats: targets.fats,\n        carbs: targets.carbs\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        256
+      ],
+      "id": "c4a3e66f-c215-4c46-b6ee-a38cd7c77293",
+      "name": "output -> json"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные\nconst input = $input.first().json;\n// Если валидатор вернул ошибку, данные могут лежать глубже или структура битая\n// Но мы постараемся вывести хоть что-то\nconst menu = input.menu_data || {};\nconst stats = input.calculated_stats || { calories: 0, protein: 0, fats: 0, carbs: 0 };\nconst targets = input.target_stats || { calories: 0, protein: 0, fats: 0, carbs: 0 };\n\nconst fmt = (num) => Math.round(num || 0);\n\n// 1. ШАПКА\nlet msg = `<b>💪 ПЛАН ПИТАНИЯ ГОТОВ!</b>\\n\\n`;\n\n// Если калории 0 (ошибка валидации), пишем предупреждение или просто выводим что есть\nif (stats.calories === 0 && input.is_valid === false) {\n    msg += `⚠️ <i>(Авто-подсчет не сработал, но вот твое меню)</i>\\n\\n`;\n} else {\n    msg += `<b>📊 ИТОГО ЗА ДЕНЬ:</b>\\n`;\n    msg += `🔥 <b>${fmt(stats.calories)} ккал</b> (Цель: ${fmt(targets.calories)})\\n`;\n    msg += `🥩 Белки: ${fmt(stats.protein)}г / ${fmt(targets.protein)}г\\n`;\n    msg += `🥑 Жиры: ${fmt(stats.fats)}г / ${fmt(targets.fats)}г\\n`;\n    msg += `🍚 Угли:  ${fmt(stats.carbs)}г / ${fmt(targets.carbs)}г\\n`;\n    msg += `__________________________________\\n\\n`;\n}\n\n// 2. СПИСОК БЛЮД\nif (menu.meals && Array.isArray(menu.meals)) {\n    menu.meals.forEach((meal) => {\n        let icon = '🍽';\n        const nameLower = (meal.name || \"\").toLowerCase();\n        if (nameLower.includes('завтрак')) icon = '🍳';\n        if (nameLower.includes('обед')) icon = '🍲';\n        if (nameLower.includes('ужин')) icon = '🥗';\n        \n        msg += `${icon} <b>${(meal.name || \"Прием пищи\").toUpperCase()}</b>\\n`;\n        msg += `<i>${meal.dish || \"\"}</i>\\n`; \n        \n        // УМНЫЙ РЕНДЕР ИНГРЕДИЕНТОВ\n        if (meal.ingredients && Array.isArray(meal.ingredients)) {\n            meal.ingredients.forEach(ing => {\n                // ПРОВЕРКА: Это строка или объект?\n                if (typeof ing === 'string') {\n                    // Если агент прислал строку: \"Творог - 200г\"\n                    msg += `▫️ ${ing}\\n`;\n                } else {\n                    // Если агент прислал объект (как надо)\n                    msg += `▫️ ${ing.name}: <b>${ing.weight_g}г</b>\\n`;\n                }\n            });\n        }\n\n        const mealCals = Math.round(meal.total_cals || 0);\n        if (mealCals > 0) msg += `└ <i>~${mealCals} ккал</i>\\n\\n`;\n        else msg += `\\n`;\n    });\n}\n\nmsg += `<i>Сохраняй, готовь и становись лучше! 🚀</i>`;\n\nreturn {\n  json: {\n    final_message: msg,\n    chat_id: input.chat_id || $('Telegram Trigger').first().json.message?.chat?.id \n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        256
+      ],
+      "id": "58529e40-28e3-42ef-a540-9abd62285f82",
+      "name": "comver to HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Получаем исходный ответ от Агента\nconst agentOutput = $input.first().json.output || \"\";\n\nlet parsedData = null;\nlet isReadyToGenerate = false;\nlet cleanText = agentOutput; \n\n// --- ФУНКЦИИ ПОИСКА И ОЧИСТКИ ---\n\n// Функция для безопасного парсинга JSON\nfunction tryParseJSON(str) {\n    try {\n        return JSON.parse(str);\n    } catch (e) {\n        return null;\n    }\n}\n\n// 2. Попытка найти JSON внутри ответа\n// Сначала ищем JSON в блоках кода ```json ... ``` (это приоритет)\nlet jsonMatch = agentOutput.match(/```json\\s*(\\{[\\s\\S]*?\\})\\s*```/i);\n\n// Если не нашли в блоках, ищем просто фигурные скобки (жадный поиск последнего объекта)\nif (!jsonMatch) {\n    jsonMatch = agentOutput.match(/(\\{[\\s\\S]*\\})/);\n}\n\nif (jsonMatch) {\n    const jsonString = jsonMatch[1] || jsonMatch[0]; // Берем контент\n    const fullMatch = jsonMatch[0]; // Берем весь найденный кусок (включая ```)\n\n    // Проверяем, валидный ли это JSON\n    const data = tryParseJSON(jsonString);\n    \n    if (data) {\n        parsedData = data;\n        \n        // Логика переключения\n        if (parsedData.is_finished === true) {\n            isReadyToGenerate = true;\n        }\n\n        // АГРЕССИВНАЯ ОЧИСТКА ТЕКСТА\n        // 1. Удаляем сам JSON (и код-блоки, если были)\n        cleanText = cleanText.replace(fullMatch, '');\n        \n        // 2. Удаляем \"мусорные\" фразы, которые часто остаются перед JSON\n        // Например: \"Вот данные:\", \"JSON output:\", \"Output:\"\n        const garbagePhrases = [\n            /Here is the JSON:?/yi,\n            /JSON output:?/yi,\n            /System output:?/yi,\n            /Вот json:?/yi,\n            /Технические данные:?/yi\n        ];\n        \n        garbagePhrases.forEach(regex => {\n            cleanText = cleanText.replace(regex, '');\n        });\n    }\n}\n\n// Финальная зачистка пробелов\ncleanText = cleanText.trim();\n\n// Если после зачистки текст пустой (агент прислал только JSON), \n// но мы еще не закончили (is_finished: false), ставим заглушку, чтобы не слать пустоту\nif (!cleanText && !isReadyToGenerate) {\n    // Обычно это значит, что агент тупит. Можно вернуть пустоту, \n    // но лучше ничего не отправлять, если логика позволяет.\n    // В вашем случае оставим пустую строку, Telegram может выдать ошибку, \n    // поэтому добавим эмодзи или пропустим.\n    cleanText = \"⏳\"; \n}\n\n// 3. Маршрутизация и Форматирование HTML\nif (isReadyToGenerate) {\n    // ВЕТКА 1: Генерация\n    return {\n        json: {\n            ...parsedData,\n            route_type: 'generate'\n        }\n    };\n} else {\n    // ВЕТКА 2: Разговор\n    \n    let processedText = cleanText;\n\n    // --- ПРЕВРАЩЕНИЕ MARKDOWN В HTML ---\n    // 1. Жирный: **текст** -> <b>текст</b>\n    processedText = processedText.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>');\n    \n    // 2. Жирный: __текст__ -> <b>текст</b>\n    processedText = processedText.replace(/__(.*?)__/g, '<b>$1</b>');\n\n    // 3. Списки: * пункт -> • пункт\n    processedText = processedText.replace(/^\\*\\s/gm, '• ');\n\n    // 4. Курсив: *текст* -> <i>текст</i> (аккуратно, чтобы не задеть списки)\n    processedText = processedText.replace(/([^*])\\*([^*]+)\\*([^*])/g, '$1<i>$2</i>$3');\n\n    // 5. Заголовки: ### -> <b>\n    processedText = processedText.replace(/^#{1,6}\\s+(.*)$/gm, '<b>$1</b>');\n\n    return {\n        json: {\n            text_response: processedText, \n            route_type: 'conversation'\n        }\n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1936,
+        144
+      ],
+      "id": "e675a152-541d-4fba-8cce-6a039fb1c445",
+      "name": "new_formater"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        304
+      ],
+      "id": "c4c3a64d-25ed-44a9-9e2a-17962176f4ac",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VEeJdAgWAIzKltob",
+          "name": "mxpkns"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        432
+      ],
+      "id": "9d9b62aa-3648-4465-9777-8c0b611a4e0c",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VEeJdAgWAIzKltob",
+          "name": "mxpkns"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const status = $input.first().json?.result?.status;\nconst allowed = ['member', 'administrator', 'creator'];\nreturn [{ json: { is_subscribed: allowed.includes(status), status } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3248,
+        464
+      ],
+      "id": "bf5cd467-c510-44a4-88db-be02f25c3ec4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -2064,
+        320
+      ],
+      "id": "cfb76040-f0e0-4b22-b122-cb6280b6cccc",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -4896,
+        240
+      ],
+      "id": "70ca015c-1684-4f44-8b1e-0a71051eb86e",
+      "name": "Telegram Trigger",
+      "webhookId": "532c8fec-933b-439d-8565-df6bfc22263e",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5f564d3f-5a5d-4143-9add-8352999cce8b",
+              "leftValue": "={{ $json.callback_query }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4672,
+        240
+      ],
+      "id": "6870b789-d89a-4b16-9ef0-c9eaa87034df",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "users_nutrition",
+          "mode": "list",
+          "cachedResultName": "users_nutrition"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $json.callback_query.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4336,
+        -272
+      ],
+      "id": "88d8bcbc-b85f-4918-8441-14b726403ae5",
+      "name": "get language",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "B6QkQPsiMrigBfY4",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/B6QkQPsiMrigBfY4",
+          "cachedResultName": "callback_en"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "callback_query_data": "={{ $('If2').item.json.callback_query.data }}",
+            "callback_query_message_chat_id": "={{ $('If2').item.json.callback_query.message.chat.id }}",
+            "callback_query_id": "={{ $('If2').item.json.callback_query.id }}",
+            "callback_query_from_id": "={{ $('If2').item.json.callback_query.from.id }}"
+          },
+          "matchingColumns": [
+            "callback_query_data",
+            "callback_query_message_chat_id",
+            "callback_query_id",
+            "callback_query_from_id"
+          ],
+          "schema": [
+            {
+              "id": "callback_query_data",
+              "displayName": "callback_query_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_message_chat_id",
+              "displayName": "callback_query_message_chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_id",
+              "displayName": "callback_query_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_from_id",
+              "displayName": "callback_query_from_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -3680,
+        -304
+      ],
+      "name": "Call callback_en",
+      "id": "50e41f44-be01-4ec2-ab0a-152fa0ebb207"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2GGB7l9opUfOHgpo",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2GGB7l9opUfOHgpo",
+          "cachedResultName": "callback_ru"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "callback_query_data": "={{ $('If2').item.json.callback_query.data }}",
+            "callback_query_message_chat_id": "={{ $('If2').item.json.callback_query.message.chat.id }}",
+            "callback_query_id": "={{ $('If2').item.json.callback_query.id }}"
+          },
+          "matchingColumns": [
+            "callback_query_data",
+            "callback_query_message_chat_id",
+            "callback_query_id"
+          ],
+          "schema": [
+            {
+              "id": "callback_query_data",
+              "displayName": "callback_query_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_message_chat_id",
+              "displayName": "callback_query_message_chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_id",
+              "displayName": "callback_query_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -3680,
+        -528
+      ],
+      "name": "Call callback_ru",
+      "id": "e67130af-3fa0-45e2-82b4-dd6c3e00d3fc"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.language }}",
+                    "rightValue": "ru",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "afbae3ed-7209-4541-a1e8-f2c19fda7622"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ru"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d209e7ea-fc06-48ef-8825-2412b71f9b31",
+                    "leftValue": "={{ $json.language }}",
+                    "rightValue": "en",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "en"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2e2f6539-3604-4858-9cb2-6a47ec59de1f",
+                    "leftValue": "={{ $json.language }}",
+                    "rightValue": "ar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ar"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -4176,
+        -288
+      ],
+      "id": "c46a92c4-3bcf-4483-9854-fd45b216b44f",
+      "name": "callback router"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "users_nutrition",
+          "mode": "list",
+          "cachedResultName": "users_nutrition"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": 379336096,
+            "language": "ar"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sex",
+              "displayName": "sex",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "weight",
+              "displayName": "weight",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "height",
+              "displayName": "height",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "activity_level",
+              "displayName": "activity_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "goal",
+              "displayName": "goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "allergies",
+              "displayName": "allergies",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "excluded_foods",
+              "displayName": "excluded_foods",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "calories",
+              "displayName": "calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "protein",
+              "displayName": "protein",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "fats",
+              "displayName": "fats",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "carbs",
+              "displayName": "carbs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "get_food",
+              "displayName": "get_food",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "funnel_stage",
+              "displayName": "funnel_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "funnel_start_at",
+              "displayName": "funnel_start_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_funnel_msg_at",
+              "displayName": "last_funnel_msg_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_buyer",
+              "displayName": "is_buyer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -5392,
+        -1632
+      ],
+      "id": "1032fdc3-7c64-49ce-85b3-b2cb7fc2d11b",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jlwgyCM5RPUxTBhG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jlwgyCM5RPUxTBhG",
+          "cachedResultName": "callback_ar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "callback_query_data": "={{ $('If2').item.json.callback_query.data }}",
+            "callback_query_message_chat_id": "={{ $('If2').item.json.callback_query.message.chat.id }}",
+            "callback_query_id": "={{ $('If2').item.json.callback_query.id }}",
+            "callback_query_from_id": "={{ $('If2').item.json.callback_query.from.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "callback_query_data",
+              "displayName": "callback_query_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_message_chat_id",
+              "displayName": "callback_query_message_chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_id",
+              "displayName": "callback_query_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "callback_query_from_id",
+              "displayName": "callback_query_from_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3680,
+        -80
+      ],
+      "id": "f8971f47-17d3-4367-bc22-fa8cc4568ec2",
+      "name": "Call 'callback_ar'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "AGENT MAIN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "routher": {
+      "main": [
+        [
+          {
+            "node": "text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check follower": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formating": {
+      "main": [
+        [
+          {
+            "node": "check follower",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "routher",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "message menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "message for AI agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "calculator macros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENT MAIN": {
+      "main": [
+        [
+          {
+            "node": "new_formater",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "text": {
+      "main": [
+        [
+          {
+            "node": "AGENT MAIN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculator macros": {
+      "main": [
+        [
+          {
+            "node": "save data user db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENT FOOD": {
+      "main": [
+        [
+          {
+            "node": "output -> json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "messge for ready diets": {
+      "main": [
+        [
+          {
+            "node": "AGENT FOOD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get db user": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "formating",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save data user db": {
+      "main": [
+        [
+          {
+            "node": "messge for ready diets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "message for AGENT FOOD": {
+      "main": [
+        [
+          {
+            "node": "get_food = True",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_food = True": {
+      "main": [
+        []
+      ]
+    },
+    "output -> json": {
+      "main": [
+        [
+          {
+            "node": "comver to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "comver to HTML": {
+      "main": [
+        [
+          {
+            "node": "message for AGENT FOOD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "new_formater": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENT MAIN",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENT FOOD",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AGENT MAIN",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "get language",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get db user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get language": {
+      "main": [
+        [
+          {
+            "node": "callback router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "callback router": {
+      "main": [
+        [
+          {
+            "node": "Call callback_ru",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call callback_en",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'callback_ar'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ff403465-6266-4177-ad2b-655dc839ad7b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "cXhW3Mu9WdRnk0Fe",
+  "tags": [
+    {
+      "updatedAt": "2025-11-25T07:38:41.908Z",
+      "createdAt": "2025-11-25T07:38:41.908Z",
+      "id": "73Cgx5GNvxOjusRB",
+      "name": "VANYA_BOT"
+    }
+  ]
+}

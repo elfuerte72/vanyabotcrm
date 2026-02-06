@@ -1,0 +1,688 @@
+{
+  "name": "callback_ru",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=Я хорошо знаю, что такое экономить на себе и сомневаться, а нужно ли это вообще. Но каждый раз, когда я все‑таки решался, проходил и усваивал материал, я был горд, что сделал это, потому что смог вынести пользу и стать лучше.❤️\n\nТы уже на верном пути: у тебя есть план питания, и я верю, что ты уже внедрила его в свою жизнь.❤️\n\nИ думаю, ты сама понимаешь, что супер‑комбо — это питание + тренировки (активность). Именно для этого я и собрал этот комплекс, который направлен на все проблемные зоны.🙏\n\nБуду рад видеть тебя в своем <a href=\"https://t.me/ivanfit_health\">телеграм канале</a>, где ты можешь совершенствовать красоту тела и укреплять здоровье.🙏",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        -224
+      ],
+      "id": "d33c86d3-859c-4dd2-a1f0-d50d32cd1485",
+      "name": "send none message",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "",
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        -448
+      ],
+      "id": "93a055b0-5176-4b51-b311-1bd8b03e381c",
+      "name": "Send Suitability",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "=1fMoKSPu6KX8_B9pal8w3FVxi-T2Nj4L3",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        768,
+        -448
+      ],
+      "id": "4bcd56e6-c05d-4e68-88c3-9aab85878306",
+      "name": "download show_callback",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ueux2zIBXzQyGGGe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=Ты уже на верном пути, у тебя есть План Питания, и я верю, что ты его уже внедрила в свою ЖИЗНЬ❤️\nБуду рад видеть тебя в своем <a href=\"https://t.me/ivanfit_health\">телеграм канале</a>, где ты можешь совершенствовать красоту тела и укреплять здоровье🙏",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        -608
+      ],
+      "id": "380829f2-261b-41f6-900b-a4bb234492d0",
+      "name": "Send Reminder Ack",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Start').item.json.callback_query_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        -704
+      ],
+      "id": "e2b60c1d-5d91-4cd8-8e6c-7a520697c30b",
+      "name": "Answer Callback",
+      "webhookId": "9d631b1f-cfcd-47de-9096-b92ebf8d53f8",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "buy_now",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cb48ff30-15ad-40ee-899a-dcedf304fe14"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Buy"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a89fe2ee-0d09-4d90-a46f-52689afdc0f6",
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "show_info",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Info"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "22957a71-0e2c-4909-ae1a-e61094216d4f",
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "show_results",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Show"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba749850-8552-44e3-b1c2-e7296f8991da",
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "remind_later",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Later"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "682f201e-0c15-4a8e-981a-b7f0d8bd0756",
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "check_suitability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_suitability"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8fddc9ad-1d6e-4a6a-8882-be6338aaa659",
+                    "leftValue": "={{ $json.callback_query_data }}",
+                    "rightValue": "none",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "none"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        288,
+        -752
+      ],
+      "id": "1764bc02-2b06-4267-b45e-6e69f7e9dbec",
+      "name": "Router"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=📌 упражнения которые бьют в «цель». Все проблемные зоны, от «ушек» до рыхлых рук.\n\n📌самая рабочая схема по борьбе с отёчностью\n\n📌Понимание что такое целлюлит и как от него избавиться\n\n📌 Плечи наконец РАСКРОЮТСЯ, и можно будет вздохнуть полной грудью\n\n📌Я открыт для ПОМОЩИ, мне можно задать интересующий вопрос касательно техники упражнений\n\n",
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        -768
+      ],
+      "id": "e2050f20-4a35-4e9f-b9db-692b30359ff9",
+      "name": "Send Results",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids = [\n  \"192D7VKnBQAhRxl2tPbkm180ryvK_JnnM\",\n  \"1shlC_81AL_zPFwG8APJtrcudA8afhbJY\",\n  \"1TawBgD-c4p7SaW2DbGUNyh16h9rA54be\"\n];\n\nreturn items.map(item => {\n  item.json.random_id = ids[Math.floor(Math.random() * ids.length)];\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -768
+      ],
+      "id": "e6a9eca8-7f33-4bc9-9a15-81a07dee9f94",
+      "name": "Random pic"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.random_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -768
+      ],
+      "id": "be5c1228-ae4e-4076-b03e-e7d6906cda87",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ueux2zIBXzQyGGGe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        -928
+      ],
+      "id": "c39a026e-f086-4d24-a1af-c5e4f29a920f",
+      "name": "Send Info",
+      "webhookId": "dc6e4aa8-7e52-4307-b5f0-9b0b1221c2ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1QxlXwm-nQ6NLjmn2H1RMrGRqjEnPGfTG",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        752,
+        -928
+      ],
+      "id": "8416738c-453f-40ac-af02-d78c843e0d68",
+      "name": "download info",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ueux2zIBXzQyGGGe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users_nutrition\nSET is_buyer = TRUE\nWHERE chat_id = {{ $json.callback_query_from_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        752,
+        -1072
+      ],
+      "id": "990c8d2b-bf2e-496c-85d8-3b89eb4010a2",
+      "name": "Mark as Buyer",
+      "credentials": {
+        "postgres": {
+          "id": "lPu7MlAT3plm2aFH",
+          "name": "railway postgre"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Start').item.json.callback_query_message_chat_id }}",
+        "text": "=💳 Отлично! Переходи к оплате:\n\n👇 Нажми на кнопку ниже, чтобы забрать тренировку\n\nПосле оплаты доступ откроется автоматически! ✅\n",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": " 💳 Оплатить",
+                    "additionalFields": {
+                      "url": "https://t.me/tribute/app?startapp=pnvi"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        -1072
+      ],
+      "id": "fbe588b3-403f-4996-8291-3a515df551e3",
+      "name": "buy_messasge",
+      "webhookId": "04826a0a-09f2-4f7c-9521-09ff8978d24c",
+      "credentials": {
+        "telegramApi": {
+          "id": "MC57N6YjUFPSjXve",
+          "name": "bot_ivan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "callback_query_data",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_message_chat_id",
+              "type": "any"
+            },
+            {
+              "name": "callback_query_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "441ba39a-9c7e-4924-a170-490f5ab54eb7",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        96,
+        -688
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Mark as Buyer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "download info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Random pic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Reminder Ack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "download show_callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send none message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Info": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Buyer": {
+      "main": [
+        [
+          {
+            "node": "buy_messasge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Results": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reminder Ack": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Suitability": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Random pic": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buy_messasge": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send none message": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download info": {
+      "main": [
+        [
+          {
+            "node": "Send Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download show_callback": {
+      "main": [
+        [
+          {
+            "node": "Send Suitability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "7e7c5b07-fc0e-4a91-9860-e36c6ccb32ca",
+  "meta": {
+    "instanceId": "45b562a72a8b99927a2de093265cde67bc0d3affac17a774ed22c79e357b2dae"
+  },
+  "id": "2GGB7l9opUfOHgpo",
+  "tags": []
+}
