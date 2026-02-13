@@ -1,3 +1,5 @@
+import animate from 'tailwindcss-animate';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,44 +9,54 @@ export default {
   theme: {
     extend: {
       colors: {
+        border: 'hsl(var(--border) / <alpha-value>)',
+        input: 'hsl(var(--input) / <alpha-value>)',
+        ring: 'hsl(var(--ring) / <alpha-value>)',
+        background: 'hsl(var(--background) / <alpha-value>)',
+        foreground: 'hsl(var(--foreground) / <alpha-value>)',
+        primary: {
+          DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+          foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
+          foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
+          foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+          foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+          foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+          foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+        },
         tg: {
-          bg: 'var(--tg-theme-bg-color, #ffffff)',
-          text: 'var(--tg-theme-text-color, #000000)',
-          hint: 'var(--tg-theme-hint-color, #999999)',
-          link: 'var(--tg-theme-link-color, #2481cc)',
-          button: 'var(--tg-theme-button-color, #2481cc)',
-          'button-text': 'var(--tg-theme-button-text-color, #ffffff)',
-          'secondary-bg': 'var(--tg-theme-secondary-bg-color, #f0f0f0)',
-          accent: 'var(--tg-theme-accent-text-color, var(--tg-theme-link-color, #2481cc))',
-          destructive: 'var(--tg-theme-destructive-text-color, #e53935)',
-          subtitle: 'var(--tg-theme-subtitle-text-color, var(--tg-theme-hint-color, #999999))',
-        }
+          bg: 'var(--tg-theme-bg-color)',
+          text: 'var(--tg-theme-text-color)',
+          hint: 'var(--tg-theme-hint-color)',
+          link: 'var(--tg-theme-link-color)',
+          button: 'var(--tg-theme-button-color)',
+          'button-text': 'var(--tg-theme-button-text-color)',
+          'secondary-bg': 'var(--tg-theme-secondary-bg-color)',
+          accent: 'var(--tg-theme-accent-text-color)',
+          destructive: 'var(--tg-theme-destructive-text-color)',
+          subtitle: 'var(--tg-theme-subtitle-text-color)',
+        },
       },
-      animation: {
-        fadeInUp: 'fadeInUp 0.35s ease-out both',
-        fadeIn: 'fadeIn 0.3s ease-out both',
-        slideInRight: 'slideInRight 0.3s ease-out both',
-        slideInLeft: 'slideInLeft 0.3s ease-out both',
-      },
-      keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
     },
   },
-  plugins: [],
+  plugins: [animate],
 }

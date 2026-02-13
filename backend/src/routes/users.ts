@@ -81,7 +81,8 @@ router.get('/', async (req: Request, res: Response) => {
         carbs,
         funnel_stage,
         is_buyer,
-        get_food
+        get_food,
+        created_at
       FROM users_nutrition
       ${whereClause}
       ${orderClause}
@@ -91,6 +92,48 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// GET /api/users/recent - последние добавленные клиенты
+router.get('/recent', async (req: Request, res: Response) => {
+  try {
+    const parsedDays = parseInt(req.query.days as string, 10);
+    const days = Math.min(Math.max(isNaN(parsedDays) ? 7 : parsedDays, 1), 365);
+    const parsedLimit = parseInt(req.query.limit as string, 10);
+    const limit = Math.min(Math.max(isNaN(parsedLimit) ? 20 : parsedLimit, 1), 100);
+
+    console.log(`[users.recent] Fetching recent users`, { days, limit });
+
+    const result = await pool.query(`
+      SELECT
+        chat_id,
+        username,
+        first_name,
+        sex,
+        age,
+        weight,
+        height,
+        goal,
+        calories,
+        protein,
+        fats,
+        carbs,
+        funnel_stage,
+        is_buyer,
+        get_food,
+        created_at
+      FROM users_nutrition
+      WHERE created_at >= NOW() - INTERVAL '1 day' * $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [days, limit]);
+
+    console.log(`[users.recent] Found ${result.rows.length} users`);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('[users.recent] Error:', error);
+    res.status(500).json({ error: 'Failed to fetch recent users' });
   }
 });
 
@@ -119,7 +162,8 @@ router.get('/:chatId', async (req: Request, res: Response) => {
         funnel_stage,
         is_buyer,
         get_food,
-        language
+        language,
+        created_at
       FROM users_nutrition
       WHERE chat_id = $1
     `, [chatId]);

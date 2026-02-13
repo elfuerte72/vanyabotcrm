@@ -65,6 +65,7 @@ export interface User {
   is_buyer: boolean;
   get_food: boolean;
   language?: string | null;
+  created_at?: string | null;
 }
 
 export interface ChatMessage {
@@ -228,4 +229,30 @@ export function useChatHistory(sessionId: string | null) {
   }, [sessionId]);
 
   return { messages, loading, error };
+}
+
+export function useRecentUsers(days = 7, limit = 50) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRecent = useCallback(async (d: number, l: number) => {
+    try {
+      setLoading(true);
+      const data = await fetchApi<User[]>(`/api/users/recent?days=${d}&limit=${l}`);
+      setUsers(data);
+      setError(null);
+    } catch (e) {
+      console.error('[useRecentUsers] Error fetching recent users:', e);
+      setError(e instanceof Error ? e.message : 'Failed to fetch recent users');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecent(days, limit);
+  }, [days, limit, fetchRecent]);
+
+  return { users, loading, error, refetch: () => fetchRecent(days, limit) };
 }

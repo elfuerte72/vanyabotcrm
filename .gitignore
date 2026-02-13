@@ -5,3 +5,4 @@ backend/public/
 *.local
 .env
 .env.*
+.mcp.json
