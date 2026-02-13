@@ -5,6 +5,7 @@ import { validate, parse } from '@telegram-apps/init-data-node';
 import usersRouter from './routes/users';
 import chatRouter from './routes/chat';
 import statsRouter from './routes/stats';
+import eventsRouter from './routes/events';
 
 const app = express();
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
@@ -49,6 +50,7 @@ app.get('/health', (req, res) => {
 app.use('/api/users', authMiddleware, usersRouter);
 app.use('/api/chat', authMiddleware, chatRouter);
 app.use('/api/stats', authMiddleware, statsRouter);
+app.use('/api/events', authMiddleware, eventsRouter);
 
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

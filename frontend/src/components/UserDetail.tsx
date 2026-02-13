@@ -156,7 +156,7 @@ export function UserDetail({ user, onBack }: UserDetailProps) {
       {/* Chat History */}
       <section className="px-4">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-          История чата
+          История взаимодействий
         </h2>
         <ChatHistory sessionId={String(user.chat_id)} />
       </section>
