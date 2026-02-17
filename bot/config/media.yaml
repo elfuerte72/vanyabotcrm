@@ -1,0 +1,20 @@
+# Google Drive file IDs for media content
+# These are sent to users during the funnel / callback interactions
+
+videos:
+  # Free 7-minute workout (Day 1 gift)
+  workout: "1NOzdV9ajZSFNbjnhE7Mhj44LEpvhjp06"
+  workout_url: "https://drive.google.com/file/d/1NOzdV9ajZSFNbjnhE7Mhj44LEpvhjp06/view?usp=drivesdk"
+
+  # "What's in the program" info video (show_info callback)
+  info: "1QxlXwm-nQ6NLjmn2H1RMrGRqjEnPGfTG"
+
+  # "Will this workout suit me?" video (check_suitability callback)
+  suitability: "1fMoKSPu6KX8_B9pal8w3FVxi-T2Nj4L3"
+
+photos:
+  # Result photos (show_results callback — random pick)
+  results:
+    - "192D7VKnBQAhRxl2tPbkm180ryvK_JnnM"
+    - "1shlC_81AL_zPFwG8APJtrcudA8afhbJY"
+    - "1TawBgD-c4p7SaW2DbGUNyh16h9rA54be"

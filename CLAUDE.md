@@ -25,6 +25,15 @@ npm run test:watch   # Watch mode (vitest)
 npx vitest run src/__tests__/chat.test.ts  # Run a single test file
 ```
 
+### Telegram Bot (`/bot`)
+```bash
+cd bot && source .venv/bin/activate
+python -m src.main                    # Start bot (polling + scheduler + webhook)
+python -m pytest tests/ -v            # Run all tests (58 tests)
+python -m pytest tests/test_calculator.py  # Run single test file
+python -m scripts.trigger_funnel      # Manually trigger funnel sender
+```
+
 ### Database
 ```bash
 PGPASSWORD='y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa' psql -h yamabiko.proxy.rlwy.net -p 26903 -U railway -d railway
@@ -35,14 +44,47 @@ No lint commands are configured.
 ## Architecture
 
 ```
-Telegram Mini App → React Frontend (Vite) → Express API → PostgreSQL (Railway)
+Telegram Bot (aiogram) ──→ PostgreSQL (Railway)
+                          ↕
+Telegram Mini App → React Frontend (Vite) → Express API ──→ PostgreSQL (Railway)
 ```
+
+Three services share the same PostgreSQL database:
 
 **Frontend** (`/frontend/src`): React 18 + TypeScript + Tailwind CSS + shadcn/ui components. Single-page app with two views (list/detail) and two tabs (clients/recent) switched via state in `App.tsx`. All API hooks and types live in `hooks/useApi.ts`. No routing library. UI labels are in Russian. Mobile-first Telegram Mini App — no hover effects, no animations.
 
 **Backend** (`/backend/src`): Express + TypeScript. `app.ts` creates the Express app (routes, middleware, static serving); `index.ts` only calls `app.listen()`. This split enables supertest to import `app.ts` directly without starting a server. Routes in `src/routes/` — `users.ts`, `chat.ts`, `stats.ts`. Database pool in `db.ts` (SSL with `rejectUnauthorized: false`). Auth middleware validates Telegram `initData` via `@telegram-apps/init-data-node`. Auth skipped when `BOT_TOKEN` env is unset (dev mode). In production, backend also serves the frontend SPA via a catch-all `*` route from `public/`.
 
-**Deployment**: Both services deploy to Railway with NIXPACKS builder. Frontend serves static files via `npx serve dist`. Backend compiles TypeScript then runs `node dist/index.js`.
+**Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a 5-day sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts polling + APScheduler (daily funnel at 23:00 UTC) + aiohttp webhook server (Ziina payments on port 8080).
+
+**Deployment**: All services deploy to Railway with NIXPACKS builder.
+
+## Bot Architecture (`/bot`)
+
+```
+src/main.py          → Entry point: polling + scheduler + webhook server
+src/bot.py           → Factory: creates Bot + Dispatcher, registers routers/middlewares
+src/handlers/        → Telegram event handlers (start, message, callbacks, payment)
+src/middlewares/     → Middleware chain: logging → subscription check → user data loading
+src/services/        → Business logic (AI agents, calculator, formatter, language, media)
+src/funnel/          → Sales funnel: message definitions, batch sender, scheduler
+src/i18n/            → Localized strings per language (ru.py, en.py, ar.py)
+src/db/              → asyncpg pool + all SQL queries
+src/models/          → User dataclass
+config/              → Pydantic Settings (.env) + media.yaml (Google Drive file IDs)
+```
+
+**Message flow** (`src/handlers/message.py`): Text/voice → detect language → AGENT MAIN (conversation or data collection) → if data ready: calculate KBJU → save to DB → AGENT FOOD (meal plan JSON) → validate → format HTML → send.
+
+**Config** (`config/settings.py`): Uses lazy initialization via proxy objects — `settings` and `media_config` are not instantiated at import time. This allows tests to run without a `.env` file by setting env vars in `conftest.py`.
+
+**Chat history**: Bot reads/writes to `n8n_chat_histories` table (backward-compatible with n8n format). `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
+
+**Funnel stages** (0→5): After user receives meal plan (`get_food=TRUE`), daily cron sends progressive sales messages. `get_funnel_targets()` fetches non-buyers with `funnel_stage` 0-4. Each send increments `funnel_stage` by 1.
+
+## Bot Testing Patterns
+
+Tests use pytest + pytest-asyncio in `bot/tests/`. Env vars are set in `conftest.py` (fake `BOT_TOKEN`, `DATABASE_URL`, `OPENROUTER_API_KEY`) to prevent `Settings` validation errors. No database or API mocking needed for unit tests — calculator, language detection, formatter, funnel messages, and i18n are all pure functions.
 
 ## API Endpoints
 
@@ -103,6 +145,11 @@ Tests use Vitest + Supertest in `src/__tests__/`. Database is mocked via `vi.moc
 | Variable | Service | Description |
 |----------|---------|-------------|
 | `PORT` | backend | Server port (default: 3001) |
-| `BOT_TOKEN` | backend | Telegram bot token for auth validation |
-| `DATABASE_URL` | backend | PostgreSQL connection string |
+| `BOT_TOKEN` | backend, bot | Telegram bot token |
+| `DATABASE_URL` | backend, bot | PostgreSQL connection string |
 | `VITE_API_URL` | frontend | API base URL (empty = relative URLs with Vite proxy) |
+| `CHANNEL_ID` | bot | Telegram channel ID for subscription check |
+| `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
+| `OPENROUTER_MODEL` | bot | LLM model (default: google/gemini-3-flash-preview) |
+| `TRIBUTE_LINK` | bot | Payment link for Tribute |
+| `LOG_LEVEL` | bot | Logging level (default: DEBUG) |
