@@ -53,7 +53,7 @@ Three services share the same PostgreSQL database:
 
 **Frontend** (`/frontend/src`): React 18 + TypeScript + Tailwind CSS + shadcn/ui components. Single-page app with two views (list/detail) and two tabs (clients/recent) switched via state in `App.tsx`. All API hooks and types live in `hooks/useApi.ts`. No routing library. UI labels are in Russian. Mobile-first Telegram Mini App — no hover effects, no animations.
 
-**Backend** (`/backend/src`): Express + TypeScript. `app.ts` creates the Express app (routes, middleware, static serving); `index.ts` only calls `app.listen()`. This split enables supertest to import `app.ts` directly without starting a server. Routes in `src/routes/` — `users.ts`, `chat.ts`, `stats.ts`. Database pool in `db.ts` (SSL with `rejectUnauthorized: false`). Auth middleware validates Telegram `initData` via `@telegram-apps/init-data-node`. Auth skipped when `BOT_TOKEN` env is unset (dev mode). In production, backend also serves the frontend SPA via a catch-all `*` route from `public/`.
+**Backend** (`/backend/src`): Express + TypeScript. `app.ts` creates the Express app (routes, middleware, static serving); `index.ts` only calls `app.listen()`. This split enables supertest to import `app.ts` directly without starting a server. Routes in `src/routes/` — `users.ts`, `chat.ts`, `stats.ts`, `events.ts`. Database pool in `db.ts` (SSL with `rejectUnauthorized: false`). Auth middleware validates Telegram `initData` via `@telegram-apps/init-data-node`. Auth skipped when `BOT_TOKEN` env is unset (dev mode). In production, backend also serves the frontend SPA via a catch-all `*` route from `public/`.
 
 **Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a 5-day sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts polling + APScheduler (daily funnel at 23:00 UTC) + aiohttp webhook server (Ziina payments on port 8080).
 
@@ -94,6 +94,7 @@ Tests use pytest + pytest-asyncio in `bot/tests/`. Env vars are set in `conftest
 | `GET /api/users/:chatId` | — |
 | `GET /api/stats` | — |
 | `GET /api/chat/:sessionId` | — |
+| `GET /api/events/:chatId` | `type` (filter by event_type) |
 | `GET /health` | No auth required |
 
 Auth: `Authorization: tma <initData>` header (1hr expiry).
@@ -110,14 +111,16 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 **`n8n_chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
 
+**`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `created_at`. Used in CRM to show full user interaction timeline alongside chat messages.
+
 ## Frontend Patterns
 
 - **UI library**: shadcn/ui components in `src/components/ui/` (Card, Badge, Button, Tabs, Separator, Avatar) built on Radix UI primitives + class-variance-authority (CVA)
 - **Icons**: Lucide React (`lucide-react`) — no inline SVGs
 - **Utility**: `cn()` from `src/lib/utils.ts` (clsx + tailwind-merge) for conditional class merging
 - **Path alias**: `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig.json`)
-- Shared constants (`goalLabels`, `activityLabels`) exported from `hooks/useApi.ts` — don't duplicate in components
-- Hooks: `useUsers(filters)`, `useUser(chatId)`, `useStats()`, `useChatHistory(sessionId)`, `useRecentUsers(days)`, `useDebounce(value, delay)`
+- Shared constants (`goalLabels`, `activityLabels`, `eventButtonLabels`) exported from `hooks/useApi.ts` — don't duplicate in components
+- Hooks: `useUsers(filters)`, `useUser(chatId)`, `useStats()`, `useChatHistory(sessionId)`, `useUserEvents(chatId)`, `useRecentUsers(days, limit)`, `useDebounce(value, delay)`
 - `useDebounce` default 300ms for search input
 - **No animations or hover effects** — this is a mobile Telegram Mini App. Use `active:` states for touch feedback only
 - `text-[16px]` on inputs prevents iOS auto-zoom
