@@ -1,6 +1,9 @@
 """Shared fixtures for tests."""
 
+from __future__ import annotations
+
 import os
+from typing import Any
 
 import pytest
 
@@ -8,6 +11,16 @@ import pytest
 os.environ.setdefault("BOT_TOKEN", "test_token_fake")
 os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test")
 os.environ.setdefault("OPENROUTER_API_KEY", "test_key_fake")
+
+from tests.helpers import (  # noqa: E402
+    AGENT_RESPONSES,
+    MEAL_PLANS,
+    make_bot,
+    make_callback,
+    make_message,
+    make_user,
+    make_user_dict,
+)
 
 
 @pytest.fixture
@@ -29,36 +42,62 @@ def sample_user_data() -> dict:
 @pytest.fixture
 def sample_meal_plan() -> dict:
     """Sample meal plan as returned from AGENT FOOD."""
-    return {
-        "meals": [
-            {
-                "name": "Завтрак",
-                "dish": "Овсянка с ягодами",
-                "total_cals": 400,
-                "ingredients": [
-                    {"name": "Овсяные хлопья", "weight_g": 80, "cals": 280, "p": 10, "f": 5, "c": 50},
-                    {"name": "Голубика", "weight_g": 100, "cals": 57, "p": 1, "f": 0, "c": 14},
-                    {"name": "Мёд", "weight_g": 15, "cals": 48, "p": 0, "f": 0, "c": 13},
-                ],
-            },
-            {
-                "name": "Обед",
-                "dish": "Куриная грудка с рисом",
-                "total_cals": 550,
-                "ingredients": [
-                    {"name": "Куриная грудка", "weight_g": 200, "cals": 330, "p": 62, "f": 7, "c": 0},
-                    {"name": "Рис", "weight_g": 80, "cals": 280, "p": 5, "f": 1, "c": 62},
-                ],
-            },
-            {
-                "name": "Ужин",
-                "dish": "Салат с тунцом",
-                "total_cals": 350,
-                "ingredients": [
-                    {"name": "Тунец", "weight_g": 150, "cals": 180, "p": 39, "f": 1, "c": 0},
-                    {"name": "Овощи", "weight_g": 200, "cals": 50, "p": 2, "f": 0, "c": 10},
-                    {"name": "Оливковое масло", "weight_g": 10, "cals": 88, "p": 0, "f": 10, "c": 0},
-                ],
-            },
-        ]
-    }
+    return MEAL_PLANS["ru"]
+
+
+# ─── Multilingual user fixtures ─────────────────────────────────────────
+
+@pytest.fixture(params=["ru", "en", "ar"])
+def lang(request: pytest.FixtureRequest) -> str:
+    """Parametrized language fixture — yields ru, en, ar."""
+    return request.param
+
+
+@pytest.fixture
+def user_ru():
+    return make_user("ru")
+
+
+@pytest.fixture
+def user_en():
+    return make_user("en")
+
+
+@pytest.fixture
+def user_ar():
+    return make_user("ar")
+
+
+@pytest.fixture
+def mock_bot():
+    return make_bot()
+
+
+@pytest.fixture
+def agent_response_ru() -> str:
+    return AGENT_RESPONSES["ru"]
+
+
+@pytest.fixture
+def agent_response_en() -> str:
+    return AGENT_RESPONSES["en"]
+
+
+@pytest.fixture
+def agent_response_ar() -> str:
+    return AGENT_RESPONSES["ar"]
+
+
+@pytest.fixture
+def meal_plan_ru() -> dict:
+    return MEAL_PLANS["ru"]
+
+
+@pytest.fixture
+def meal_plan_en() -> dict:
+    return MEAL_PLANS["en"]
+
+
+@pytest.fixture
+def meal_plan_ar() -> dict:
+    return MEAL_PLANS["ar"]

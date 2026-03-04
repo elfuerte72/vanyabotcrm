@@ -120,6 +120,23 @@ async def update_funnel_stage(chat_id: int) -> None:
     logger.debug("funnel_stage_updated", chat_id=chat_id)
 
 
+async def advance_funnel_if_at_stage(chat_id: int, expected_stage: int) -> bool:
+    """Advance funnel only if user is at the expected stage. Returns True if updated."""
+    pool = await get_pool()
+    result = await pool.execute(
+        """
+        UPDATE users_nutrition
+        SET funnel_stage = funnel_stage + 1, last_funnel_msg_at = NOW()
+        WHERE chat_id = $1 AND funnel_stage = $2
+        """,
+        chat_id, expected_stage,
+    )
+    updated = result == "UPDATE 1"
+    if updated:
+        logger.debug("funnel_stage_advanced", chat_id=chat_id, from_stage=expected_stage)
+    return updated
+
+
 # --- Chat history (compatible with n8n_chat_histories) ---
 
 async def get_chat_history(session_id: str, limit: int = 20) -> list[dict[str, Any]]:

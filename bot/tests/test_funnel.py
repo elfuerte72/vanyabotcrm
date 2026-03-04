@@ -9,18 +9,17 @@ class TestGetFunnelMessage:
         assert msg is not None
         assert isinstance(msg, FunnelMessage)
         assert len(msg.buttons) > 0
-        assert msg.has_url_button is True
-        assert msg.url != ""
+        assert msg.buttons[0][1] == "video_workout"
 
     def test_stage_0_en(self):
         msg = get_funnel_message(0, "en")
         assert msg is not None
-        assert msg.has_url_button is True
+        assert msg.buttons[0][1] == "video_workout"
 
     def test_stage_0_ar(self):
         msg = get_funnel_message(0, "ar")
         assert msg is not None
-        assert msg.has_url_button is True
+        assert msg.buttons[0][1] == "video_workout"
 
     def test_all_stages_exist(self):
         for lang in ("ru", "en", "ar"):

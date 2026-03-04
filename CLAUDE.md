@@ -4,6 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
+### Root (combined build for Railway)
+```bash
+npm run build        # Frontend build → Backend build → copy frontend/dist → backend/public
+npm start            # cd backend && node dist/index.js
+```
+
 ### Backend (`/backend`)
 ```bash
 npm run dev          # Dev server with hot reload (tsx watch, port 3001)
@@ -80,7 +86,9 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Chat history**: Bot reads/writes to `n8n_chat_histories` table (backward-compatible with n8n format). `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
 
-**Funnel stages** (0→5): After user receives meal plan (`get_food=TRUE`), daily cron sends progressive sales messages. `get_funnel_targets()` fetches non-buyers with `funnel_stage` 0-4. Each send increments `funnel_stage` by 1.
+**Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. Allowed statuses: `member`, `administrator`, `creator`. Blocks handler if not subscribed — sends localized "please subscribe" message. If check fails (bot not admin), defaults to blocking.
+
+**Funnel stages** (0→5): After user receives meal plan (`get_food=TRUE`), daily cron sends progressive sales messages. `get_funnel_targets()` fetches non-buyers with `funnel_stage` 0-4. Each send increments `funnel_stage` by 1. Important: stage is incremented by scheduler *after* sending, so when user clicks a callback button from stage N message, they are already at stage N+1.
 
 ## Bot Testing Patterns
 
@@ -151,8 +159,10 @@ Tests use Vitest + Supertest in `src/__tests__/`. Database is mocked via `vi.moc
 | `BOT_TOKEN` | backend, bot | Telegram bot token |
 | `DATABASE_URL` | backend, bot | PostgreSQL connection string |
 | `VITE_API_URL` | frontend | API base URL (empty = relative URLs with Vite proxy) |
-| `CHANNEL_ID` | bot | Telegram channel ID for subscription check |
+| `CHANNEL_ID` | bot | Telegram channel ID for subscription check (default: -1002504147240) |
+| `CHANNEL_USERNAME` | bot | Telegram channel username, preferred over ID (default: ivanfit_health) |
 | `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
 | `OPENROUTER_MODEL` | bot | LLM model (default: google/gemini-3-flash-preview) |
 | `TRIBUTE_LINK` | bot | Payment link for Tribute |
+| `ZIINA_WEBHOOK_SECRET` | bot | Ziina payment webhook secret (optional) |
 | `LOG_LEVEL` | bot | Logging level (default: DEBUG) |

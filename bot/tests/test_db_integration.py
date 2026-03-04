@@ -26,6 +26,7 @@ os.environ.setdefault("BOT_TOKEN", "test_token_fake")
 os.environ.setdefault("OPENROUTER_API_KEY", "test_key_fake")
 
 from src.db.queries import (
+    advance_funnel_if_at_stage,
     get_user,
     save_user_data,
     mark_as_buyer,
@@ -323,6 +324,71 @@ async def test_update_funnel_stage(chat_id: int):
     await update_funnel_stage(chat_id)
     user = await get_user(chat_id)
     assert user.funnel_stage == 2
+
+
+# ─── advance_funnel_if_at_stage ─────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_advance_funnel_if_at_stage_matches(chat_id: int):
+    """advance_funnel_if_at_stage increments when current stage matches expected."""
+    await save_user_data(
+        chat_id=chat_id, username="adv", sex="male", age=30,
+        weight=80.0, height=180.0, activity_level="moderate", goal="weight_loss",
+        allergies="none", excluded_foods="none",
+        calories=2000, protein=120, fats=80, carbs=200, language="ru",
+    )
+    await set_food_received(chat_id)
+    # Stage is 0 after set_food_received
+    await update_funnel_stage(chat_id)
+    # Now stage is 1
+
+    result = await advance_funnel_if_at_stage(chat_id, expected_stage=1)
+    assert result is True, "Should advance when stage matches"
+
+    user = await get_user(chat_id)
+    assert user.funnel_stage == 2
+
+
+@pytest.mark.asyncio
+async def test_advance_funnel_if_at_stage_no_match(chat_id: int):
+    """advance_funnel_if_at_stage does NOT increment when stage doesn't match."""
+    await save_user_data(
+        chat_id=chat_id, username="noadv", sex="male", age=30,
+        weight=80.0, height=180.0, activity_level="moderate", goal="weight_loss",
+        allergies="none", excluded_foods="none",
+        calories=2000, protein=120, fats=80, carbs=200, language="ru",
+    )
+    await set_food_received(chat_id)
+    # Stage is 0
+
+    result = await advance_funnel_if_at_stage(chat_id, expected_stage=3)
+    assert result is False, "Should NOT advance when stage doesn't match"
+
+    user = await get_user(chat_id)
+    assert user.funnel_stage == 0, "Stage should remain unchanged"
+
+
+@pytest.mark.asyncio
+async def test_advance_funnel_if_at_stage_idempotent(chat_id: int):
+    """advance_funnel_if_at_stage is idempotent — second call returns False."""
+    await save_user_data(
+        chat_id=chat_id, username="idem", sex="male", age=30,
+        weight=80.0, height=180.0, activity_level="moderate", goal="weight_loss",
+        allergies="none", excluded_foods="none",
+        calories=2000, protein=120, fats=80, carbs=200, language="ru",
+    )
+    await set_food_received(chat_id)
+    await update_funnel_stage(chat_id)  # stage → 1
+
+    first = await advance_funnel_if_at_stage(chat_id, expected_stage=1)
+    assert first is True
+
+    second = await advance_funnel_if_at_stage(chat_id, expected_stage=1)
+    assert second is False, "Second call should return False (already at stage 2)"
+
+    user = await get_user(chat_id)
+    assert user.funnel_stage == 2, "Stage should only increment once"
 
 
 @pytest.mark.asyncio

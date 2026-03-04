@@ -27,13 +27,10 @@ def get_funnel_message(stage: int, language: str) -> FunnelMessage | None:
     s = get_strings(language)
 
     if stage == 0:
-        # Day 1: free workout video link
-        workout_url = media_config["videos"].get("workout_url", "")
+        # Day 1: callback button → handler sends video link + stage 1 pitch
         return FunnelMessage(
             text=s.FUNNEL_DAY_0,
             buttons=[(s.FUNNEL_DAY_0_BUTTON, "video_workout")],
-            has_url_button=True,
-            url=workout_url,
         )
     elif stage == 1:
         # Day video_workout: buy offer after free video

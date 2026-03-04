@@ -41,11 +41,11 @@ EXPECTED_BUTTONS = {
 
 class TestFunnelMessageContent:
     @pytest.mark.parametrize("language", LANGUAGES)
-    def test_stage_0_has_url_button(self, language):
-        """Stage 0 has a URL button (workout video link)."""
+    def test_stage_0_has_callback_button(self, language):
+        """Stage 0 has a callback button (video_workout)."""
         msg = get_funnel_message(0, language)
         assert msg is not None
-        assert msg.has_url_button is True
+        assert msg.has_url_button is False
         assert len(msg.buttons) >= 1
         assert msg.buttons[0][1] == "video_workout"
 
