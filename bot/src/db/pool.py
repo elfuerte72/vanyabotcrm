@@ -1,4 +1,6 @@
+import asyncio
 import ssl
+from urllib.parse import urlparse
 
 import asyncpg
 import structlog
@@ -8,12 +10,15 @@ from config.settings import settings
 logger = structlog.get_logger()
 
 _pool: asyncpg.Pool | None = None
+_pool_lock = asyncio.Lock()
 
 
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await create_pool()
+        async with _pool_lock:
+            if _pool is None:
+                _pool = await create_pool()
     return _pool
 
 
@@ -28,7 +33,9 @@ async def create_pool() -> asyncpg.Pool:
         max_size=10,
         ssl=ssl_ctx,
     )
-    logger.info("database_pool_created", dsn=settings.database_url[:30] + "...")
+    # Log only host, not credentials
+    parsed = urlparse(settings.database_url)
+    logger.info("database_pool_created", host=parsed.hostname, port=parsed.port)
     return pool
 
 

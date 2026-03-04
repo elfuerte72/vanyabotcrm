@@ -19,6 +19,7 @@ from src.db.queries import save_user_data, set_food_received
 from src.i18n import get_strings
 from src.models.user import User
 from src.services.ai_agent import run_agent_main
+from src.services.ai_client import get_ai_client
 from src.services.ai_food import run_agent_food
 from src.services.calculator import calculate_macros
 from src.services.formatter import (
@@ -48,13 +49,7 @@ async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None
     file_bytes = await bot.download_file(file.file_path)
 
     # Transcribe using OpenAI Whisper via OpenRouter
-    from openai import AsyncOpenAI
-    from config.settings import settings
-
-    client = AsyncOpenAI(
-        api_key=settings.openrouter_api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
+    client = get_ai_client()
 
     try:
         transcription = await client.audio.transcriptions.create(
@@ -98,7 +93,14 @@ async def _process_text_message(
     logger.debug("processing_message", chat_id=chat_id, lang=detected_lang, text=text[:100])
 
     # Run AI agent
-    agent_output = await run_agent_main(chat_id, text)
+    try:
+        agent_output = await run_agent_main(chat_id, text)
+    except Exception as e:
+        logger.error("agent_main_failed", chat_id=chat_id, error=str(e))
+        strings = get_strings(detected_lang)
+        await message.answer(strings.AI_ERROR)
+        return
+
     response = parse_agent_output(agent_output)
 
     if response.route_type == "conversation":
@@ -131,6 +133,7 @@ async def _process_text_message(
     await save_user_data(
         chat_id=chat_id,
         username=username,
+        first_name=message.from_user.first_name if message.from_user else "",
         sex=data.get("sex", ""),
         age=int(data.get("age", 0)),
         weight=float(data.get("weight", 0)),
@@ -151,15 +154,20 @@ async def _process_text_message(
     await message.answer(strings.CALCULATING_MENU, parse_mode="HTML")
 
     # Generate meal plan
-    menu_data = await run_agent_food(
-        calories=macros.calories,
-        protein=macros.protein,
-        fats=macros.fats,
-        carbs=macros.carbs,
-        excluded_foods=data.get("excluded_foods", "none"),
-        allergies=data.get("allergies", "none"),
-        language=detected_lang,
-    )
+    try:
+        menu_data = await run_agent_food(
+            calories=macros.calories,
+            protein=macros.protein,
+            fats=macros.fats,
+            carbs=macros.carbs,
+            excluded_foods=data.get("excluded_foods", "none"),
+            allergies=data.get("allergies", "none"),
+            language=detected_lang,
+        )
+    except Exception as e:
+        logger.error("agent_food_failed", chat_id=chat_id, error=str(e))
+        await message.answer(strings.AI_ERROR)
+        return
 
     logger.info("agent_food_result", chat_id=chat_id, menu_data=menu_data)
 

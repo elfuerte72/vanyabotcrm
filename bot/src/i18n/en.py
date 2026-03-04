@@ -142,6 +142,8 @@ MEAL_TOTAL = "Total"
 # --- Error messages ---
 VOICE_ERROR = "Sorry, I couldn't process your voice message. Please type your answer."
 VIDEO_UNAVAILABLE = "Sorry, video is temporarily unavailable."
+PAYMENT_CONFIRMED = "Payment received! Your workout access is now active. Check your messages."
+AI_ERROR = "Sorry, something went wrong. Please try again in a moment."
 
 # --- Start ---
 START_MESSAGE = (

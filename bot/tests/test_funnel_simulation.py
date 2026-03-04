@@ -344,15 +344,16 @@ class TestFunnelKeyboardConfiguration:
         send_kwargs = bot.send_message.call_args.kwargs
         markup = send_kwargs["reply_markup"]
 
-        # sender.py puts all buttons in ONE row
-        buttons = markup.inline_keyboard[0]
+        # sender.py puts each button in its own row
+        rows = markup.inline_keyboard
         expected_cbs = EXPECTED_BUTTONS[stage]
 
-        assert len(buttons) == len(expected_cbs), (
-            f"Stage {stage}: expected {len(expected_cbs)} buttons, got {len(buttons)}"
+        assert len(rows) == len(expected_cbs), (
+            f"Stage {stage}: expected {len(expected_cbs)} button rows, got {len(rows)}"
         )
 
-        for btn, (expected_cb,) in zip(buttons, expected_cbs):
+        for row, (expected_cb,) in zip(rows, expected_cbs):
+            btn = row[0]
             assert btn.callback_data == expected_cb, (
                 f"Stage {stage}: expected callback_data={expected_cb}, got {btn.callback_data}"
             )

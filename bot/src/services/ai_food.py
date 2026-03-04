@@ -10,9 +10,9 @@ import json
 import re
 
 import structlog
-from openai import AsyncOpenAI
 
 from config.settings import settings
+from src.services.ai_client import get_ai_client
 
 logger = structlog.get_logger()
 
@@ -133,13 +133,6 @@ USER_PROMPTS = {
 }
 
 
-def _build_client() -> AsyncOpenAI:
-    return AsyncOpenAI(
-        api_key=settings.openrouter_api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
-
-
 async def run_agent_food(
     calories: int,
     protein: int,
@@ -177,7 +170,7 @@ async def run_agent_food(
         excluded=excluded_foods, allergies=allergies, language=language,
     )
 
-    client = _build_client()
+    client = get_ai_client()
     response = await client.chat.completions.create(
         model=settings.openrouter_model,
         messages=[

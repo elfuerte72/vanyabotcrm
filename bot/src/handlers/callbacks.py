@@ -34,6 +34,9 @@ def _get_payment_url(language: str) -> str:
 
 @router.callback_query(F.data == "buy_now")
 async def handle_buy_now(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"
@@ -57,6 +60,9 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "show_info")
 async def handle_show_info(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     try:
         await send_info_video(bot, chat_id)
@@ -69,6 +75,9 @@ async def handle_show_info(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "show_results")
 async def handle_show_results(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"
@@ -83,6 +92,9 @@ async def handle_show_results(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "check_suitability")
 async def handle_check_suitability(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     try:
         await send_suitability_video(bot, chat_id)
@@ -93,6 +105,9 @@ async def handle_check_suitability(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "remind_later")
 async def handle_remind_later(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"
@@ -104,6 +119,9 @@ async def handle_remind_later(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "none")
 async def handle_none(callback: CallbackQuery, bot: Bot) -> None:
+    if not callback.message:
+        await callback.answer()
+        return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"
@@ -121,6 +139,8 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
     except Exception:
         pass
 
+    if not callback.message:
+        return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"

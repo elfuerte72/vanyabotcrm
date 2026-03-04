@@ -8,10 +8,10 @@ Compatible with n8n_chat_histories table format.
 from __future__ import annotations
 
 import structlog
-from openai import AsyncOpenAI
 
 from config.settings import settings
 from src.db.queries import get_chat_history, save_chat_message
+from src.services.ai_client import get_ai_client
 
 logger = structlog.get_logger()
 
@@ -83,13 +83,6 @@ Example of the final output format:
 - Return meal names and dish names in the same language as the user's last message"""
 
 
-def _build_client() -> AsyncOpenAI:
-    return AsyncOpenAI(
-        api_key=settings.openrouter_api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
-
-
 async def run_agent_main(chat_id: int, user_message: str) -> str:
     """Run the main nutrition agent conversation.
 
@@ -99,6 +92,9 @@ async def run_agent_main(chat_id: int, user_message: str) -> str:
 
     Returns:
         Raw agent output text (may contain JSON if finished)
+
+    Raises:
+        Exception: If AI API call fails (caller should handle)
     """
     session_id = str(chat_id)
 
@@ -126,8 +122,11 @@ async def run_agent_main(chat_id: int, user_message: str) -> str:
         model=settings.openrouter_model,
     )
 
+    # Save human message before API call to preserve history
+    await save_chat_message(session_id, "human", user_message)
+
     # Call OpenRouter
-    client = _build_client()
+    client = get_ai_client()
     response = await client.chat.completions.create(
         model=settings.openrouter_model,
         messages=messages,
@@ -135,8 +134,7 @@ async def run_agent_main(chat_id: int, user_message: str) -> str:
 
     output = response.choices[0].message.content or ""
 
-    # Save to chat history (n8n compatible format)
-    await save_chat_message(session_id, "human", user_message)
+    # Save AI response
     await save_chat_message(session_id, "ai", output)
 
     logger.debug(

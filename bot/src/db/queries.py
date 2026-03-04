@@ -38,16 +38,18 @@ async def save_user_data(
     fats: int,
     carbs: int,
     language: str,
+    first_name: str = "",
 ) -> None:
     pool = await get_pool()
     await pool.execute(
         """
         INSERT INTO users_nutrition (
-            chat_id, username, sex, age, weight, height,
+            chat_id, username, first_name, sex, age, weight, height,
             activity_level, goal, allergies, excluded_foods,
             calories, protein, fats, carbs, language, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
         ON CONFLICT (chat_id) DO UPDATE SET
+            first_name = EXCLUDED.first_name,
             sex = EXCLUDED.sex,
             age = EXCLUDED.age,
             weight = EXCLUDED.weight,
@@ -64,7 +66,7 @@ async def save_user_data(
             get_food = FALSE,
             updated_at = NOW()
         """,
-        chat_id, username, sex, age, weight, height,
+        chat_id, username, first_name, sex, age, weight, height,
         activity_level, goal, allergies, excluded_foods,
         calories, protein, fats, carbs, language,
     )
@@ -100,6 +102,7 @@ async def get_funnel_targets() -> list[dict[str, Any]]:
         SELECT chat_id, funnel_stage, language
         FROM users_nutrition
         WHERE (is_buyer IS FALSE OR is_buyer IS NULL)
+          AND get_food = TRUE
           AND funnel_stage >= 0
           AND funnel_stage < 5
         """
