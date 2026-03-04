@@ -151,14 +151,15 @@ If buy_now clicked at ANY stage → is_buyer=TRUE → excluded from funnel
 | Formality | Informal (ты) | Informal (you) | Semi-formal |
 
 ### Payment URLs
-Currently all 3 languages use the same `settings.tribute_link`. EN/AR Ziina support is a TODO.
+RU users get `settings.tribute_link` (Tribute). EN/AR users get `settings.ziina_link` (Ziina) with fallback to Tribute if not configured.
 
-### Localization Gaps
-1. **Meal plan headers** — `format_meal_plan_html()` uses hardcoded Russian text: "ПЛАН ПИТАНИЯ ГОТОВ!", "ИТОГО ЗА ДЕНЬ:", etc.
-2. **Voice transcription error** — Fallback is English-only: "Sorry, I couldn't process your voice message"
-3. **show_info error** — Fallback is English-only: "Sorry, video is temporarily unavailable"
-4. **Calculating message** — `_process_text_message` sends ALL 3 languages concatenated instead of just the detected language
-5. **AI agent food prompt** — System prompt is in Russian, so meal names tend to be Russian regardless of user language
+### Localization Status
+All user-facing strings are fully localized via `src/i18n/{ru,en,ar}.py` (36 constants each). Previously identified gaps have been resolved:
+- Meal plan headers — localized via `get_strings(language)` in `formatter.py`
+- Voice/video error messages — use `VOICE_ERROR` / `VIDEO_UNAVAILABLE` i18n strings
+- Calculating message — sends only the detected language
+- AI Food prompt — per-language `SYSTEM_PROMPTS` and `USER_PROMPTS` in `ai_food.py`
+- /start command — detects language from `message.from_user.language_code`
 
 ---
 

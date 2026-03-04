@@ -163,6 +163,7 @@ Tests use Vitest + Supertest in `src/__tests__/`. Database is mocked via `vi.moc
 | `CHANNEL_USERNAME` | bot | Telegram channel username, preferred over ID (default: ivanfit_health) |
 | `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
 | `OPENROUTER_MODEL` | bot | LLM model (default: google/gemini-3-flash-preview) |
-| `TRIBUTE_LINK` | bot | Payment link for Tribute |
+| `TRIBUTE_LINK` | bot | Payment link for Tribute (RU users) |
+| `ZIINA_LINK` | bot | Payment link for Ziina (EN/AR users, falls back to TRIBUTE_LINK) |
 | `ZIINA_WEBHOOK_SECRET` | bot | Ziina payment webhook secret (optional) |
 | `LOG_LEVEL` | bot | Logging level (default: DEBUG) |
