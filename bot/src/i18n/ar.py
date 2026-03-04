@@ -99,6 +99,7 @@ BUY_MESSAGE = (
     "بعد الدفع سيفتح الوصول تلقائياً! ✅"
 )
 BUY_BUTTON = " 💳 ادفع"
+WATCH_VIDEO_BUTTON = "▶️ شاهد الفيديو"
 
 RESULTS_CAPTION = (
     "📌 تمارين تصيب الهدف. كل المناطق المشكلة.\n\n"
@@ -123,6 +124,29 @@ NONE_RESPONSE = (
     "لهذا بالضبط جمعت هذا المجمع الموجه لكل المناطق المشكلة.🙏\n\n"
     'سأكون سعيداً برؤيتك في <a href="https://t.me/ivanfit_health">قناتي على تيليجرام</a>، '
     "حيث يمكنك تحسين جمال الجسم وتعزيز الصحة.🙏"
+)
+
+# --- Meal plan formatting ---
+MEAL_PLAN_READY = "🍽 <b>خطة الوجبات جاهزة!</b>"
+DAILY_TOTAL = "📊 <b>المجموع اليومي:</b>"
+CALORIES_LABEL = "🔥 سعرات"
+PROTEIN_LABEL = "🥩 بروتين"
+FATS_LABEL = "🧈 دهون"
+CARBS_LABEL = "🍞 كربوهيدرات"
+KCAL = "سعرة"
+GRAM = "غ"
+CALC_FAILED = "لم يتم حساب المجاميع تلقائياً"
+DEFAULT_MEAL_NAME = "وجبة"
+MEAL_TOTAL = "المجموع"
+
+# --- Error messages ---
+VOICE_ERROR = "عذراً، لم أتمكن من معالجة رسالتك الصوتية. يرجى الكتابة."
+VIDEO_UNAVAILABLE = "عذراً، الفيديو غير متوفر حالياً."
+
+# --- Start ---
+START_MESSAGE = (
+    "مرحباً! سأساعدك في حساب الماكروز وإنشاء خطة تغذية. "
+    "فقط اكتب لي!"
 )
 
 VIDEO_WORKOUT_RESPONSE = (

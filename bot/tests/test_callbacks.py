@@ -122,17 +122,21 @@ class TestHandleShowInfo:
         callback.answer.assert_called_once()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("language", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.send_info_video", new_callable=AsyncMock)
-    async def test_show_info_handles_error(self, mock_send_video):
-        """On video download error, sends fallback text."""
+    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
+    async def test_show_info_handles_error(self, mock_get_lang, mock_send_video, language):
+        """On video download error, sends localized fallback text."""
+        mock_get_lang.return_value = language
         mock_send_video.side_effect = Exception("Download failed")
         callback = _make_callback(data="show_info")
         bot = _make_bot()
+        strings = get_strings(language)
 
         await handle_show_info(callback, bot)
 
         bot.send_message.assert_called_once()
-        assert "unavailable" in bot.send_message.call_args.args[1]
+        assert bot.send_message.call_args.args[1] == strings.VIDEO_UNAVAILABLE
         callback.answer.assert_called_once()
 
 
@@ -245,23 +249,33 @@ class TestHandleNone:
 class TestHandleVideoWorkout:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
+    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_sends_response_with_buy_button(self, mock_get_lang, language):
+    async def test_video_workout_sends_pitch_with_video_and_buy_buttons(self, mock_get_lang, mock_advance, language):
         mock_get_lang.return_value = language
+        mock_advance.return_value = True
         callback = _make_callback(data="video_workout")
         bot = _make_bot()
         strings = get_strings(language)
 
         await handle_video_workout(callback, bot)
 
-        bot.send_message.assert_called_once()
-        call_kwargs = bot.send_message.call_args
-        assert call_kwargs.kwargs["text"] == strings.VIDEO_WORKOUT_RESPONSE
-
-        # Check that buy_now button is attached
-        markup = call_kwargs.kwargs["reply_markup"]
-        buttons = markup.inline_keyboard[0]
-        assert len(buttons) == 1
-        assert buttons[0].callback_data == "buy_now"
-        assert buttons[0].text == strings.BUY_BUTTON
+        # Answer callback first, then single message
         callback.answer.assert_called_once()
+        assert bot.send_message.call_count == 1
+
+        call_kwargs = bot.send_message.call_args.kwargs
+        assert call_kwargs["text"] == strings.VIDEO_WORKOUT_RESPONSE
+
+        # Two rows: video URL button + buy callback button
+        markup = call_kwargs["reply_markup"]
+        assert len(markup.inline_keyboard) == 2
+        video_btn = markup.inline_keyboard[0][0]
+        assert video_btn.url is not None
+        assert video_btn.text == strings.WATCH_VIDEO_BUTTON
+        buy_btn = markup.inline_keyboard[1][0]
+        assert buy_btn.callback_data == "buy_now"
+        assert buy_btn.text == strings.BUY_BUTTON
+
+        # Should advance funnel from stage 1→2
+        mock_advance.assert_called_once_with(callback.from_user.id, expected_stage=1)

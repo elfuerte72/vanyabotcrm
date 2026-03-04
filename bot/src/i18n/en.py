@@ -99,6 +99,7 @@ BUY_MESSAGE = (
     "After payment, access will open automatically! ✅"
 )
 BUY_BUTTON = " 💳 Pay"
+WATCH_VIDEO_BUTTON = "▶️ Watch video"
 
 RESULTS_CAPTION = (
     "📌 exercises that hit the target. All problem areas, from love handles to flabby arms.\n\n"
@@ -123,6 +124,29 @@ NONE_RESPONSE = (
     "That's exactly why I created this complex targeting all problem areas.🙏\n\n"
     'I\'d be happy to see you in my <a href="https://t.me/ivanfit_health">telegram channel</a>, '
     "where you can perfect body beauty and strengthen health.🙏"
+)
+
+# --- Meal plan formatting ---
+MEAL_PLAN_READY = "🍽 <b>YOUR MEAL PLAN IS READY!</b>"
+DAILY_TOTAL = "📊 <b>DAILY TOTAL:</b>"
+CALORIES_LABEL = "🔥 Calories"
+PROTEIN_LABEL = "🥩 Protein"
+FATS_LABEL = "🧈 Fats"
+CARBS_LABEL = "🍞 Carbs"
+KCAL = "kcal"
+GRAM = "g"
+CALC_FAILED = "Could not calculate totals automatically"
+DEFAULT_MEAL_NAME = "Meal"
+MEAL_TOTAL = "Total"
+
+# --- Error messages ---
+VOICE_ERROR = "Sorry, I couldn't process your voice message. Please type your answer."
+VIDEO_UNAVAILABLE = "Sorry, video is temporarily unavailable."
+
+# --- Start ---
+START_MESSAGE = (
+    "Hi! I'll help you calculate your macros and create a nutrition plan. "
+    "Just write to me!"
 )
 
 VIDEO_WORKOUT_RESPONSE = (

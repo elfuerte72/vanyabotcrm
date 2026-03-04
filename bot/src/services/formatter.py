@@ -15,6 +15,8 @@ from typing import Any
 
 import structlog
 
+from src.i18n import get_strings
+
 logger = structlog.get_logger()
 
 
@@ -117,26 +119,29 @@ def format_meal_plan_html(
     menu_data: dict[str, Any],
     calculated_stats: dict[str, Any],
     target_stats: dict[str, Any],
+    language: str = "ru",
 ) -> str:
     """Format meal plan JSON into Telegram HTML.
 
     Port of n8n 'comver to HTML' Code node.
     """
-    msg = "🍽 <b>ПЛАН ПИТАНИЯ ГОТОВ!</b>\n\n"
+    s = get_strings(language)
+
+    msg = f"{s.MEAL_PLAN_READY}\n\n"
 
     if calculated_stats.get("calories", 0) == 0:
-        msg += "<i>(Не удалось рассчитать итоги автоматически)</i>\n\n"
+        msg += f"<i>({s.CALC_FAILED})</i>\n\n"
     else:
-        msg += "📊 <b>ИТОГО ЗА ДЕНЬ:</b>\n"
-        msg += f"🔥 Калории: <b>{calculated_stats['calories']}</b> / {target_stats.get('calories', 0)} ккал\n"
-        msg += f"🥩 Белки: <b>{calculated_stats['protein']}г</b> / {target_stats.get('protein', 0)}г\n"
-        msg += f"🧈 Жиры: <b>{calculated_stats['fats']}г</b> / {target_stats.get('fats', 0)}г\n"
-        msg += f"🍞 Углеводы: <b>{calculated_stats['carbs']}г</b> / {target_stats.get('carbs', 0)}г\n"
+        msg += f"{s.DAILY_TOTAL}\n"
+        msg += f"{s.CALORIES_LABEL}: <b>{calculated_stats['calories']}</b> / {target_stats.get('calories', 0)} {s.KCAL}\n"
+        msg += f"{s.PROTEIN_LABEL}: <b>{calculated_stats['protein']}{s.GRAM}</b> / {target_stats.get('protein', 0)}{s.GRAM}\n"
+        msg += f"{s.FATS_LABEL}: <b>{calculated_stats['fats']}{s.GRAM}</b> / {target_stats.get('fats', 0)}{s.GRAM}\n"
+        msg += f"{s.CARBS_LABEL}: <b>{calculated_stats['carbs']}{s.GRAM}</b> / {target_stats.get('carbs', 0)}{s.GRAM}\n"
         msg += "━━━━━━━━━━━━━━━━━━━━━\n\n"
 
     meals = menu_data.get("meals", [])
     for meal in meals:
-        name = (meal.get("name") or "Приём пищи").upper()
+        name = (meal.get("name") or s.DEFAULT_MEAL_NAME).upper()
         dish = meal.get("dish", "")
 
         # Icon based on meal name
@@ -163,14 +168,14 @@ def format_meal_plan_html(
                 name_str = ing.get("name", "?")
                 weight = ing.get("weight_g", "?")
                 cals = ing.get("cals", 0)
-                msg += f"  • {name_str} — <b>{weight}г</b>"
+                msg += f"  • {name_str} — <b>{weight}{s.GRAM}</b>"
                 if cals:
-                    msg += f" ({cals} ккал)"
+                    msg += f" ({cals} {s.KCAL})"
                 msg += "\n"
 
         total_cals = round(meal.get("total_cals", 0))
         if total_cals > 0:
-            msg += f"\n  📌 <i>Итого: ~{total_cals} ккал</i>\n\n"
+            msg += f"\n  📌 <i>{s.MEAL_TOTAL}: ~{total_cals} {s.KCAL}</i>\n\n"
         else:
             msg += "\n"
 

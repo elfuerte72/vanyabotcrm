@@ -64,8 +64,9 @@ async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None
         text = transcription.text
         logger.info("voice_transcribed", chat_id=message.chat.id, text=text[:100])
     except Exception as e:
-        logger.error("voice_transcription_failed", error=str(e))
-        await message.answer("Sorry, I couldn't process your voice message. Please type your answer.")
+        logger.error("voice_transcription_failed", error=str(e), chat_id=message.chat.id)
+        lang = (db_user.language if db_user else None) or "en"
+        await message.answer(get_strings(lang).VOICE_ERROR)
         return
 
     await _process_text_message(message, bot, db_user, text)
@@ -147,12 +148,7 @@ async def _process_text_message(
 
     # Send "calculating..." message
     strings = get_strings(detected_lang)
-    await message.answer(
-        f"<b>RU:</b>\n{get_strings('ru').CALCULATING_MENU}\n\n"
-        f"<b>EN:</b>\n{get_strings('en').CALCULATING_MENU}\n\n"
-        f"<b>AR:</b>\n{get_strings('ar').CALCULATING_MENU}",
-        parse_mode="HTML",
-    )
+    await message.answer(strings.CALCULATING_MENU, parse_mode="HTML")
 
     # Generate meal plan
     menu_data = await run_agent_food(
@@ -162,6 +158,7 @@ async def _process_text_message(
         carbs=macros.carbs,
         excluded_foods=data.get("excluded_foods", "none"),
         allergies=data.get("allergies", "none"),
+        language=detected_lang,
     )
 
     logger.info("agent_food_result", chat_id=chat_id, menu_data=menu_data)
@@ -182,7 +179,7 @@ async def _process_text_message(
         logger.warning("meal_plan_validation_failed", error=error, chat_id=chat_id)
 
     # Format and send
-    html = format_meal_plan_html(menu_data, calc_stats, target_stats)
+    html = format_meal_plan_html(menu_data, calc_stats, target_stats, language=detected_lang)
     await message.answer(html, parse_mode="HTML")
 
     # Mark as food received → starts funnel

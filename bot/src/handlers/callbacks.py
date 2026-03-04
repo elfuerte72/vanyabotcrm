@@ -11,8 +11,8 @@ import structlog
 from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from config.settings import settings
-from src.db.queries import get_user_language, mark_as_buyer
+from config.settings import settings, media_config
+from src.db.queries import get_user_language, mark_as_buyer, advance_funnel_if_at_stage
 from src.i18n import get_strings
 from src.services.media import (
     send_info_video,
@@ -29,8 +29,7 @@ def _get_payment_url(language: str) -> str:
     """Get payment URL based on language (Tribute for RU, Ziina for EN/AR)."""
     if language == "ru":
         return settings.tribute_link
-    # EN/AR use Ziina — for now same Tribute link, customize later
-    return settings.tribute_link
+    return settings.ziina_link or settings.tribute_link
 
 
 @router.callback_query(F.data == "buy_now")
@@ -62,8 +61,9 @@ async def handle_show_info(callback: CallbackQuery, bot: Bot) -> None:
     try:
         await send_info_video(bot, chat_id)
     except Exception as e:
-        logger.error("show_info_failed", error=str(e), chat_id=chat_id)
-        await bot.send_message(chat_id, "Sorry, video is temporarily unavailable.")
+        language = await get_user_language(callback.from_user.id) or "en"
+        logger.error("show_info_failed", error=str(e), chat_id=chat_id, language=language)
+        await bot.send_message(chat_id, get_strings(language).VIDEO_UNAVAILABLE)
     await callback.answer()
 
 
@@ -115,18 +115,31 @@ async def handle_none(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "video_workout")
 async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
+    # Answer immediately to remove loading spinner
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     language = await get_user_language(user_id) or "en"
     strings = get_strings(language)
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=strings.BUY_BUTTON, callback_data="buy_now")]
-    ])
+    # Single message: pitch + video URL button + buy button
+    workout_url = media_config["videos"].get("workout_url", "")
+    rows = []
+    if workout_url:
+        rows.append([InlineKeyboardButton(text=strings.WATCH_VIDEO_BUTTON, url=workout_url)])
+    rows.append([InlineKeyboardButton(text=strings.BUY_BUTTON, callback_data="buy_now")])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
 
     await bot.send_message(
         chat_id=chat_id,
         text=strings.VIDEO_WORKOUT_RESPONSE,
         reply_markup=keyboard,
     )
-    await callback.answer()
+
+    # Advance funnel from 1→2 so scheduler skips stage 1
+    await advance_funnel_if_at_stage(user_id, expected_stage=1)
+    logger.info("video_workout_callback", user_id=user_id, language=language)

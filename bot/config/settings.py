@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     # Payment
     tribute_link: str = "https://t.me/tribute/app?startapp=pnvi"
+    ziina_link: str = ""  # Ziina payment link for EN/AR users
     ziina_webhook_secret: str = ""
 
     # Logging
