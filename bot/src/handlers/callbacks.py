@@ -7,6 +7,8 @@ Callbacks: buy_now, show_info, show_results, check_suitability,
 
 from __future__ import annotations
 
+import asyncio
+
 import structlog
 from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
@@ -146,20 +148,42 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
     language = await get_user_language(user_id) or "en"
     strings = get_strings(language)
 
-    # Single message: pitch + video URL button + buy button
+    # Send message with URL button to watch video on Google Drive
     workout_url = media_config["videos"].get("workout_url", "")
     rows = []
     if workout_url:
         rows.append([InlineKeyboardButton(text=strings.WATCH_VIDEO_BUTTON, url=workout_url)])
-    rows.append([InlineKeyboardButton(text=strings.BUY_BUTTON, callback_data="buy_now")])
     keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
 
     await bot.send_message(
         chat_id=chat_id,
-        text=strings.VIDEO_WORKOUT_RESPONSE,
+        text=strings.WATCH_VIDEO_PROMPT,
         reply_markup=keyboard,
     )
 
-    # Advance funnel from 1→2 so scheduler skips stage 1
-    await advance_funnel_if_at_stage(user_id, expected_stage=1)
     logger.info("video_workout_callback", user_id=user_id, language=language)
+
+    # After 5 minutes — send follow-up with buy button
+    asyncio.create_task(_delayed_workout_followup(bot, chat_id, user_id, language))
+
+
+async def _delayed_workout_followup(
+    bot: Bot, chat_id: int, user_id: int, language: str
+) -> None:
+    """Send follow-up message 5 minutes after video_workout click."""
+    await asyncio.sleep(300)  # 5 minutes
+
+    strings = get_strings(language)
+    rows = [[InlineKeyboardButton(text=strings.BUY_BUTTON, callback_data="buy_now")]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
+
+    try:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=strings.VIDEO_WORKOUT_RESPONSE,
+            reply_markup=keyboard,
+        )
+        await advance_funnel_if_at_stage(user_id, expected_stage=1)
+        logger.info("workout_followup_sent", chat_id=chat_id)
+    except Exception as e:
+        logger.error("workout_followup_failed", chat_id=chat_id, error=str(e))

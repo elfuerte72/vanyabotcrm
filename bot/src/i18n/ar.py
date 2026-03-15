@@ -100,6 +100,7 @@ BUY_MESSAGE = (
 )
 BUY_BUTTON = " 💳 ادفع"
 WATCH_VIDEO_BUTTON = "▶️ شاهد الفيديو"
+WATCH_VIDEO_PROMPT = "إليك تمريناً مجانياً مني! اضغط الزر أدناه للمشاهدة 👇"
 
 RESULTS_CAPTION = (
     "📌 تمارين تصيب الهدف. كل المناطق المشكلة.\n\n"

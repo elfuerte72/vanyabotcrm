@@ -5,6 +5,7 @@ backend/public/
 *.local
 .env
 .env.*
+!.env.example
 .mcp.json
 
 # Python

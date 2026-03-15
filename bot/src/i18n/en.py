@@ -100,6 +100,7 @@ BUY_MESSAGE = (
 )
 BUY_BUTTON = " 💳 Pay"
 WATCH_VIDEO_BUTTON = "▶️ Watch video"
+WATCH_VIDEO_PROMPT = "Here's a free workout from me! Tap the button below to watch 👇"
 
 RESULTS_CAPTION = (
     "📌 exercises that hit the target. All problem areas, from love handles to flabby arms.\n\n"

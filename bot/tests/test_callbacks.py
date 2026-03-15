@@ -249,33 +249,29 @@ class TestHandleNone:
 class TestHandleVideoWorkout:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_sends_pitch_with_video_and_buy_buttons(self, mock_get_lang, mock_advance, language):
+    async def test_video_workout_sends_prompt_with_video_button(self, mock_get_lang, mock_asyncio, language):
         mock_get_lang.return_value = language
-        mock_advance.return_value = True
         callback = _make_callback(data="video_workout")
         bot = _make_bot()
         strings = get_strings(language)
 
         await handle_video_workout(callback, bot)
 
-        # Answer callback first, then single message
+        # Answer callback first, then single message with video prompt
         callback.answer.assert_called_once()
         assert bot.send_message.call_count == 1
 
         call_kwargs = bot.send_message.call_args.kwargs
-        assert call_kwargs["text"] == strings.VIDEO_WORKOUT_RESPONSE
+        assert call_kwargs["text"] == strings.WATCH_VIDEO_PROMPT
 
-        # Two rows: video URL button + buy callback button
+        # One row: video URL button only (buy button sent later via delayed task)
         markup = call_kwargs["reply_markup"]
-        assert len(markup.inline_keyboard) == 2
+        assert len(markup.inline_keyboard) == 1
         video_btn = markup.inline_keyboard[0][0]
         assert video_btn.url is not None
         assert video_btn.text == strings.WATCH_VIDEO_BUTTON
-        buy_btn = markup.inline_keyboard[1][0]
-        assert buy_btn.callback_data == "buy_now"
-        assert buy_btn.text == strings.BUY_BUTTON
 
-        # Should advance funnel from stage 1→2
-        mock_advance.assert_called_once_with(callback.from_user.id, expected_stage=1)
+        # Delayed follow-up task scheduled
+        mock_asyncio.create_task.assert_called_once()

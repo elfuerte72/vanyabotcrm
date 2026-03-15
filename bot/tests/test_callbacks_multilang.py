@@ -134,9 +134,11 @@ class TestShowInfoMultilang:
         callback.answer.assert_called_once()
 
     @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
     @patch("src.handlers.callbacks.send_info_video", new_callable=AsyncMock)
-    async def test_show_info_error_sends_fallback(self, mock_video):
+    async def test_show_info_error_sends_fallback(self, mock_video, mock_get_lang):
         mock_video.side_effect = Exception("Download failed")
+        mock_get_lang.return_value = "en"
         callback = make_callback(data="show_info", chat_id=30000)
         bot = make_bot()
 
@@ -246,11 +248,10 @@ class TestNoneMultilang:
 class TestVideoWorkoutMultilang:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_text_per_language(self, mock_get_lang, mock_advance, lang):
+    async def test_video_workout_text_per_language(self, mock_get_lang, mock_asyncio, lang):
         mock_get_lang.return_value = lang
-        mock_advance.return_value = True
         callback = make_callback(data="video_workout", chat_id=80000, user_id=80000)
         bot = make_bot()
         strings = get_strings(lang)
@@ -258,33 +259,32 @@ class TestVideoWorkoutMultilang:
         await handle_video_workout(callback, bot)
 
         call_kwargs = bot.send_message.call_args.kwargs
-        assert call_kwargs["text"] == strings.VIDEO_WORKOUT_RESPONSE, (
-            f"{lang}: VIDEO_WORKOUT_RESPONSE mismatch"
+        assert call_kwargs["text"] == strings.WATCH_VIDEO_PROMPT, (
+            f"{lang}: WATCH_VIDEO_PROMPT mismatch"
         )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_advances_funnel(self, mock_get_lang, mock_advance, lang):
-        """CRM update: advance_funnel_if_at_stage(user_id, 1) called."""
+    async def test_video_workout_advances_funnel(self, mock_get_lang, mock_asyncio, lang):
+        """Funnel advance is scheduled in delayed follow-up task."""
         mock_get_lang.return_value = lang
-        mock_advance.return_value = True
         callback = make_callback(data="video_workout", user_id=80000)
         bot = make_bot()
 
         await handle_video_workout(callback, bot)
 
-        mock_advance.assert_called_once_with(80000, expected_stage=1)
+        # Delayed task is created (advance happens inside it after 5 min)
+        mock_asyncio.create_task.assert_called_once()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_keyboard_structure(self, mock_get_lang, mock_advance, lang):
-        """Keyboard has 2 rows: [video URL button], [buy_now callback button]."""
+    async def test_video_workout_keyboard_structure(self, mock_get_lang, mock_asyncio, lang):
+        """Keyboard has 1 row: [video URL button]. Buy button sent later."""
         mock_get_lang.return_value = lang
-        mock_advance.return_value = True
         callback = make_callback(data="video_workout")
         bot = make_bot()
         strings = get_strings(lang)
@@ -292,25 +292,19 @@ class TestVideoWorkoutMultilang:
         await handle_video_workout(callback, bot)
 
         markup = bot.send_message.call_args.kwargs["reply_markup"]
-        assert len(markup.inline_keyboard) == 2, "Should have 2 rows"
+        assert len(markup.inline_keyboard) == 1, "Should have 1 row (video only)"
 
         # Row 1: video URL button
         video_btn = markup.inline_keyboard[0][0]
         assert video_btn.url is not None, "First button should be URL"
         assert video_btn.text == strings.WATCH_VIDEO_BUTTON
 
-        # Row 2: buy callback button
-        buy_btn = markup.inline_keyboard[1][0]
-        assert buy_btn.callback_data == "buy_now"
-        assert buy_btn.text == strings.BUY_BUTTON
-
     @pytest.mark.asyncio
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_answers_callback_first(self, mock_get_lang, mock_advance):
+    async def test_video_workout_answers_callback_first(self, mock_get_lang, mock_asyncio):
         """callback.answer() is called immediately (before send_message)."""
         mock_get_lang.return_value = "en"
-        mock_advance.return_value = True
         callback = make_callback(data="video_workout")
 
         await handle_video_workout(callback, make_bot())
@@ -336,16 +330,15 @@ class TestCRMDataFlow:
         mock_mark.assert_called_once_with(90001)
 
     @pytest.mark.asyncio
-    @patch("src.handlers.callbacks.advance_funnel_if_at_stage", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_advances_stage_1_to_2(self, mock_lang, mock_advance):
-        """video_workout → CRM: funnel_stage conditionally 1→2."""
+    async def test_video_workout_schedules_delayed_followup(self, mock_lang, mock_asyncio):
+        """video_workout → schedules delayed follow-up (buy + funnel advance)."""
         mock_lang.return_value = "en"
-        mock_advance.return_value = True
         callback = make_callback(data="video_workout", user_id=90002)
         await handle_video_workout(callback, make_bot())
 
-        mock_advance.assert_called_once_with(90002, expected_stage=1)
+        mock_asyncio.create_task.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.send_info_video", new_callable=AsyncMock)

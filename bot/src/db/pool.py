@@ -23,15 +23,20 @@ async def get_pool() -> asyncpg.Pool:
 
 
 async def create_pool() -> asyncpg.Pool:
-    ssl_ctx = ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = ssl.CERT_NONE
+    # Disable SSL for local development (sslmode=disable in URL)
+    dsn = settings.database_url
+    use_ssl: ssl.SSLContext | bool = False
+    if "sslmode=disable" not in dsn:
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+        use_ssl = ssl_ctx
 
     pool = await asyncpg.create_pool(
-        dsn=settings.database_url,
+        dsn=dsn,
         min_size=2,
         max_size=10,
-        ssl=ssl_ctx,
+        ssl=use_ssl,
     )
     # Log only host, not credentials
     parsed = urlparse(settings.database_url)

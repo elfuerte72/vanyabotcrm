@@ -171,20 +171,41 @@ async def run_agent_food(
     )
 
     client = get_ai_client()
-    response = await client.chat.completions.create(
-        model=settings.openrouter_model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
 
-    output = response.choices[0].message.content or ""
+    max_retries = 2
+    output = ""
+    total_tokens = None
+
+    for attempt in range(max_retries):
+        response = await client.chat.completions.create(
+            model=settings.openrouter_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+        )
+
+        message = response.choices[0]
+        output = message.message.content or ""
+        total_tokens = response.usage.total_tokens if response.usage else None
+
+        if output.strip():
+            break
+
+        logger.warning(
+            "agent_food_empty_response",
+            attempt=attempt + 1,
+            finish_reason=message.finish_reason,
+            refusal=getattr(message.message, "refusal", None),
+            tokens=total_tokens,
+            language=language,
+        )
 
     logger.info(
         "agent_food_response",
         output_len=len(output),
-        tokens=response.usage.total_tokens if response.usage else None,
+        tokens=total_tokens,
         language=language,
     )
 
