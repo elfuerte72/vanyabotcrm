@@ -24,10 +24,10 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: n8n_chat_histories; Type: TABLE; Schema: public; Owner: -
+-- Name: chat_histories; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.n8n_chat_histories (
+CREATE TABLE public.chat_histories (
     id integer NOT NULL,
     session_id character varying(255) NOT NULL,
     message jsonb NOT NULL
@@ -35,10 +35,10 @@ CREATE TABLE public.n8n_chat_histories (
 
 
 --
--- Name: n8n_chat_histories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: chat_histories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.n8n_chat_histories_id_seq
+CREATE SEQUENCE public.chat_histories_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -48,10 +48,10 @@ CREATE SEQUENCE public.n8n_chat_histories_id_seq
 
 
 --
--- Name: n8n_chat_histories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: chat_histories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.n8n_chat_histories_id_seq OWNED BY public.n8n_chat_histories.id;
+ALTER SEQUENCE public.chat_histories_id_seq OWNED BY public.chat_histories.id;
 
 
 --
@@ -124,10 +124,10 @@ CREATE TABLE public.users_nutrition (
 
 
 --
--- Name: n8n_chat_histories id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: chat_histories id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.n8n_chat_histories ALTER COLUMN id SET DEFAULT nextval('public.n8n_chat_histories_id_seq'::regclass);
+ALTER TABLE ONLY public.chat_histories ALTER COLUMN id SET DEFAULT nextval('public.chat_histories_id_seq'::regclass);
 
 
 --
@@ -138,11 +138,11 @@ ALTER TABLE ONLY public.user_events ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- Name: n8n_chat_histories n8n_chat_histories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: chat_histories chat_histories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.n8n_chat_histories
-    ADD CONSTRAINT n8n_chat_histories_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.chat_histories
+    ADD CONSTRAINT chat_histories_pkey PRIMARY KEY (id);
 
 
 --

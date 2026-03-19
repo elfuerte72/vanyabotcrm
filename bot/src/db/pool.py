@@ -27,10 +27,7 @@ async def create_pool() -> asyncpg.Pool:
     dsn = settings.database_url
     use_ssl: ssl.SSLContext | bool = False
     if "sslmode=disable" not in dsn:
-        ssl_ctx = ssl.create_default_context()
-        ssl_ctx.check_hostname = False
-        ssl_ctx.verify_mode = ssl.CERT_NONE
-        use_ssl = ssl_ctx
+        use_ssl = ssl.create_default_context()
 
     pool = await asyncpg.create_pool(
         dsn=dsn,

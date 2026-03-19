@@ -2,7 +2,7 @@
 
 Handles conversation with user to collect KBJU data.
 Uses OpenRouter API (Gemini 3 Flash).
-Compatible with n8n_chat_histories table format.
+Compatible with chat_histories table format.
 """
 
 from __future__ import annotations

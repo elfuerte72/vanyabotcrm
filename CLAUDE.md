@@ -110,7 +110,7 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Config** (`config/settings.py`): Uses lazy initialization via proxy objects — `settings` and `media_config` are not instantiated at import time. This allows tests to run without a `.env` file by setting env vars in `conftest.py`.
 
-**Chat history**: Bot reads/writes to `n8n_chat_histories` table (backward-compatible with n8n format). `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
+**Chat history**: Bot reads/writes to `chat_histories` table. `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
 
 **Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. Allowed statuses: `member`, `administrator`, `creator`. Blocks handler if not subscribed — sends localized "please subscribe" message. If check fails (bot not admin), defaults to blocking.
 
@@ -144,7 +144,7 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 **`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-6), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`.
 
-**`n8n_chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
+**`chat_histories`** — Chat messages (renamed from `n8n_chat_histories`). PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
 
 **`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `created_at`. Used in CRM to show full user interaction timeline alongside chat messages.
 
@@ -154,7 +154,7 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 ## n8n Migration Status
 
-The project has fully migrated away from n8n. The `n8n_chat_histories` table name is a legacy artifact — the bot now writes directly via asyncpg. No n8n workflows are in use. The table name is kept for backward compatibility with existing data.
+The project has fully migrated away from n8n. The table `n8n_chat_histories` has been renamed to `chat_histories` (migration: `db/migrations/001_rename_chat_histories.sql`). A backward-compatible view `n8n_chat_histories` exists during transition. No n8n workflows are in use.
 
 ## Frontend Patterns
 
@@ -203,12 +203,15 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 | `TRIBUTE_LINK` | bot | Payment link for Tribute (RU users) |
 | `ZIINA_LINK` | bot | Payment link for Ziina (EN/AR users, falls back to TRIBUTE_LINK) |
 | `ZIINA_WEBHOOK_SECRET` | bot | Ziina payment webhook secret (optional) |
-| `LOG_LEVEL` | bot | Logging level (default: DEBUG) |
+| `LOG_LEVEL` | crm, bot | Logging level (CRM default: info, Bot default: INFO) |
+| `NODE_ENV` | crm | Environment (production requires BOT_TOKEN) |
 
 ## Security Notes
 
 - **Never hardcode credentials** in source files or CLAUDE.md — use `DATABASE_URL` env var
-- CRM CORS is currently `origin: true` (accepts all origins) — should be restricted in production
-- SSL verification is disabled in both CRM (`rejectUnauthorized: false`) and bot (`ssl.CERT_NONE`) for Supabase compatibility
-- Ziina webhook signature validation is optional — if `ZIINA_WEBHOOK_SECRET` is empty, webhooks are accepted without verification
-- Auth is completely skipped when `BOT_TOKEN` is unset (dev mode)
+- CRM CORS: disabled in production (same-origin SPA), allows `localhost:5173` in dev
+- SSL verification enabled (system CA) in both CRM and bot; `sslmode=disable` in DSN disables SSL for local dev
+- Ziina webhook signature validation is mandatory — if `ZIINA_WEBHOOK_SECRET` is empty, webhooks return 503
+- Auth is skipped when `BOT_TOKEN` is unset in dev; in production (`NODE_ENV=production`) missing `BOT_TOKEN` throws at startup
+- CRM uses `helmet` for security headers, `express-rate-limit` (100 req/min on `/api`), and `zod` for input validation
+- CRM uses `pino` + `pino-http` for structured logging (`LOG_LEVEL` env var, default: `info`)

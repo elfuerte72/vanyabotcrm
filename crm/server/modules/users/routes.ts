@@ -1,19 +1,26 @@
 import { Router, Request, Response } from 'express';
 import pool from '../../db.js';
+import logger from '../../logger.js';
+import { usersQuery, recentUsersQuery, chatIdParam } from '../../validation.js';
 
 const router = Router();
 
 // GET /api/users - список пользователей с фильтрацией
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { search, status, goal, funnel_stage, sort, order } = req.query;
+    const parsed = usersQuery.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid query parameters', details: parsed.error.flatten() });
+    }
+
+    const { search, status, goal, funnel_stage, sort, order } = parsed.data;
 
     const conditions: string[] = [];
     const params: any[] = [];
     let paramIdx = 1;
 
     // Поиск по имени, username, chat_id
-    if (search && typeof search === 'string' && search.trim()) {
+    if (search && search.trim()) {
       conditions.push(`(
         first_name ILIKE $${paramIdx}
         OR username ILIKE $${paramIdx}
@@ -25,26 +32,27 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Фильтр по статусу (buyer / lead)
     if (status === 'buyer') {
-      conditions.push(`is_buyer = true`);
+      conditions.push(`is_buyer = $${paramIdx}`);
+      params.push(true);
+      paramIdx++;
     } else if (status === 'lead') {
-      conditions.push(`is_buyer = false`);
+      conditions.push(`is_buyer = $${paramIdx}`);
+      params.push(false);
+      paramIdx++;
     }
 
     // Фильтр по цели
-    if (goal && typeof goal === 'string' && goal.trim()) {
+    if (goal && goal.trim()) {
       conditions.push(`goal = $${paramIdx}`);
       params.push(goal.trim());
       paramIdx++;
     }
 
     // Фильтр по этапу воронки
-    if (funnel_stage !== undefined && funnel_stage !== '' && funnel_stage !== null) {
-      const stage = parseInt(funnel_stage as string, 10);
-      if (!isNaN(stage)) {
-        conditions.push(`funnel_stage = $${paramIdx}`);
-        params.push(stage);
-        paramIdx++;
-      }
+    if (funnel_stage !== undefined) {
+      conditions.push(`funnel_stage = $${paramIdx}`);
+      params.push(funnel_stage);
+      paramIdx++;
     }
 
     const whereClause = conditions.length > 0
@@ -59,7 +67,7 @@ router.get('/', async (req: Request, res: Response) => {
       age: 'age',
       weight: 'weight',
     };
-    const sortColumn = allowedSorts[(sort as string)] || 'is_buyer DESC, funnel_stage';
+    const sortColumn = allowedSorts[sort as string] || 'is_buyer DESC, funnel_stage';
     const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
     const orderClause = sort
       ? `ORDER BY ${sortColumn} ${sortOrder} NULLS LAST`
@@ -90,7 +98,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(result.rows);
   } catch (error) {
-    console.error('[users] Error fetching users:', error);
+    logger.error({ err: error }, 'Error fetching users');
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -98,12 +106,12 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/users/recent - последние добавленные клиенты
 router.get('/recent', async (req: Request, res: Response) => {
   try {
-    const parsedDays = parseInt(req.query.days as string, 10);
-    const days = Math.min(Math.max(isNaN(parsedDays) ? 7 : parsedDays, 1), 365);
-    const parsedLimit = parseInt(req.query.limit as string, 10);
-    const limit = Math.min(Math.max(isNaN(parsedLimit) ? 20 : parsedLimit, 1), 100);
+    const parsed = recentUsersQuery.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid query parameters', details: parsed.error.flatten() });
+    }
 
-    console.log(`[users.recent] Fetching recent users`, { days, limit });
+    const { days, limit } = parsed.data;
 
     const result = await pool.query(`
       SELECT
@@ -129,10 +137,9 @@ router.get('/recent', async (req: Request, res: Response) => {
       LIMIT $2
     `, [days, limit]);
 
-    console.log(`[users.recent] Found ${result.rows.length} users`);
     res.json(result.rows);
   } catch (error) {
-    console.error('[users.recent] Error:', error);
+    logger.error({ err: error }, 'Error fetching recent users');
     res.status(500).json({ error: 'Failed to fetch recent users' });
   }
 });
@@ -140,7 +147,12 @@ router.get('/recent', async (req: Request, res: Response) => {
 // GET /api/users/:chatId - детали пользователя
 router.get('/:chatId', async (req: Request, res: Response) => {
   try {
-    const { chatId } = req.params;
+    const parsed = chatIdParam.safeParse(req.params);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid chatId parameter' });
+    }
+
+    const { chatId } = parsed.data;
 
     const result = await pool.query(`
       SELECT
@@ -174,7 +186,7 @@ router.get('/:chatId', async (req: Request, res: Response) => {
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('[users] Error fetching user:', error);
+    logger.error({ err: error }, 'Error fetching user');
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });

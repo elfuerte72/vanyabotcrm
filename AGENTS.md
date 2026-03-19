@@ -85,7 +85,7 @@ monitoringsql/
 | Table | Purpose |
 |-------|---------|
 | `users_nutrition` | User profiles, KBJU data, funnel stage, buyer status |
-| `n8n_chat_histories` | Chat messages (JSONB, legacy n8n format) |
+| `chat_histories` | Chat messages (JSONB, renamed from n8n_chat_histories) |
 | `user_events` | Button clicks, funnel events, interaction timeline |
 
 ## API Endpoints

@@ -53,11 +53,11 @@ async def e2e_cleanup():
 
     pool = await get_pool()
     await pool.execute("DELETE FROM users_nutrition WHERE chat_id = $1", E2E_CHAT_ID)
-    await pool.execute("DELETE FROM n8n_chat_histories WHERE session_id = $1", E2E_SESSION_ID)
+    await pool.execute("DELETE FROM chat_histories WHERE session_id = $1", E2E_SESSION_ID)
     yield
     pool = await get_pool()
     await pool.execute("DELETE FROM users_nutrition WHERE chat_id = $1", E2E_CHAT_ID)
-    await pool.execute("DELETE FROM n8n_chat_histories WHERE session_id = $1", E2E_SESSION_ID)
+    await pool.execute("DELETE FROM chat_histories WHERE session_id = $1", E2E_SESSION_ID)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

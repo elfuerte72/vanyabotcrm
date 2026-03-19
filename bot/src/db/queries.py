@@ -140,13 +140,13 @@ async def advance_funnel_if_at_stage(chat_id: int, expected_stage: int) -> bool:
     return updated
 
 
-# --- Chat history (compatible with n8n_chat_histories) ---
+# --- Chat history (compatible with chat_histories) ---
 
 async def get_chat_history(session_id: str, limit: int = 20) -> list[dict[str, Any]]:
     pool = await get_pool()
     rows = await pool.fetch(
         """
-        SELECT message FROM n8n_chat_histories
+        SELECT message FROM chat_histories
         WHERE session_id = $1
         ORDER BY id DESC
         LIMIT $2
@@ -167,7 +167,7 @@ async def save_chat_message(session_id: str, role: str, content: str) -> None:
     message = json.dumps({"type": role, "content": content})
     await pool.execute(
         """
-        INSERT INTO n8n_chat_histories (session_id, message)
+        INSERT INTO chat_histories (session_id, message)
         VALUES ($1, $2::jsonb)
         """,
         session_id, message,

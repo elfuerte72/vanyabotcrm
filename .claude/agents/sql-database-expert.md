@@ -28,10 +28,10 @@ This project uses PostgreSQL hosted on Supabase:
 - **Project ref**: `dnzwpdcvrpfiipjwpxux`
 - **Connection**: Use `DATABASE_URL` env var (never hardcode credentials)
 - **MCP access**: Use `mcp__supabase__execute_sql` for queries
-- **Backend ORM/Client**: Raw `pg` pool in `crm/server/db.ts` (SSL with `rejectUnauthorized: false`)
+- **Backend ORM/Client**: Raw `pg` pool in `crm/server/db.ts` (SSL enabled via system CA)
 - **Key tables**:
   - `users_nutrition` — User profiles (PK: `chat_id` bigint). Columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (enum: weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-6), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`.
-  - `n8n_chat_histories` — Chat messages (PK: `id` auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
+  - `chat_histories` — Chat messages (PK: `id` auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
 
 ## Methodology
 
@@ -58,7 +58,7 @@ When working on any database task, follow this approach:
 - Use `EXPLAIN ANALYZE` to verify query plans
 - Recommend indexes only when there's evidence of slow queries (not preemptively for every column)
 - Consider partial indexes for filtered queries (e.g., `WHERE is_buyer = true`)
-- For JSONB columns like `message` in `n8n_chat_histories`, use GIN indexes when querying JSON fields frequently
+- For JSONB columns like `message` in `chat_histories`, use GIN indexes when querying JSON fields frequently
 
 ## Platform-Specific Knowledge
 

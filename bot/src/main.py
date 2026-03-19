@@ -56,6 +56,9 @@ async def main() -> None:
     logger = structlog.get_logger()
     logger.info("bot_starting", log_level=settings.log_level)
 
+    if not settings.ziina_webhook_secret:
+        logger.warning("ZIINA_WEBHOOK_SECRET not set — payment webhooks will be rejected")
+
     # Initialize DB pool
     await get_pool()
 

@@ -1,14 +1,16 @@
 import { Pool } from 'pg';
+import logger from './logger.js';
 
 if (!process.env.DATABASE_URL) {
-  console.error('[db] DATABASE_URL is not set');
+  logger.error('DATABASE_URL is not set');
 }
 
+const dsn = process.env.DATABASE_URL || '';
+const sslDisabled = dsn.includes('sslmode=disable');
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: dsn,
+  ssl: sslDisabled ? false : true,
 });
 
 export default pool;

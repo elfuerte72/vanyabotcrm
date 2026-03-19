@@ -58,14 +58,14 @@ async def cleanup_test_data():
     for cid in TEST_CHAT_IDS:
         await pool.execute("DELETE FROM users_nutrition WHERE chat_id = $1", cid)
         await pool.execute(
-            "DELETE FROM n8n_chat_histories WHERE session_id = $1", str(cid)
+            "DELETE FROM chat_histories WHERE session_id = $1", str(cid)
         )
     yield
     # Post-cleanup (reuse same pool)
     for cid in TEST_CHAT_IDS:
         await pool.execute("DELETE FROM users_nutrition WHERE chat_id = $1", cid)
         await pool.execute(
-            "DELETE FROM n8n_chat_histories WHERE session_id = $1", str(cid)
+            "DELETE FROM chat_histories WHERE session_id = $1", str(cid)
         )
 
 
@@ -464,7 +464,7 @@ async def test_chat_message_jsonb_format():
 
     pool = await get_pool()
     row = await pool.fetchrow(
-        "SELECT message FROM n8n_chat_histories WHERE session_id = $1 ORDER BY id DESC LIMIT 1",
+        "SELECT message FROM chat_histories WHERE session_id = $1 ORDER BY id DESC LIMIT 1",
         session_id,
     )
     msg = row["message"]

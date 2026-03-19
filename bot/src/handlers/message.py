@@ -117,7 +117,7 @@ async def _process_text_message(
         logger.error("generate_route_but_no_data", chat_id=chat_id)
         return
 
-    logger.info("data_collection_finished", chat_id=chat_id, data=data)
+    logger.info("data_collection_finished", chat_id=chat_id, fields=list(data.keys()))
 
     # Calculate KBJU
     macros = calculate_macros(
@@ -169,7 +169,7 @@ async def _process_text_message(
         await message.answer(strings.AI_ERROR)
         return
 
-    logger.info("agent_food_result", chat_id=chat_id, menu_data=menu_data)
+    logger.info("agent_food_result", chat_id=chat_id, meals_count=len(menu_data) if isinstance(menu_data, list) else 1)
 
     # Validate
     target_stats = {

@@ -23,8 +23,7 @@ class LoggingMiddleware(BaseMiddleware):
                 "incoming_message",
                 chat_id=event.chat.id,
                 user_id=event.from_user.id if event.from_user else None,
-                username=event.from_user.username if event.from_user else None,
-                text=(event.text or "")[:100],
+                text_length=len(event.text or ""),
                 content_type=event.content_type,
             )
         elif isinstance(event, CallbackQuery):

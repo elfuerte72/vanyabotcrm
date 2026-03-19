@@ -1,7 +1,7 @@
 """Ziina payment webhook handler.
 
 Receives payment confirmation from Ziina and:
-1. Validates webhook secret
+1. Validates webhook secret (required — rejects if not configured)
 2. Updates user as buyer in DB
 3. Sends confirmation + content to user via Telegram
 """
@@ -23,28 +23,27 @@ logger = structlog.get_logger()
 
 async def handle_ziina_webhook(request: web.Request) -> web.Response:
     """Handle incoming Ziina payment webhook."""
-    # Validate webhook secret if configured
-    if settings.ziina_webhook_secret:
-        signature = request.headers.get("X-Webhook-Signature", "")
-        body = await request.read()
-        expected = hmac.new(
-            settings.ziina_webhook_secret.encode(),
-            body,
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(signature, expected):
-            logger.warning("ziina_webhook_invalid_signature")
-            return web.Response(status=401, text="Invalid signature")
-        try:
-            import json
-            data = json.loads(body)
-        except Exception:
-            return web.Response(status=400, text="Invalid JSON")
-    else:
-        try:
-            data = await request.json()
-        except Exception:
-            return web.Response(status=400, text="Invalid JSON")
+    # Reject webhooks if secret is not configured
+    if not settings.ziina_webhook_secret:
+        logger.error("ziina_webhook_secret_not_configured")
+        return web.Response(status=503, text="Webhook secret not configured")
+
+    signature = request.headers.get("X-Webhook-Signature", "")
+    body = await request.read()
+    expected = hmac.new(
+        settings.ziina_webhook_secret.encode(),
+        body,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        logger.warning("ziina_webhook_invalid_signature")
+        return web.Response(status=401, text="Invalid signature")
+
+    try:
+        import json
+        data = json.loads(body)
+    except Exception:
+        return web.Response(status=400, text="Invalid JSON")
 
     # Log only safe fields
     logger.info(

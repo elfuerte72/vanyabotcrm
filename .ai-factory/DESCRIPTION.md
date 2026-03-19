@@ -28,7 +28,7 @@ Two services share a single PostgreSQL database:
 1. **Bot** (Python/aiogram) — handles Telegram interactions, AI conversations, KBJU calculation, meal plan generation, funnel automation
 2. **CRM** (TypeScript modular monolith) — Express REST API + React Mini App in one project with shared types
 
-The bot writes user data and chat history; the CRM reads it. Chat history uses `n8n_chat_histories` table (backward-compatible with legacy n8n format).
+The bot writes user data and chat history; the CRM reads it. Chat history uses `chat_histories` table.
 
 ## Architecture
 See `.ai-factory/ARCHITECTURE.md` for detailed architecture guidelines.

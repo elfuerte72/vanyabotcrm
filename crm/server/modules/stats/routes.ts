@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import pool from '../../db.js';
+import logger from '../../logger.js';
 
 const router = Router();
 
@@ -38,7 +39,7 @@ router.get('/', async (req: Request, res: Response) => {
       funnel_distribution: funnelDist.rows,
     });
   } catch (error) {
-    console.error('[stats] Error fetching stats:', error);
+    logger.error({ err: error }, 'Error fetching stats');
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
