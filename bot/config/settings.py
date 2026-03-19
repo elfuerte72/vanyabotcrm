@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # OpenRouter
     openrouter_api_key: str
     openrouter_model: str = "google/gemini-3-flash-preview"
+    openrouter_temperature_conversation: float = 0.4
+    openrouter_temperature_food: float = 0.8
+    openrouter_max_retries: int = 2
 
     # Payment
     tribute_link: str = "https://t.me/tribute/app?startapp=pnvi"

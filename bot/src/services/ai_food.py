@@ -172,11 +172,10 @@ async def run_agent_food(
 
     client = get_ai_client()
 
-    max_retries = 2
     output = ""
     total_tokens = None
 
-    for attempt in range(max_retries):
+    for attempt in range(settings.openrouter_max_retries):
         response = await client.chat.completions.create(
             model=settings.openrouter_model,
             messages=[
@@ -184,6 +183,7 @@ async def run_agent_food(
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
+            temperature=settings.openrouter_temperature_food,
         )
 
         message = response.choices[0]
