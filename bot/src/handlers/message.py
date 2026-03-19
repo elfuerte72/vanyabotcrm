@@ -33,11 +33,14 @@ logger = structlog.get_logger()
 
 router = Router()
 
+# Test account — always allow recalculation (skip get_food check)
+TEST_CHAT_ID = 379336096
+
 
 @router.message(F.voice)
 async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None:
     """Handle voice messages: download → transcribe → process as text."""
-    if db_user and db_user.get_food:
+    if db_user and db_user.get_food and message.chat.id != TEST_CHAT_ID:
         lang = db_user.language or "en"
         strings = get_strings(lang)
         await message.answer(strings.ALREADY_CALCULATED, parse_mode="HTML")
@@ -70,7 +73,7 @@ async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None
 @router.message(F.text)
 async def handle_text(message: Message, bot: Bot, db_user: User | None) -> None:
     """Handle text messages."""
-    if db_user and db_user.get_food:
+    if db_user and db_user.get_food and message.chat.id != TEST_CHAT_ID:
         lang = db_user.language or "en"
         strings = get_strings(lang)
         await message.answer(strings.ALREADY_CALCULATED, parse_mode="HTML")
@@ -190,6 +193,7 @@ async def _process_text_message(
     html = format_meal_plan_html(menu_data, calc_stats, target_stats, language=detected_lang)
     await message.answer(html, parse_mode="HTML")
 
-    # Mark as food received → starts funnel
-    await set_food_received(chat_id)
+    # Mark as food received → starts funnel (skip for test account)
+    if chat_id != TEST_CHAT_ID:
+        await set_food_received(chat_id)
     logger.info("meal_plan_sent", chat_id=chat_id, calories=macros.calories)
