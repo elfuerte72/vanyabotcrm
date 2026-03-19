@@ -26,6 +26,7 @@ from aiogram.types import (
 from pydantic import ValidationError
 
 from src.db.queries import save_user_data, set_food_received
+from src.handlers.start import LANGUAGE_CHOOSE_MESSAGE, _make_language_keyboard
 from src.i18n import get_strings
 from src.models.user import User
 from src.models.user_data import CollectedUserData
@@ -77,9 +78,23 @@ def _make_confirm_keyboard(lang: str) -> InlineKeyboardMarkup:
     ])
 
 
+async def _require_language(message: Message, db_user: User | None) -> bool:
+    """If user hasn't chosen a language yet, show language buttons. Returns True if blocked."""
+    if db_user is None:
+        logger.info("no_language_selected", chat_id=message.chat.id)
+        await message.answer(
+            LANGUAGE_CHOOSE_MESSAGE,
+            reply_markup=_make_language_keyboard(),
+        )
+        return True
+    return False
+
+
 @router.message(F.voice)
 async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None:
     """Handle voice messages: download → transcribe → process as text."""
+    if await _require_language(message, db_user):
+        return
     if db_user and db_user.get_food and message.chat.id != TEST_CHAT_ID:
         lang = db_user.language or "en"
         strings = get_strings(lang)
@@ -113,6 +128,8 @@ async def handle_voice(message: Message, bot: Bot, db_user: User | None) -> None
 @router.message(F.text)
 async def handle_text(message: Message, bot: Bot, db_user: User | None) -> None:
     """Handle text messages."""
+    if await _require_language(message, db_user):
+        return
     if db_user and db_user.get_food and message.chat.id != TEST_CHAT_ID:
         lang = db_user.language or "en"
         strings = get_strings(lang)
@@ -131,7 +148,7 @@ async def _process_text_message(
     """Core message processing logic."""
     chat_id = message.chat.id
     username = message.from_user.username if message.from_user else "unknown"
-    detected_lang = detect_language(text)
+    detected_lang = db_user.language if db_user and db_user.language else detect_language(text)
 
     logger.debug("processing_message", chat_id=chat_id, lang=detected_lang, text=text[:100])
 

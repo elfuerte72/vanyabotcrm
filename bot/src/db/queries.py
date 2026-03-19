@@ -181,3 +181,33 @@ async def get_user_language(chat_id: int) -> str | None:
         "SELECT language FROM users_nutrition WHERE chat_id = $1", chat_id
     )
     return row["language"] if row else None
+
+
+async def save_user_language(
+    chat_id: int, language: str, username: str = "", first_name: str = ""
+) -> None:
+    """UPSERT minimal user record with language. Used when new user picks language at /start."""
+    pool = await get_pool()
+    await pool.execute(
+        """
+        INSERT INTO users_nutrition (chat_id, username, first_name, language, updated_at)
+        VALUES ($1, $2, $3, $4, NOW())
+        ON CONFLICT (chat_id) DO UPDATE SET
+            username = EXCLUDED.username,
+            first_name = EXCLUDED.first_name,
+            language = EXCLUDED.language,
+            updated_at = NOW()
+        """,
+        chat_id, username, first_name, language,
+    )
+    logger.info("user_language_saved", chat_id=chat_id, language=language)
+
+
+async def update_user_language(chat_id: int, language: str) -> None:
+    """Update language for an existing user. Used by /language command."""
+    pool = await get_pool()
+    await pool.execute(
+        "UPDATE users_nutrition SET language = $1, updated_at = NOW() WHERE chat_id = $2",
+        language, chat_id,
+    )
+    logger.info("user_language_updated", chat_id=chat_id, language=language)
