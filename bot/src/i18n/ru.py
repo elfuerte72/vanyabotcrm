@@ -1,4 +1,4 @@
-"""Russian localization strings — extracted from n8n workflows."""
+"""Russian localization strings."""
 
 # --- Subscription ---
 SUBSCRIBE_MESSAGE = (

@@ -1,6 +1,5 @@
 """Callback query handlers — inline button presses.
 
-Port of n8n callback_ru/en/ar workflows.
 Callbacks: buy_now, show_info, show_results, check_suitability,
            remind_later, none, video_workout
 """

@@ -31,7 +31,7 @@ class AgentResponse:
 def parse_agent_output(output: str) -> AgentResponse:
     """Parse AI agent output, extract JSON if present.
 
-    Port of n8n 'new_formater' Code node.
+    Extracts JSON data if present, determines route type.
     """
     parsed_data = None
     is_ready_to_generate = False
@@ -92,7 +92,7 @@ def parse_agent_output(output: str) -> AgentResponse:
 def markdown_to_telegram_html(text: str) -> str:
     """Convert markdown-style formatting to Telegram HTML.
 
-    Port of n8n 'new_formater' Code node logic.
+    Converts **bold**, *italic*, `code`, and bullet lists.
     """
     # Bold: **text** → <b>text</b>
     text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)
@@ -123,7 +123,7 @@ def format_meal_plan_html(
 ) -> str:
     """Format meal plan JSON into Telegram HTML.
 
-    Port of n8n 'comver to HTML' Code node.
+    Renders meals, macros summary, and excluded foods.
     """
     s = get_strings(language)
 
@@ -189,7 +189,7 @@ def validate_meal_plan(
 ) -> tuple[bool, str | None, dict[str, int]]:
     """Validate generated meal plan.
 
-    Port of n8n 'output -> json' Code node.
+    Checks meal count, calorie deviation, and excluded food violations.
 
     Returns:
         (is_valid, error_reason, calculated_stats)

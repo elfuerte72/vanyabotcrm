@@ -11,7 +11,6 @@ def detect_language(text: str) -> str:
     """Detect language from text using script detection.
 
     Priority: Arabic > Russian > English (default).
-    Matches the n8n 'formating' node logic exactly.
     """
     if _ARABIC_RE.search(text):
         return "ar"

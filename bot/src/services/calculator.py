@@ -1,7 +1,4 @@
-"""Mifflin-St Jeor KBJU calculator.
-
-Exact port of the n8n 'calculator macros' Code node.
-"""
+"""Mifflin-St Jeor KBJU calculator."""
 
 from __future__ import annotations
 

@@ -21,7 +21,7 @@ _BATCH_DELAY = 1.0  # seconds between batches
 async def send_funnel_messages(bot: Bot) -> None:
     """Fetch all funnel targets and send appropriate stage messages.
 
-    Port of n8n 'days router' + 'DAYS_ru/en/ar' workflows.
+    Sends stage-appropriate messages based on user's funnel_stage and language.
     """
     targets = await get_funnel_targets()
     logger.info("funnel_targets_fetched", count=len(targets))

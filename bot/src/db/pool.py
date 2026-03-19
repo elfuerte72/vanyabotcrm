@@ -28,6 +28,10 @@ async def create_pool() -> asyncpg.Pool:
     use_ssl: ssl.SSLContext | bool = False
     if "sslmode=disable" not in dsn:
         use_ssl = ssl.create_default_context()
+        # Supabase Supavisor (pooler) uses a self-signed certificate
+        if ".pooler.supabase.com" in dsn:
+            use_ssl.check_hostname = False
+            use_ssl.verify_mode = ssl.CERT_NONE
 
     pool = await asyncpg.create_pool(
         dsn=dsn,

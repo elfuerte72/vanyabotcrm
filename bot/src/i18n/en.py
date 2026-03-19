@@ -1,4 +1,4 @@
-"""English localization strings — extracted from n8n workflows."""
+"""English localization strings."""
 
 SUBSCRIBE_MESSAGE = "To use the bot, please subscribe to the channel: https://t.me/ivanfit_health"
 

@@ -1,4 +1,4 @@
-"""Arabic localization strings — extracted from n8n workflows."""
+"""Arabic localization strings."""
 
 SUBSCRIBE_MESSAGE = "لاستخدام البوت، يرجى الاشتراك في القناة: https://t.me/ivanfit_health"
 

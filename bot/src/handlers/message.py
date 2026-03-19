@@ -1,6 +1,6 @@
 """Handler for text and voice messages — main conversation flow.
 
-Flow (port of n8n MAIN v2):
+Flow:
 1. Check if user already got food (get_food=True) → reject
 2. Text: detect language → send to AGENT MAIN
 3. Voice: download → transcribe → send to AGENT MAIN

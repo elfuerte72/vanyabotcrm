@@ -14,7 +14,7 @@ logger = structlog.get_logger()
 def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     """Create and configure the funnel scheduler.
 
-    Runs daily at 23:00 UTC (matching the n8n Schedule Trigger).
+    Runs daily at 23:00 UTC.
     """
     scheduler = AsyncIOScheduler()
 

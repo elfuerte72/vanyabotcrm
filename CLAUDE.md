@@ -16,13 +16,17 @@ npm test              # Run all tests (vitest run)
 npm run test:watch    # Watch mode (vitest)
 ```
 
-### Telegram Bot (`/bot`)
+### Telegram Bot (`/bot`) — uv for dependency management
 ```bash
-cd bot && source .venv/bin/activate
-python -m src.main                    # Start bot (polling + scheduler + webhook)
-python -m pytest tests/ -v            # Run all tests (340 tests)
-python -m pytest tests/test_calculator.py  # Run single test file
-python -m scripts.trigger_funnel      # Manually trigger funnel sender
+cd bot
+uv sync                               # Install all deps (creates .venv automatically)
+uv sync --no-dev                      # Install production deps only
+uv run python -m src.main             # Start bot (polling + scheduler + webhook)
+uv run pytest tests/ -v               # Run all tests (340 tests)
+uv run pytest tests/test_calculator.py  # Run single test file
+uv run python -m scripts.trigger_funnel  # Manually trigger funnel sender
+uv add <package>                      # Add dependency (updates pyproject.toml + uv.lock)
+uv add --dev <package>                # Add dev dependency
 ```
 
 ### Database
@@ -48,7 +52,7 @@ Two services share the same PostgreSQL database:
 
 **Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a 5-day sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts polling + APScheduler (daily funnel at 23:00 UTC) + aiohttp webhook server (Ziina payments on port 8080).
 
-**Deployment**: Bot deploys to Railway with NIXPACKS builder. CRM deployment is being migrated. Database is on Supabase.
+**Deployment**: Bot runs locally (deployment target TBD). CRM deployment is being migrated. Database is on Supabase.
 
 ## CRM Architecture (`/crm`)
 
@@ -144,17 +148,13 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 **`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-6), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`.
 
-**`chat_histories`** — Chat messages (renamed from `n8n_chat_histories`). PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
+**`chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
 
 **`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `created_at`. Used in CRM to show full user interaction timeline alongside chat messages.
 
 ### Database Triggers
 
 `users_nutrition` has NOTIFY triggers (`trg_clients_notify_ins/upd/del` → `notify_clients_changed()`) for real-time updates. Schema is exported in `db/schema.sql`. Always check for unexpected triggers before debugging data issues: `SELECT trigger_name, event_manipulation, action_statement FROM information_schema.triggers WHERE event_object_table = 'users_nutrition';`
-
-## n8n Migration Status
-
-The project has fully migrated away from n8n. The table `n8n_chat_histories` has been renamed to `chat_histories` (migration: `db/migrations/001_rename_chat_histories.sql`). A backward-compatible view `n8n_chat_histories` exists during transition. No n8n workflows are in use.
 
 ## Frontend Patterns
 
@@ -179,14 +179,6 @@ Dark theme with Anthropic-inspired palette. Colors use HSL CSS variables in spac
 ## CRM Testing Patterns
 
 Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via `vi.mock('../db')` — mock `pool.query` return values rather than hitting the real database. Import `app` from `../app` (not `../index`) for supertest. Auth is automatically skipped in tests because `BOT_TOKEN` is unset.
-
-## Railway Project
-
-- **Project Name:** my n8n
-- **Project ID:** 1f29c8b0-a81e-4d12-96cd-f97f87e96a16
-- **Environment:** production
-- **Active services:** Redis, Postgres (n8n), Worker, Primary (n8n instances)
-- Bot and CRM services have been removed from Railway
 
 ## Environment Variables
 
