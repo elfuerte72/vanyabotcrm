@@ -24,10 +24,11 @@ You are an elite database architect and SQL expert with deep expertise across Po
 
 ## Project Context
 
-This project uses PostgreSQL hosted on Railway:
-- **Connection**: `postgres://railway:y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa@yamabiko.proxy.rlwy.net:26903/railway`
-- **CLI access**: `PGPASSWORD='y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa' psql -h yamabiko.proxy.rlwy.net -p 26903 -U railway -d railway`
-- **Backend ORM/Client**: Raw `pg` pool in `backend/src/db.ts` (SSL with `rejectUnauthorized: false`)
+This project uses PostgreSQL hosted on Supabase:
+- **Project ref**: `dnzwpdcvrpfiipjwpxux`
+- **Connection**: Use `DATABASE_URL` env var (never hardcode credentials)
+- **MCP access**: Use `mcp__supabase__execute_sql` for queries
+- **Backend ORM/Client**: Raw `pg` pool in `crm/server/db.ts` (SSL with `rejectUnauthorized: false`)
 - **Key tables**:
   - `users_nutrition` — User profiles (PK: `chat_id` bigint). Columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (enum: weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-6), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`.
   - `n8n_chat_histories` — Chat messages (PK: `id` auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.

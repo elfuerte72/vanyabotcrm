@@ -3,13 +3,12 @@
 > Project map for AI agents. Keep this file up-to-date as the project evolves.
 
 ## Project Overview
-AI-powered Telegram nutrition bot with sales funnel and Mini App CRM for fitness trainer client management. Three services (bot, backend, frontend) share a single PostgreSQL database.
+AI-powered Telegram nutrition bot with sales funnel and Mini App CRM for fitness trainer client management. Two services (bot, CRM) share a single PostgreSQL database.
 
 ## Tech Stack
 - **Bot:** Python 3.11+ / aiogram 3.x + OpenRouter (Gemini 3 Flash)
-- **Backend:** Express + TypeScript
-- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
-- **Database:** PostgreSQL (Railway)
+- **CRM:** TypeScript modular monolith — Express (server) + React 18 + Vite + Tailwind + shadcn/ui (client) + shared types
+- **Database:** PostgreSQL (Supabase)
 - **Deployment:** Railway (Nixpacks)
 
 ## Project Structure
@@ -27,36 +26,48 @@ monitoringsql/
 │   │   ├── db/                 # asyncpg pool + SQL queries
 │   │   └── models/             # User dataclass
 │   ├── config/                 # Pydantic Settings + media.yaml
-│   ├── tests/                  # pytest tests (58+)
+│   ├── tests/                  # pytest tests (340+)
 │   └── scripts/                # Utility scripts (trigger_funnel)
-├── backend/                    # Express API for Mini App CRM
-│   ├── src/
-│   │   ├── index.ts            # Server startup (app.listen)
+├── crm/                        # CRM modular monolith (TypeScript)
+│   ├── shared/                 # Shared types and constants
+│   │   ├── types.ts            # User, ChatMessage, UserEvent, Stats, UserFilters
+│   │   └── constants.ts        # goalLabels, activityLabels, eventButtonLabels
+│   ├── server/                 # Express API
 │   │   ├── app.ts              # Express app (routes, middleware, static)
-│   │   ├── db.ts               # PostgreSQL pool (SSL)
+│   │   ├── index.ts            # Entry point: app.listen()
 │   │   ├── auth.ts             # Telegram initData auth middleware
-│   │   └── routes/             # API routes (users, chat, stats, events)
-│   └── src/__tests__/          # vitest + supertest tests
-├── frontend/                   # React Mini App CRM
-│   ├── src/
+│   │   ├── db.ts               # PostgreSQL pool (SSL)
+│   │   ├── modules/
+│   │   │   ├── users/routes.ts # GET /api/users, /recent, /:chatId
+│   │   │   ├── chat/routes.ts  # GET /api/chat/:sessionId
+│   │   │   ├── stats/routes.ts # GET /api/stats
+│   │   │   └── events/routes.ts# GET /api/events/:chatId
+│   │   └── __tests__/          # vitest + supertest tests
+│   ├── client/                 # React Mini App CRM
 │   │   ├── App.tsx             # Main app (list/detail views, clients/recent tabs)
 │   │   ├── components/         # UI components
 │   │   │   ├── ui/             # shadcn/ui base components
 │   │   │   ├── UserList.tsx    # Client list with filters
 │   │   │   ├── UserDetail.tsx  # Full client profile + chat + events
 │   │   │   └── ...
-│   │   ├── hooks/useApi.ts     # All API hooks, types, shared constants
+│   │   ├── hooks/useApi.ts     # API hooks (re-exports shared types/constants)
 │   │   └── lib/utils.ts        # cn() utility (clsx + tailwind-merge)
+│   ├── package.json            # Unified deps
+│   ├── tsconfig.json           # Client tsconfig
+│   ├── tsconfig.server.json    # Server tsconfig
+│   ├── vite.config.ts          # Vite (client build + dev proxy)
 │   ├── tailwind.config.js      # ESM config (never use require!)
-│   └── index.html              # SPA entry
-├── n8n/                        # Legacy n8n workflow JSONs (reference only)
+│   └── railway.json            # Railway deployment
+├── db/                         # Database schema (shared contract)
+│   └── schema.sql              # CREATE TABLE + triggers (pg_dump)
 ├── docs/                       # Documentation
 │   └── bot-documentation.md    # Bot feature documentation
 ├── .ai-factory/                # AI Factory context
 │   ├── DESCRIPTION.md          # Project specification
-│   └── PLAN.md                 # Current implementation plan
+│   └── ARCHITECTURE.md         # Modular Monolith architecture guidelines
 ├── CLAUDE.md                   # Agent instructions
-└── AGENTS.md                   # This file
+├── AGENTS.md                   # This file
+└── ISSUES.md                   # Known issues and fix plan
 ```
 
 ## Key Entry Points
@@ -64,9 +75,10 @@ monitoringsql/
 |------|---------|
 | `bot/src/main.py` | Bot entry: starts polling, scheduler, webhook server |
 | `bot/src/bot.py` | Creates Bot + Dispatcher, registers routers/middlewares |
-| `backend/src/index.ts` | Backend server startup |
-| `backend/src/app.ts` | Express app configuration (import for testing) |
-| `frontend/src/App.tsx` | React SPA root component |
+| `crm/server/index.ts` | CRM server startup |
+| `crm/server/app.ts` | Express app configuration (import for testing) |
+| `crm/client/App.tsx` | React SPA root component |
+| `crm/shared/types.ts` | Shared TypeScript interfaces (single source of truth) |
 | `bot/config/settings.py` | Bot configuration (Pydantic Settings, lazy init) |
 
 ## Key Database Tables
@@ -80,6 +92,7 @@ monitoringsql/
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /api/users` | List users (search, filter, sort) |
+| `GET /api/users/recent` | Recent users (days, limit) |
 | `GET /api/users/:chatId` | User detail |
 | `GET /api/stats` | Aggregated stats |
 | `GET /api/chat/:sessionId` | Chat history |
@@ -90,12 +103,7 @@ monitoringsql/
 |----------|------|-------------|
 | Agent Instructions | CLAUDE.md | Build commands, architecture, patterns |
 | Project Spec | .ai-factory/DESCRIPTION.md | Tech stack and feature spec |
+| Architecture | .ai-factory/ARCHITECTURE.md | Modular Monolith guidelines |
 | Bot Docs | docs/bot-documentation.md | Bot features and messages |
-
-## AI Context Files
-| File | Purpose |
-|------|---------|
-| AGENTS.md | This file — project structure map |
-| .ai-factory/DESCRIPTION.md | Project specification and tech stack |
-| .ai-factory/ARCHITECTURE.md | Architecture decisions and guidelines |
-| CLAUDE.md | Agent instructions and preferences |
+| DB Schema | db/schema.sql | Database tables and triggers |
+| Known Issues | ISSUES.md | Security/quality issues and fix plan |

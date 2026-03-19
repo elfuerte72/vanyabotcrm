@@ -4,45 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
-### Root (combined build for Railway)
+### CRM (`/crm`) — unified TypeScript project (server + client)
 ```bash
-npm run build        # Frontend build → Backend build → copy frontend/dist → backend/public
-npm start            # cd backend && node dist/index.js
-```
-
-### Backend (`/backend`)
-```bash
-npm run dev          # Dev server with hot reload (tsx watch, port 3001)
-npm run build        # Compile TypeScript → dist/
-npm start            # Run compiled server
-```
-
-### Frontend (`/frontend`)
-```bash
-npm run dev          # Vite dev server (port 5173), proxies /api → localhost:3001
-npm run build        # tsc + vite build → dist/
-npm run preview      # Preview production build
-```
-
-### Backend Tests (`/backend`)
-```bash
-npm test             # Run all tests (vitest run)
-npm run test:watch   # Watch mode (vitest)
-npx vitest run src/__tests__/chat.test.ts  # Run a single test file
+cd crm
+npm run dev           # Concurrently: server (tsx watch :3001) + client (Vite :5173)
+npm run dev:server    # Server only with hot reload (tsx watch, port 3001)
+npm run dev:client    # Vite dev server (port 5173), proxies /api → localhost:3001
+npm run build         # Build client (Vite) → build server (tsc) → copy client to server/public
+npm start             # Run compiled server: node dist/server/index.js
+npm test              # Run all tests (vitest run)
+npm run test:watch    # Watch mode (vitest)
 ```
 
 ### Telegram Bot (`/bot`)
 ```bash
 cd bot && source .venv/bin/activate
 python -m src.main                    # Start bot (polling + scheduler + webhook)
-python -m pytest tests/ -v            # Run all tests (58 tests)
+python -m pytest tests/ -v            # Run all tests (340 tests)
 python -m pytest tests/test_calculator.py  # Run single test file
 python -m scripts.trigger_funnel      # Manually trigger funnel sender
 ```
 
 ### Database
 ```bash
-PGPASSWORD='y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa' psql -h yamabiko.proxy.rlwy.net -p 26903 -U railway -d railway
+# Connection string from DATABASE_URL env var
+psql "$DATABASE_URL"
+# Schema reference: db/schema.sql
 ```
 
 No lint commands are configured.
@@ -50,20 +37,59 @@ No lint commands are configured.
 ## Architecture
 
 ```
-Telegram Bot (aiogram) ──→ PostgreSQL (Railway)
+Telegram Bot (aiogram) ──→ PostgreSQL
                           ↕
-Telegram Mini App → React Frontend (Vite) → Express API ──→ PostgreSQL (Railway)
+Telegram Mini App → React Client (Vite) → Express API ──→ PostgreSQL
 ```
 
-Three services share the same PostgreSQL database:
+Two services share the same PostgreSQL database:
 
-**Frontend** (`/frontend/src`): React 18 + TypeScript + Tailwind CSS + shadcn/ui components. Single-page app with two views (list/detail) and two tabs (clients/recent) switched via state in `App.tsx`. All API hooks and types live in `hooks/useApi.ts`. No routing library. UI labels are in Russian. Mobile-first Telegram Mini App — no hover effects, no animations.
-
-**Backend** (`/backend/src`): Express + TypeScript. `app.ts` creates the Express app (routes, middleware, static serving); `index.ts` only calls `app.listen()`. This split enables supertest to import `app.ts` directly without starting a server. Routes in `src/routes/` — `users.ts`, `chat.ts`, `stats.ts`, `events.ts`. Database pool in `db.ts` (SSL with `rejectUnauthorized: false`). Auth middleware validates Telegram `initData` via `@telegram-apps/init-data-node`. Auth skipped when `BOT_TOKEN` env is unset (dev mode). In production, backend also serves the frontend SPA via a catch-all `*` route from `public/`.
+**CRM** (`/crm`): Modular monolith — Express API + React SPA in a single TypeScript project. Shared types between server and client in `shared/`. Server modules in `server/modules/{users,chat,stats,events}/routes.ts`. Client is a Telegram Mini App with two views (list/detail) and two tabs (clients/recent). `server/app.ts` creates Express app; `server/index.ts` calls `app.listen()` (split for supertest). Auth middleware in `server/auth.ts` validates Telegram `initData`. In production, server serves client SPA via catch-all `*` route from `public/`.
 
 **Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a 5-day sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts polling + APScheduler (daily funnel at 23:00 UTC) + aiohttp webhook server (Ziina payments on port 8080).
 
-**Deployment**: All services deploy to Railway with NIXPACKS builder.
+**Deployment**: Bot deploys to Railway with NIXPACKS builder. CRM deployment is being migrated. Database is on Supabase.
+
+## CRM Architecture (`/crm`)
+
+```
+crm/
+├── shared/              # Shared types and constants (server + client)
+│   ├── types.ts         # User, ChatMessage, UserEvent, Stats, UserFilters
+│   └── constants.ts     # goalLabels, activityLabels, eventButtonLabels
+├── server/              # Express API
+│   ├── app.ts           # Express app (routes, middleware, static)
+│   ├── index.ts         # Entry point: app.listen()
+│   ├── auth.ts          # Telegram initData auth middleware
+│   ├── db.ts            # PostgreSQL pool (SSL, no hardcoded fallback)
+│   ├── modules/
+│   │   ├── users/routes.ts    # GET /api/users, /api/users/recent, /api/users/:chatId
+│   │   ├── chat/routes.ts     # GET /api/chat/:sessionId
+│   │   ├── stats/routes.ts    # GET /api/stats
+│   │   └── events/routes.ts   # GET /api/events/:chatId
+│   └── __tests__/       # vitest + supertest tests
+├── client/              # React SPA (Telegram Mini App)
+│   ├── App.tsx          # Main app (list/detail views, clients/recent tabs)
+│   ├── components/      # UI components (UserList, UserDetail, UserCard, etc.)
+│   │   └── ui/          # shadcn/ui base components
+│   ├── hooks/useApi.ts  # API hooks (re-exports types from shared/)
+│   ├── lib/utils.ts     # cn() helper
+│   ├── index.css        # Tailwind + CSS vars
+│   └── vite-env.d.ts    # Telegram WebApp type declarations
+├── package.json         # Unified deps (server + client)
+├── tsconfig.json        # Client tsconfig (noEmit, JSX, @/ alias → ./client/)
+├── tsconfig.server.json # Server tsconfig (commonjs, outDir → dist/server/)
+├── vite.config.ts       # Vite (client build + dev proxy)
+├── vitest.config.ts     # Test config
+└── tailwind.config.js   # ESM config (never use require!)
+```
+
+### Dependency Rules
+- ✅ `server/modules/*` → `server/db.ts`, `shared/*`
+- ✅ `client/components/*` → `client/hooks/*`, `client/lib/*`, `shared/*`
+- ❌ `server/` → `client/` (server must not import client code)
+- ❌ `client/` → `server/` (client must not import server code)
+- ❌ `shared/` → `server/` or `client/` (shared has no layer dependencies)
 
 ## Bot Architecture (`/bot`)
 
@@ -99,6 +125,7 @@ Tests use pytest + pytest-asyncio in `bot/tests/`. Env vars are set in `conftest
 | Endpoint | Query Params |
 |----------|-------------|
 | `GET /api/users` | `search`, `status` (buyer/lead), `goal`, `funnel_stage`, `sort` (name/calories/funnel/age/weight), `order` (asc/desc) |
+| `GET /api/users/recent` | `days` (1-365, default 7), `limit` (1-100, default 20) |
 | `GET /api/users/:chatId` | — |
 | `GET /api/stats` | — |
 | `GET /api/chat/:sessionId` | — |
@@ -111,7 +138,7 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 ## Database
 
-**Connection**: `postgres://railway:y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa@yamabiko.proxy.rlwy.net:26903/railway`
+**Connection**: PostgreSQL connection string in `DATABASE_URL` env var. Schema reference: `db/schema.sql`.
 
 ### Key Tables
 
@@ -121,13 +148,21 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 **`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `created_at`. Used in CRM to show full user interaction timeline alongside chat messages.
 
+### Database Triggers
+
+`users_nutrition` has NOTIFY triggers (`trg_clients_notify_ins/upd/del` → `notify_clients_changed()`) for real-time updates. Schema is exported in `db/schema.sql`. Always check for unexpected triggers before debugging data issues: `SELECT trigger_name, event_manipulation, action_statement FROM information_schema.triggers WHERE event_object_table = 'users_nutrition';`
+
+## n8n Migration Status
+
+The project has fully migrated away from n8n. The `n8n_chat_histories` table name is a legacy artifact — the bot now writes directly via asyncpg. No n8n workflows are in use. The table name is kept for backward compatibility with existing data.
+
 ## Frontend Patterns
 
-- **UI library**: shadcn/ui components in `src/components/ui/` (Card, Badge, Button, Tabs, Separator, Avatar) built on Radix UI primitives + class-variance-authority (CVA)
+- **UI library**: shadcn/ui components in `client/components/ui/` (Card, Badge, Button, Tabs, Separator, Avatar) built on Radix UI primitives + class-variance-authority (CVA)
 - **Icons**: Lucide React (`lucide-react`) — no inline SVGs
-- **Utility**: `cn()` from `src/lib/utils.ts` (clsx + tailwind-merge) for conditional class merging
-- **Path alias**: `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig.json`)
-- Shared constants (`goalLabels`, `activityLabels`, `eventButtonLabels`) exported from `hooks/useApi.ts` — don't duplicate in components
+- **Utility**: `cn()` from `client/lib/utils.ts` (clsx + tailwind-merge) for conditional class merging
+- **Path alias**: `@/` maps to `client/` (configured in both `vite.config.ts` and `tsconfig.json`)
+- **Shared types/constants**: Defined in `shared/types.ts` and `shared/constants.ts`, re-exported from `client/hooks/useApi.ts`
 - Hooks: `useUsers(filters)`, `useUser(chatId)`, `useStats()`, `useChatHistory(sessionId)`, `useUserEvents(chatId)`, `useRecentUsers(days, limit)`, `useDebounce(value, delay)`
 - `useDebounce` default 300ms for search input
 - **No animations or hover effects** — this is a mobile Telegram Mini App. Use `active:` states for touch feedback only
@@ -141,24 +176,26 @@ Dark theme with Anthropic-inspired palette. Colors use HSL CSS variables in spac
 
 **Important**: `tailwind.config.js` uses ESM (`import`/`export default`). Never use `require()` in this file — it silently breaks the config.
 
-## Backend Testing Patterns
+## CRM Testing Patterns
 
-Tests use Vitest + Supertest in `src/__tests__/`. Database is mocked via `vi.mock('../db')` — mock `pool.query` return values rather than hitting the real database. Import `app` from `../app` (not `../index`) for supertest. Auth is automatically skipped in tests because `BOT_TOKEN` is unset.
+Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via `vi.mock('../db')` — mock `pool.query` return values rather than hitting the real database. Import `app` from `../app` (not `../index`) for supertest. Auth is automatically skipped in tests because `BOT_TOKEN` is unset.
 
 ## Railway Project
 
 - **Project Name:** my n8n
 - **Project ID:** 1f29c8b0-a81e-4d12-96cd-f97f87e96a16
 - **Environment:** production
+- **Active services:** Redis, Postgres (n8n), Worker, Primary (n8n instances)
+- Bot and CRM services have been removed from Railway
 
 ## Environment Variables
 
 | Variable | Service | Description |
 |----------|---------|-------------|
-| `PORT` | backend | Server port (default: 3001) |
-| `BOT_TOKEN` | backend, bot | Telegram bot token |
-| `DATABASE_URL` | backend, bot | PostgreSQL connection string |
-| `VITE_API_URL` | frontend | API base URL (empty = relative URLs with Vite proxy) |
+| `PORT` | crm | Server port (default: 3001) |
+| `BOT_TOKEN` | crm, bot | Telegram bot token |
+| `DATABASE_URL` | crm, bot | Supabase PostgreSQL connection string |
+| `VITE_API_URL` | crm | API base URL (empty = relative URLs with Vite proxy) |
 | `CHANNEL_ID` | bot | Telegram channel ID for subscription check (default: -1002504147240) |
 | `CHANNEL_USERNAME` | bot | Telegram channel username, preferred over ID (default: ivanfit_health) |
 | `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
@@ -167,3 +204,11 @@ Tests use Vitest + Supertest in `src/__tests__/`. Database is mocked via `vi.moc
 | `ZIINA_LINK` | bot | Payment link for Ziina (EN/AR users, falls back to TRIBUTE_LINK) |
 | `ZIINA_WEBHOOK_SECRET` | bot | Ziina payment webhook secret (optional) |
 | `LOG_LEVEL` | bot | Logging level (default: DEBUG) |
+
+## Security Notes
+
+- **Never hardcode credentials** in source files or CLAUDE.md — use `DATABASE_URL` env var
+- CRM CORS is currently `origin: true` (accepts all origins) — should be restricted in production
+- SSL verification is disabled in both CRM (`rejectUnauthorized: false`) and bot (`ssl.CERT_NONE`) for Supabase compatibility
+- Ziina webhook signature validation is optional — if `ZIINA_WEBHOOK_SECRET` is empty, webhooks are accepted without verification
+- Auth is completely skipped when `BOT_TOKEN` is unset (dev mode)

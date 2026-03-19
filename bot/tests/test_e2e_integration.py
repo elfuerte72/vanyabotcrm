@@ -2,19 +2,19 @@
 
 Simulates: user creation → KBJU save → food received → 6-day funnel → buy → verify.
 Uses test chat_id 99999999.
+
+Requires DATABASE_URL env var pointing to a real PostgreSQL instance.
 """
 
 from __future__ import annotations
 
 import os
 
-# Real database URL for integration tests
-REAL_DATABASE_URL = (
-    "postgres://railway:y6G7oBq6-0VdfPV3S6HuliVFeL2d4tMa"
-    "@yamabiko.proxy.rlwy.net:26903/railway"
-)
+import pytest
 
-os.environ["DATABASE_URL"] = REAL_DATABASE_URL
+# Use DATABASE_URL from environment for integration tests
+if not os.environ.get("DATABASE_URL"):
+    pytest.skip("DATABASE_URL not set — skipping integration tests", allow_module_level=True)
 os.environ.setdefault("BOT_TOKEN", "test_token_fake")
 os.environ.setdefault("OPENROUTER_API_KEY", "test_key_fake")
 
