@@ -104,7 +104,12 @@ async def get_funnel_targets() -> list[dict[str, Any]]:
         WHERE (is_buyer IS FALSE OR is_buyer IS NULL)
           AND get_food = TRUE
           AND funnel_stage >= 0
-          AND funnel_stage < 5
+          AND funnel_stage <= 5
+          AND (
+            (funnel_stage = 0 AND last_funnel_msg_at + interval '2 hours' <= NOW())
+            OR
+            (funnel_stage > 0 AND last_funnel_msg_at + interval '23 hours' <= NOW())
+          )
         """
     )
     return [dict(row) for row in rows]

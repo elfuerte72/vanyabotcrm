@@ -1,4 +1,4 @@
-"""APScheduler-based daily funnel sender."""
+"""APScheduler-based funnel sender — runs every 15 minutes."""
 
 from __future__ import annotations
 
@@ -14,7 +14,9 @@ logger = structlog.get_logger()
 def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     """Create and configure the funnel scheduler.
 
-    Runs daily at 23:00 UTC.
+    Runs every 15 minutes to check for users whose delay has elapsed:
+    - Stage 0: 2 hours after receiving meal plan
+    - Stages 1-5: 23 hours after previous funnel message
     """
     scheduler = AsyncIOScheduler()
 
@@ -24,12 +26,11 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
 
     scheduler.add_job(
         _job,
-        "cron",
-        hour=23,
-        minute=0,
-        id="daily_funnel",
+        "interval",
+        minutes=15,
+        id="funnel_check",
         replace_existing=True,
     )
 
-    logger.info("funnel_scheduler_configured", schedule="daily at 23:00 UTC")
+    logger.info("funnel_scheduler_configured", schedule="every 15 minutes")
     return scheduler
