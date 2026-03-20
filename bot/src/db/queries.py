@@ -211,3 +211,12 @@ async def update_user_language(chat_id: int, language: str) -> None:
         language, chat_id,
     )
     logger.info("user_language_updated", chat_id=chat_id, language=language)
+
+
+async def clear_chat_history(session_id: str) -> None:
+    """Delete all chat history for a given session."""
+    pool = await get_pool()
+    await pool.execute(
+        "DELETE FROM chat_histories WHERE session_id = $1", session_id
+    )
+    logger.info("chat_history_cleared", session_id=session_id)

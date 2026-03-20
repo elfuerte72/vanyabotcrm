@@ -152,6 +152,21 @@ START_MESSAGE = (
     "Just write to me!"
 )
 
+WELCOME_WITH_QUESTIONS = (
+    "Hi! I'm Ivan, your nutrition consultant. "
+    "To create a personalized meal plan, I need a few details. "
+    "Please answer these questions:\n\n"
+    "1. Your sex (male/female)?\n"
+    "2. Weight (kg)?\n"
+    "3. Height (cm)?\n"
+    "4. Age?\n"
+    "5. Activity level: sedentary / light / moderate / high / extreme?\n"
+    "6. Goal: lose weight / maintain / gain muscle?\n"
+    "7. Any food allergies or foods you want to exclude?"
+)
+
+LANGUAGE_CHANGED = "Language changed to English."
+
 VIDEO_WORKOUT_RESPONSE = (
     "Now your body is activated 🤍\n"
     "And in this state, workouts give results 2-3 times faster.\n\n"

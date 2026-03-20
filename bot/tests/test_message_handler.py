@@ -93,15 +93,15 @@ class TestGetFoodGuard:
 
     @pytest.mark.asyncio
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
-    async def test_no_guard_when_db_user_none(self, mock_agent):
-        """New user (db_user=None) passes guard."""
-        mock_agent.return_value = "Welcome! Let me help."
+    async def test_guard_blocks_when_db_user_none(self, mock_agent):
+        """New user (db_user=None) is blocked — must choose language first."""
         msg = _make_message(text="Hello")
         bot = AsyncMock()
 
         await handle_text(msg, bot, None)
 
-        mock_agent.assert_called_once()
+        mock_agent.assert_not_called()
+        msg.answer.assert_called_once()
 
 
 # ─── Route: conversation ─────────────────────────────────────────────────
