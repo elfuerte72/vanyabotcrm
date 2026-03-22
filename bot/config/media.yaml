@@ -12,9 +12,21 @@ videos:
   # "Will this workout suit me?" video (check_suitability callback)
   suitability: "1fMoKSPu6KX8_B9pal8w3FVxi-T2Nj4L3"
 
+# Video notes (circles) — Google Drive file IDs
+video_notes:
+  # Stage 3: "Как это работает" explanation
+  how_it_works: "1QxlXwm-nQ6NLjmn2H1RMrGRqjEnPGfTG"
+  # Stage 5: "Подойдёт ли она мне" sales circle
+  will_it_suit: "1fMoKSPu6KX8_B9pal8w3FVxi-T2Nj4L3"
+
 photos:
   # Result photos (show_results callback — random pick)
   results:
     - "192D7VKnBQAhRxl2tPbkm180ryvK_JnnM"
     - "1shlC_81AL_zPFwG8APJtrcudA8afhbJY"
     - "1TawBgD-c4p7SaW2DbGUNyh16h9rA54be"
+
+  # Funnel photos (local files in bot/media/photos/)
+  funnel:
+    stage_1: "before_after_1.jpg"
+    stage_2: "before_after_2.jpg"

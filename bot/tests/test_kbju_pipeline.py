@@ -85,7 +85,7 @@ class TestKBJUPipelineRU:
         assert food_kwargs.kwargs["protein"] == macros["protein"]
 
         # set_food_received called → starts funnel
-        mock_set_food.assert_called_once_with(100001)
+        mock_set_food.assert_called_once_with(100001, language="ru")
 
         # Meal plan sent to user
         assert message.answer.call_count >= 2  # "calculating..." + meal plan HTML
@@ -122,7 +122,7 @@ class TestKBJUPipelineEN:
         assert save_kwargs.kwargs["fats"] == macros["fats"]
         assert save_kwargs.kwargs["carbs"] == macros["carbs"]
 
-        mock_set_food.assert_called_once_with(100002)
+        mock_set_food.assert_called_once_with(100002, language="en")
 
 
 class TestKBJUPipelineAR:
@@ -153,7 +153,7 @@ class TestKBJUPipelineAR:
         macros = expected_macros("ar")
         assert save_kwargs.kwargs["calories"] == macros["calories"]
 
-        mock_set_food.assert_called_once_with(100003)
+        mock_set_food.assert_called_once_with(100003, language="ar")
 
 
 # ─── KBJU calculation verification ──────────────────────────────────────
@@ -211,7 +211,7 @@ class TestSetFoodReceivedStartsFunnel:
         await _process_text_message(message, AsyncMock(), None, "Hello")
 
         # set_food_received is the LAST DB call — after meal plan is sent
-        mock_set_food.assert_called_once_with(55555)
+        mock_set_food.assert_called_once_with(55555, language="en")
 
         # It was called AFTER save_user_data
         save_order = mock_save_user.call_args_list

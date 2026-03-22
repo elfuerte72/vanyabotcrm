@@ -115,6 +115,7 @@ CREATE TABLE public.users_nutrition (
     funnel_stage integer DEFAULT 0,
     funnel_start_at timestamp without time zone,
     last_funnel_msg_at timestamp without time zone,
+    next_funnel_msg_at timestamp with time zone,
     is_buyer boolean DEFAULT false,
     language character varying(5) DEFAULT 'ru'::character varying,
     id_ziina text,

@@ -284,7 +284,7 @@ async def _process_text_message(
 
     # Mark as food received → starts funnel (skip for test account)
     if chat_id != TEST_CHAT_ID:
-        await set_food_received(chat_id)
+        await set_food_received(chat_id, language=detected_lang)
     logger.info("meal_plan_sent", chat_id=chat_id, calories=macros.calories)
 
 

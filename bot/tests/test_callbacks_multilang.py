@@ -248,9 +248,8 @@ class TestNoneMultilang:
 class TestVideoWorkoutMultilang:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_text_per_language(self, mock_get_lang, mock_asyncio, lang):
+    async def test_video_workout_text_per_language(self, mock_get_lang, lang):
         mock_get_lang.return_value = lang
         callback = make_callback(data="video_workout", chat_id=80000, user_id=80000)
         bot = make_bot()
@@ -265,25 +264,9 @@ class TestVideoWorkoutMultilang:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_advances_funnel(self, mock_get_lang, mock_asyncio, lang):
-        """Funnel advance is scheduled in delayed follow-up task."""
-        mock_get_lang.return_value = lang
-        callback = make_callback(data="video_workout", user_id=80000)
-        bot = make_bot()
-
-        await handle_video_workout(callback, bot)
-
-        # Delayed task is created (advance happens inside it after 5 min)
-        mock_asyncio.create_task.assert_called_once()
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.asyncio")
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_keyboard_structure(self, mock_get_lang, mock_asyncio, lang):
-        """Keyboard has 1 row: [video URL button]. Buy button sent later."""
+    async def test_video_workout_keyboard_structure(self, mock_get_lang, lang):
+        """Keyboard has 1 row: [video URL button]."""
         mock_get_lang.return_value = lang
         callback = make_callback(data="video_workout")
         bot = make_bot()
@@ -294,15 +277,13 @@ class TestVideoWorkoutMultilang:
         markup = bot.send_message.call_args.kwargs["reply_markup"]
         assert len(markup.inline_keyboard) == 1, "Should have 1 row (video only)"
 
-        # Row 1: video URL button
         video_btn = markup.inline_keyboard[0][0]
         assert video_btn.url is not None, "First button should be URL"
         assert video_btn.text == strings.WATCH_VIDEO_BUTTON
 
     @pytest.mark.asyncio
-    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_answers_callback_first(self, mock_get_lang, mock_asyncio):
+    async def test_video_workout_answers_callback_first(self, mock_get_lang):
         """callback.answer() is called immediately (before send_message)."""
         mock_get_lang.return_value = "en"
         callback = make_callback(data="video_workout")
@@ -330,15 +311,15 @@ class TestCRMDataFlow:
         mock_mark.assert_called_once_with(90001)
 
     @pytest.mark.asyncio
-    @patch("src.handlers.callbacks.asyncio")
     @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_schedules_delayed_followup(self, mock_lang, mock_asyncio):
-        """video_workout → schedules delayed follow-up (buy + funnel advance)."""
+    async def test_video_workout_sends_video_link(self, mock_lang):
+        """video_workout → sends video link, no delayed followup."""
         mock_lang.return_value = "en"
         callback = make_callback(data="video_workout", user_id=90002)
-        await handle_video_workout(callback, make_bot())
+        bot = make_bot()
+        await handle_video_workout(callback, bot)
 
-        mock_asyncio.create_task.assert_called_once()
+        bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.send_info_video", new_callable=AsyncMock)

@@ -32,6 +32,7 @@ class User:
     updated_at: datetime | None = None
     funnel_start_at: datetime | None = None
     last_funnel_msg_at: datetime | None = None
+    next_funnel_msg_at: datetime | None = None
 
     @classmethod
     def from_row(cls, row: Any) -> User:
@@ -61,4 +62,5 @@ class User:
             updated_at=row.get("updated_at"),
             funnel_start_at=row.get("funnel_start_at"),
             last_funnel_msg_at=row.get("last_funnel_msg_at"),
+            next_funnel_msg_at=row.get("next_funnel_msg_at"),
         )

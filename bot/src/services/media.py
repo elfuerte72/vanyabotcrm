@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import random
-from io import BytesIO
+from pathlib import Path
 
 import httpx
 import structlog
 from aiogram import Bot
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, FSInputFile
 
 from config.settings import media_config
 
 logger = structlog.get_logger()
+
+_MEDIA_DIR = Path(__file__).resolve().parent.parent.parent / "media"
 
 
 def _gdrive_download_url(file_id: str) -> str:
@@ -60,4 +62,33 @@ async def send_random_result_photo(bot: Bot, chat_id: int, caption: str = "") ->
         photo=BufferedInputFile(data, filename="result.jpg"),
         caption=caption,
         parse_mode="HTML",
+    )
+
+
+async def send_local_photo(
+    bot: Bot, chat_id: int, photo_name: str, caption: str = "",
+    reply_markup=None,
+) -> None:
+    """Send a photo from bot/media/photos/ directory."""
+    photo_path = _MEDIA_DIR / "photos" / photo_name
+    if not photo_path.exists():
+        logger.error("local_photo_not_found", path=str(photo_path))
+        return
+    logger.debug("sending_local_photo", photo=photo_name, chat_id=chat_id)
+    await bot.send_photo(
+        chat_id=chat_id,
+        photo=FSInputFile(photo_path),
+        caption=caption,
+        parse_mode="HTML",
+        reply_markup=reply_markup,
+    )
+
+
+async def send_video_note_from_drive(bot: Bot, chat_id: int, file_id: str) -> None:
+    """Download video from Google Drive and send as video note (circle)."""
+    logger.debug("downloading_video_note", file_id=file_id)
+    data = await _download_file(file_id)
+    await bot.send_video_note(
+        chat_id=chat_id,
+        video_note=BufferedInputFile(data, filename="circle.mp4"),
     )

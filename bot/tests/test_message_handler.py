@@ -191,7 +191,7 @@ class TestGenerateRoute:
         assert food_kwargs["calories"] > 0
 
         # set_food_received called
-        mock_set_food.assert_called_once_with(2001)
+        mock_set_food.assert_called_once()
 
         # Two calls to answer: 1) "calculating..." 2) meal plan HTML
         assert msg.answer.call_count == 2

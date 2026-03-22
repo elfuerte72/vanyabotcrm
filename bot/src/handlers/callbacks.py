@@ -1,24 +1,23 @@
 """Callback query handlers — inline button presses.
 
 Callbacks: buy_now, show_info, show_results, check_suitability,
-           remind_later, none, video_workout
+           remind_later, none, video_workout, learn_workout, video_circle
 """
 
 from __future__ import annotations
-
-import asyncio
 
 import structlog
 from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user_language, mark_as_buyer, advance_funnel_if_at_stage
+from src.db.queries import get_user_language, mark_as_buyer
 from src.i18n import get_strings
 from src.services.media import (
     send_info_video,
     send_random_result_photo,
     send_suitability_video,
+    send_video_note_from_drive,
 )
 
 logger = structlog.get_logger()
@@ -134,7 +133,7 @@ async def handle_none(callback: CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "video_workout")
 async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
-    # Answer immediately to remove loading spinner
+    """Stage 0 button: send free 7-min workout video link."""
     try:
         await callback.answer()
     except Exception:
@@ -147,7 +146,6 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
     language = await get_user_language(user_id) or "en"
     strings = get_strings(language)
 
-    # Send message with URL button to watch video on Google Drive
     workout_url = media_config["videos"].get("workout_url", "")
     rows = []
     if workout_url:
@@ -159,30 +157,62 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot) -> None:
         text=strings.WATCH_VIDEO_PROMPT,
         reply_markup=keyboard,
     )
-
     logger.info("video_workout_callback", user_id=user_id, language=language)
 
-    # After 5 minutes — send follow-up with buy button
-    asyncio.create_task(_delayed_workout_followup(bot, chat_id, user_id, language))
 
+@router.callback_query(F.data == "learn_workout")
+async def handle_learn_workout(callback: CallbackQuery, bot: Bot) -> None:
+    """Stage 1 button (RU): show workout details + buy button (690₽)."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
 
-async def _delayed_workout_followup(
-    bot: Bot, chat_id: int, user_id: int, language: str
-) -> None:
-    """Send follow-up message 5 minutes after video_workout click."""
-    await asyncio.sleep(300)  # 5 minutes
-
+    if not callback.message:
+        return
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+    language = await get_user_language(user_id) or "ru"
     strings = get_strings(language)
-    rows = [[InlineKeyboardButton(text=strings.BUY_BUTTON, callback_data="buy_now")]]
-    keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
+
+    payment_url = _get_payment_url(language)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=strings.LEARN_WORKOUT_BUTTON, url=payment_url)]
+    ])
+
+    await bot.send_message(
+        chat_id=chat_id,
+        text=strings.LEARN_WORKOUT_RESPONSE,
+        reply_markup=keyboard,
+    )
+    logger.info("learn_workout_callback", user_id=user_id, language=language)
+
+
+@router.callback_query(F.data == "video_circle")
+async def handle_video_circle(callback: CallbackQuery, bot: Bot) -> None:
+    """Stage 3 button (RU): send 'how it works' video note (circle)."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
+        return
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+
+    video_notes = media_config.get("video_notes", {})
+    file_id = video_notes.get("how_it_works", "")
+
+    if not file_id:
+        logger.error("video_circle_no_file_id", user_id=user_id)
+        return
 
     try:
-        await bot.send_message(
-            chat_id=chat_id,
-            text=strings.VIDEO_WORKOUT_RESPONSE,
-            reply_markup=keyboard,
-        )
-        await advance_funnel_if_at_stage(user_id, expected_stage=1)
-        logger.info("workout_followup_sent", chat_id=chat_id)
+        await send_video_note_from_drive(bot, chat_id, file_id)
+        logger.info("video_circle_callback", user_id=user_id)
     except Exception as e:
-        logger.error("workout_followup_failed", chat_id=chat_id, error=str(e))
+        language = await get_user_language(user_id) or "ru"
+        strings = get_strings(language)
+        logger.error("video_circle_failed", error=str(e), chat_id=chat_id)
+        await bot.send_message(chat_id, strings.VIDEO_UNAVAILABLE)

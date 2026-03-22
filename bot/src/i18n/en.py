@@ -102,6 +102,12 @@ BUY_BUTTON = " 💳 Pay"
 WATCH_VIDEO_BUTTON = "▶️ Watch video"
 WATCH_VIDEO_PROMPT = "Here's a free workout from me! Tap the button below to watch 👇"
 
+LEARN_WORKOUT_RESPONSE = (
+    "Here's what's inside: hips, arms, belly, glutes, posture — 40 minutes, at home, "
+    "no equipment. Only for bot subscribers — $15 instead of $25."
+)
+LEARN_WORKOUT_BUTTON = "I want it"
+
 RESULTS_CAPTION = (
     "📌 exercises that hit the target. All problem areas, from love handles to flabby arms.\n\n"
     "📌 the most effective anti-swelling routine\n\n"
