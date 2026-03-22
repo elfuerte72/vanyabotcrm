@@ -33,15 +33,18 @@ async def create_pool() -> asyncpg.Pool:
             use_ssl.check_hostname = False
             use_ssl.verify_mode = ssl.CERT_NONE
 
+    min_size = 5
+    max_size = 10
+    logger.debug("database_pool_creating", min_size=min_size, max_size=max_size)
     pool = await asyncpg.create_pool(
         dsn=dsn,
-        min_size=2,
-        max_size=10,
+        min_size=min_size,
+        max_size=max_size,
         ssl=use_ssl,
     )
     # Log only host, not credentials
     parsed = urlparse(settings.database_url)
-    logger.info("database_pool_created", host=parsed.hostname, port=parsed.port)
+    logger.info("database_pool_created", host=parsed.hostname, port=parsed.port, min_size=min_size, max_size=max_size)
     return pool
 
 

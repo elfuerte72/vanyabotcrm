@@ -226,6 +226,13 @@ CREATE INDEX idx_user_events_created_at ON public.user_events USING btree (creat
 
 
 --
+-- Name: idx_funnel_targets; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_funnel_targets ON public.users_nutrition USING btree (next_funnel_msg_at) WHERE ((get_food = true) AND ((is_buyer IS FALSE) OR (is_buyer IS NULL)) AND (funnel_stage >= 0));
+
+
+--
 -- Name: users_nutrition trg_clients_notify_del; Type: TRIGGER; Schema: public; Owner: -
 --
 

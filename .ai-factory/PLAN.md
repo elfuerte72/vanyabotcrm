@@ -1,78 +1,97 @@
-# Plan: Жёсткая привязка языка при старте бота
+# Plan: Оптимизация скорости ответа бота
 
 **Mode:** Fast
-**Created:** 2026-03-19
-**Branch:** feature/agent-improvements (current)
-
-## Description
-
-Для новых пользователей (не в БД) по /start показывать выбор языка тремя inline-кнопками (English, Arabic, Russian) вместо автоопределения. Выбранный язык сохраняется в БД и используется во всех дальнейших взаимодействиях. Команда /language позволяет сменить язык в любой момент.
+**Created:** 2026-03-22
+**Source:** `.ai-factory/plans/performance-optimization.md`
 
 ## Settings
 
 - **Testing:** Yes
-- **Logging:** Verbose (DEBUG + INFO)
+- **Logging:** Verbose (DEBUG)
 - **Docs:** No
+
+## Summary
+
+4 оптимизации для ускорения ответа бота на inline-кнопки:
+1. Увеличение пула соединений (min_size 2→5)
+2. Устранение дублирующих DB-запросов в callback-хендлерах
+3. In-memory кеш Telegram file_id для медиа-файлов
+4. Partial index для запроса funnel targets
 
 ## Tasks
 
-### Phase 1: Database Layer
+### Phase 1: Quick Wins (1 коммит)
 
-- [x] Task 1: Добавить DB-запрос save_user_language
-  - File: `bot/src/db/queries.py`
-  - `save_user_language(chat_id, language, username, first_name)` — UPSERT минимальной записи
-  - `update_user_language(chat_id, language)` — обновление языка существующего пользователя
-  - Logging: INFO при сохранении
+#### ~~Task 1: Увеличить min_size пула соединений до 5~~ [x]
+- **File:** `bot/src/db/pool.py:36`
+- **Change:** `min_size=2` → `min_size=5`
+- **Logging:** DEBUG лог при создании пула с min_size/max_size
+- **Risk:** Низкий — одна строка
 
-### Phase 2: Handlers
+#### ~~Task 2: Убрать дублирующие DB-запросы в callbacks.py~~ [x]
+- **File:** `bot/src/handlers/callbacks.py`
+- **Change:** В 8 хендлерах заменить `await get_user_language(user_id)` на `data["db_user"].language` (уже загружен UserDataMiddleware)
+- **Pattern:**
+  ```python
+  # Было:
+  language = await get_user_language(user_id) or "en"
+  # Стало:
+  db_user = data.get("db_user")
+  language = db_user.language if db_user else "en"
+  ```
+- **Handlers:** handle_buy_now, handle_show_info, handle_show_results, handle_remind_later, handle_none, handle_video_workout, handle_learn_workout, handle_video_circle
+- **Logging:** DEBUG лог при получении языка из db_user
+- **Depends on:** UserDataMiddleware уже работает (`src/middlewares/user_data.py`)
 
-- [x] Task 2: Переделать /start — выбор языка для новых пользователей (blocked by: Task 1)
-  - File: `bot/src/handlers/start.py`
-  - Новый пользователь (db_user is None) → сообщение "Choose your language" + 3 inline-кнопки
-  - Существующий пользователь → START_MESSAGE на его языке (как сейчас)
-  - Вынести `_make_language_keyboard()` в отдельную функцию
-  - Константа `LANGUAGE_CHOOSE_MESSAGE` в start.py (мультиязычная, не в i18n)
+### Phase 2: File ID Cache (1 коммит)
 
-- [x] Task 3: Callback-хендлеры выбора языка (blocked by: Tasks 1, 2)
-  - File: `bot/src/handlers/start.py`
-  - `F.data.startswith("lang_")` → извлечь язык, сохранить в БД, отправить START_MESSAGE
-  - Удалить кнопки из предыдущего сообщения (edit_reply_markup)
+#### ~~Task 3: Реализовать file_id кеш в media.py~~ [x]
+- **File:** `bot/src/services/media.py`
+- **Change:** Добавить `_tg_file_id_cache: dict[str, str] = {}`. Все 5 send-функций: проверять кеш перед скачиванием, сохранять file_id после первой отправки.
+- **Functions:** send_info_video, send_suitability_video, send_random_result_photo, send_video_note_from_drive, send_local_photo
+- **File ID extraction:** `message.video.file_id`, `message.photo[-1].file_id`, `message.video_note.file_id`
+- **Logging:** DEBUG лог cache hit/miss с ключом
+- **Effect:** -90% время отправки медиа после прогрева
 
-- [x] Task 4: Команда /language для смены языка (blocked by: Tasks 1, 2)
-  - File: `bot/src/handlers/start.py`
-  - `/language` → показать те же 3 кнопки
-  - Переиспользовать `_make_language_keyboard()`
+### Phase 3: Database Index (1 коммит)
 
-- [x] Task 5: Использовать сохранённый язык в message.py (blocked by: Task 1)
-  - File: `bot/src/handlers/message.py`
-  - `db_user.language` если есть, иначе fallback на `detect_language(text)`
-  - Одна строка замены на ~134
+#### ~~Task 4: Создать миграцию с составным индексом~~ [x]
+- **File:** `db/migrations/003_add_funnel_targets_index.sql`
+- **SQL:**
+  ```sql
+  CREATE INDEX IF NOT EXISTS idx_funnel_targets
+  ON users_nutrition (next_funnel_msg_at)
+  WHERE get_food = TRUE
+    AND (is_buyer IS FALSE OR is_buyer IS NULL)
+    AND funnel_stage >= 0;
+  ```
+- **Also:** Обновить `db/schema.sql`
 
-### Phase 3: Tests
+### Phase 4: Tests (1 коммит)
 
-- [x] Task 6: Написать тесты (blocked by: Tasks 2-5)
-  - File: `bot/tests/test_language_selection.py`
-  - test_start_new_user_shows_language_buttons
-  - test_start_existing_user_shows_message
-  - test_language_callback_saves_language
-  - test_language_command_shows_buttons
-  - test_detected_lang_uses_db_language
+#### ~~Task 5: Обновить тесты callbacks (blocked by: Task 2)~~ [x]
+- **File:** `bot/tests/test_callbacks.py`, `bot/tests/test_callbacks_multilang.py`
+- **Change:** Убрать mock `get_user_language`, передавать `db_user` через data dict
+- **Verify:** db_user=None → fallback "en"
+
+#### ~~Task 6: Добавить тесты для file_id кеша (blocked by: Task 3)~~ [x]
+- **File:** `bot/tests/test_media.py` (новый)
+- **Tests:** cache miss → download, cache hit → no download, local photo cache, reset between tests
 
 ## Commit Plan
 
-**Commit 1** (после Tasks 1-5):
-```
-feat(bot): add language selection at /start and /language command
-```
+| # | Tasks | Commit Message |
+|---|-------|---------------|
+| 1 | 1, 2 | `perf(bot): increase pool min_size, eliminate duplicate DB queries in callbacks` |
+| 2 | 3 | `perf(bot): add in-memory Telegram file_id cache for media` |
+| 3 | 4 | `perf(db): add partial index for funnel targets query` |
+| 4 | 5, 6 | `test(bot): update callback tests, add media cache tests` |
 
-**Commit 2** (после Task 6):
-```
-test(bot): add language selection tests
-```
+## Expected Impact
 
-## Architecture Notes
-
-- Не используем FSM — достаточно одного UPSERT при выборе языка
-- Клавиатура выбора языка — мультиязычная константа в start.py (не в i18n)
-- `detect_language()` остаётся как fallback для пользователей без записи в БД
-- Схема БД не меняется — поле `language` в `users_nutrition` уже есть
+| Optimization | Before | After |
+|---|---|---|
+| Callback media response | 1.5-2.5 sec | ~0.1 sec (after warmup) |
+| DB queries per callback | 2 | 1 |
+| Pool cold connections | 8 on-demand | 5 always warm |
+| Funnel query | seq scan | index scan |

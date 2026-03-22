@@ -1,6 +1,7 @@
 """Tests for callback query handlers — all 7 callbacks × 3 languages.
 
 Mocks: CallbackQuery, Bot, DB queries, media services.
+Uses db_user from UserDataMiddleware instead of get_user_language mock.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from src.handlers.callbacks import (
     handle_video_workout,
 )
 from src.i18n import get_strings
+from tests.helpers import make_bot, make_callback, make_user
 
 
 def _make_callback(chat_id: int = 12345, user_id: int = 12345, data: str = "buy_now"):
@@ -56,16 +58,13 @@ class TestHandleBuyNow:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_buy_now_sends_payment_message(
-        self, mock_get_lang, mock_mark_buyer, language
-    ):
-        mock_get_lang.return_value = language
+    async def test_buy_now_sends_payment_message(self, mock_mark_buyer, language):
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_buy_now(callback, bot)
+        await handle_buy_now(callback, bot, db_user=db_user)
 
         mock_mark_buyer.assert_called_once_with(callback.from_user.id)
         bot.send_message.assert_called_once()
@@ -76,13 +75,12 @@ class TestHandleBuyNow:
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_buy_now_keyboard_has_url_button(self, mock_get_lang, mock_mark_buyer):
-        mock_get_lang.return_value = "ru"
+    async def test_buy_now_keyboard_has_url_button(self, mock_mark_buyer):
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
+        db_user = make_user("ru")
 
-        await handle_buy_now(callback, bot)
+        await handle_buy_now(callback, bot, db_user=db_user)
 
         markup = bot.send_message.call_args.kwargs["reply_markup"]
         buttons = markup.inline_keyboard[0]
@@ -93,14 +91,12 @@ class TestHandleBuyNow:
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_buy_now_default_language_en(self, mock_get_lang, mock_mark_buyer):
-        """If user language is None, defaults to English."""
-        mock_get_lang.return_value = None
+    async def test_buy_now_default_language_en(self, mock_mark_buyer):
+        """If db_user is None, defaults to English."""
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
 
-        await handle_buy_now(callback, bot)
+        await handle_buy_now(callback, bot, db_user=None)
 
         strings = get_strings("en")
         assert bot.send_message.call_args.kwargs["text"] == strings.BUY_MESSAGE
@@ -124,16 +120,15 @@ class TestHandleShowInfo:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.send_info_video", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_show_info_handles_error(self, mock_get_lang, mock_send_video, language):
+    async def test_show_info_handles_error(self, mock_send_video, language):
         """On video download error, sends localized fallback text."""
-        mock_get_lang.return_value = language
         mock_send_video.side_effect = Exception("Download failed")
         callback = _make_callback(data="show_info")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_show_info(callback, bot)
+        await handle_show_info(callback, bot, db_user=db_user)
 
         bot.send_message.assert_called_once()
         assert bot.send_message.call_args.args[1] == strings.VIDEO_UNAVAILABLE
@@ -147,14 +142,13 @@ class TestHandleShowResults:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.send_random_result_photo", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_show_results_sends_photo(self, mock_get_lang, mock_send_photo, language):
-        mock_get_lang.return_value = language
+    async def test_show_results_sends_photo(self, mock_send_photo, language):
         callback = _make_callback(data="show_results")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_show_results(callback, bot)
+        await handle_show_results(callback, bot, db_user=db_user)
 
         mock_send_photo.assert_called_once_with(
             bot, callback.message.chat.id, caption=strings.RESULTS_CAPTION
@@ -163,15 +157,14 @@ class TestHandleShowResults:
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.send_random_result_photo", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_show_results_handles_error(self, mock_get_lang, mock_send_photo):
-        mock_get_lang.return_value = "en"
+    async def test_show_results_handles_error(self, mock_send_photo):
         mock_send_photo.side_effect = Exception("Photo error")
         callback = _make_callback(data="show_results")
         bot = _make_bot()
+        db_user = make_user("en")
 
         # Should not raise
-        await handle_show_results(callback, bot)
+        await handle_show_results(callback, bot, db_user=db_user)
         callback.answer.assert_called_once()
 
 
@@ -207,14 +200,13 @@ class TestHandleCheckSuitability:
 class TestHandleRemindLater:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_remind_later_sends_message(self, mock_get_lang, language):
-        mock_get_lang.return_value = language
+    async def test_remind_later_sends_message(self, language):
         callback = _make_callback(data="remind_later")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_remind_later(callback, bot)
+        await handle_remind_later(callback, bot, db_user=db_user)
 
         bot.send_message.assert_called_once_with(
             callback.message.chat.id, strings.REMIND_LATER, parse_mode="HTML"
@@ -228,14 +220,13 @@ class TestHandleRemindLater:
 class TestHandleNone:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_none_sends_response(self, mock_get_lang, language):
-        mock_get_lang.return_value = language
+    async def test_none_sends_response(self, language):
         callback = _make_callback(data="none")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_none(callback, bot)
+        await handle_none(callback, bot, db_user=db_user)
 
         bot.send_message.assert_called_once_with(
             callback.message.chat.id, strings.NONE_RESPONSE, parse_mode="HTML"
@@ -249,14 +240,13 @@ class TestHandleNone:
 class TestHandleVideoWorkout:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["ru", "en", "ar"])
-    @patch("src.handlers.callbacks.get_user_language", new_callable=AsyncMock)
-    async def test_video_workout_sends_prompt_with_video_button(self, mock_get_lang, language):
-        mock_get_lang.return_value = language
+    async def test_video_workout_sends_prompt_with_video_button(self, language):
         callback = _make_callback(data="video_workout")
         bot = _make_bot()
         strings = get_strings(language)
+        db_user = make_user(language)
 
-        await handle_video_workout(callback, bot)
+        await handle_video_workout(callback, bot, db_user=db_user)
 
         callback.answer.assert_called_once()
         assert bot.send_message.call_count == 1
