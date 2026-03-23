@@ -6,26 +6,72 @@ from src.db.queries import calculate_next_send_time, _MSK
 
 
 class TestCalculateNextSendTimeEN:
-    """EN/AR: simple interval delays."""
+    """EN: 5min first, 1h for stages 1-8, 24h for upsell."""
+
+    def test_after_stage_0_is_5min(self):
+        result = calculate_next_send_time(0, "en")
+        assert result is not None
+        diff = result - datetime.now(timezone.utc)
+        assert timedelta(minutes=4, seconds=58) < diff < timedelta(minutes=5, seconds=2)
+
+    def test_after_stage_1_is_1h(self):
+        result = calculate_next_send_time(1, "en")
+        assert result is not None
+        diff = result - datetime.now(timezone.utc)
+        assert timedelta(minutes=59, seconds=58) < diff < timedelta(hours=1, seconds=2)
+
+    def test_after_stages_2_to_8_are_1h(self):
+        for stage in range(2, 9):
+            result = calculate_next_send_time(stage, "en")
+            assert result is not None, f"Stage {stage} should have next send time"
+            diff = result - datetime.now(timezone.utc)
+            assert timedelta(minutes=59) < diff < timedelta(hours=1, minutes=1), f"Stage {stage} should be ~1h"
+
+    def test_after_stage_9_is_24h(self):
+        result = calculate_next_send_time(9, "en")
+        assert result is not None
+        diff = result - datetime.now(timezone.utc)
+        assert timedelta(hours=23, minutes=59) < diff < timedelta(hours=24, minutes=1)
+
+    def test_after_last_stage_is_none(self):
+        assert calculate_next_send_time(10, "en") is None
+
+    def test_beyond_last_stage_is_none(self):
+        assert calculate_next_send_time(11, "en") is None
+        assert calculate_next_send_time(15, "en") is None
+
+    def test_all_en_results_are_utc(self):
+        for stage in range(10):
+            result = calculate_next_send_time(stage, "en")
+            assert result is not None
+            assert result.tzinfo == timezone.utc
+
+    def test_all_en_results_are_in_future(self):
+        now = datetime.now(timezone.utc)
+        for stage in range(10):
+            result = calculate_next_send_time(stage, "en")
+            assert result > now, f"Stage {stage} result is not in the future"
+
+
+class TestCalculateNextSendTimeAR:
+    """AR: simple interval delays (legacy)."""
 
     def test_after_stage_0_is_2h(self):
-        result = calculate_next_send_time(0, "en")
+        result = calculate_next_send_time(0, "ar")
         assert result is not None
         diff = result - datetime.now(timezone.utc)
         assert timedelta(hours=1, minutes=59) < diff < timedelta(hours=2, minutes=1)
 
     def test_after_stage_1_is_23h(self):
-        result = calculate_next_send_time(1, "en")
+        result = calculate_next_send_time(1, "ar")
         assert result is not None
         diff = result - datetime.now(timezone.utc)
         assert timedelta(hours=22, minutes=59) < diff < timedelta(hours=23, minutes=1)
 
     def test_after_last_stage_is_none(self):
-        assert calculate_next_send_time(5, "en") is None
         assert calculate_next_send_time(5, "ar") is None
 
     def test_beyond_last_stage_is_none(self):
-        assert calculate_next_send_time(6, "en") is None
         assert calculate_next_send_time(10, "ar") is None
 
 

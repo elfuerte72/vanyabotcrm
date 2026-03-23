@@ -1,7 +1,8 @@
 """Funnel simulation tests.
 
 RU: 8 stages (0-7) with photos, video notes, and specific callbacks.
-EN/AR: 6 stages (0-5) with text + buttons only.
+EN: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
+AR: 6 stages (0-5) with text + buttons only.
 """
 
 from __future__ import annotations
@@ -25,8 +26,15 @@ from tests.helpers import make_bot, make_funnel_targets
 
 logger = logging.getLogger(__name__)
 
-# Expected button callbacks for EN/AR (6 stages)
+# Expected button callbacks for EN (11 stages)
 EXPECTED_BUTTONS_EN = {
+    **{stage: [("buy_now",), (f"en_funnel_q_{stage}",)] for stage in range(9)},
+    9: [("buy_now",), ("upsell_decline",)],
+    10: [("buy_now",), ("upsell_decline",)],
+}
+
+# Expected button callbacks for AR (6 stages, legacy)
+EXPECTED_BUTTONS_AR = {
     0: [("video_workout",)],
     1: [("buy_now",)],
     2: [("buy_now",), ("check_suitability",)],
@@ -48,15 +56,22 @@ EXPECTED_BUTTONS_RU = {
 }
 
 
-# ─── EN/AR funnel text matches i18n ─────────────────────────────────────
+# ─── EN funnel text matches i18n ─────────────────────────────────────
 
 
 class TestFunnelMessageTextMatchesI18nEN:
-    @pytest.mark.parametrize("lang", ["en", "ar"])
-    @pytest.mark.parametrize("stage", [0, 1, 2, 3, 4, 5])
-    def test_funnel_text_matches_i18n(self, lang, stage):
-        strings = get_strings(lang)
-        msg = get_funnel_message(stage, lang)
+    @pytest.mark.parametrize("stage", range(9))
+    def test_en_funnel_text_matches_i18n(self, stage):
+        strings = get_strings("en")
+        msg = get_funnel_message(stage, "en")
+        assert msg is not None
+        expected_text = getattr(strings, f"FUNNEL_STAGE_{stage}")
+        assert msg.text == expected_text
+
+    @pytest.mark.parametrize("stage", range(6))
+    def test_ar_funnel_text_matches_i18n(self, stage):
+        strings = get_strings("ar")
+        msg = get_funnel_message(stage, "ar")
         assert msg is not None
         expected_text = getattr(strings, f"FUNNEL_DAY_{stage}")
         assert msg.text == expected_text
@@ -76,20 +91,26 @@ class TestFunnelMessageTextMatchesI18nRU:
 
 
 class TestFunnelButtonsEN:
-    @pytest.mark.parametrize("lang", ["en", "ar"])
-    @pytest.mark.parametrize("stage", [0, 1, 2, 3, 4, 5])
-    def test_buttons_have_correct_callback_data(self, lang, stage):
-        msg = get_funnel_message(stage, lang)
+    @pytest.mark.parametrize("stage", range(11))
+    def test_en_buttons_have_correct_callback_data(self, stage):
+        msg = get_funnel_message(stage, "en")
         assert msg is not None
         expected_cbs = EXPECTED_BUTTONS_EN[stage]
         actual_cbs = [(btn[1],) for btn in msg.buttons]
         assert actual_cbs == expected_cbs
 
-    @pytest.mark.parametrize("lang", ["en", "ar"])
-    @pytest.mark.parametrize("stage", [0, 1, 2, 3, 4, 5])
-    def test_button_labels_match_i18n(self, lang, stage):
-        strings = get_strings(lang)
-        msg = get_funnel_message(stage, lang)
+    @pytest.mark.parametrize("stage", range(6))
+    def test_ar_buttons_have_correct_callback_data(self, stage):
+        msg = get_funnel_message(stage, "ar")
+        assert msg is not None
+        expected_cbs = EXPECTED_BUTTONS_AR[stage]
+        actual_cbs = [(btn[1],) for btn in msg.buttons]
+        assert actual_cbs == expected_cbs
+
+    @pytest.mark.parametrize("stage", range(6))
+    def test_ar_button_labels_match_i18n(self, stage):
+        strings = get_strings("ar")
+        msg = get_funnel_message(stage, "ar")
         assert msg is not None
         if stage == 0:
             expected_labels = [strings.FUNNEL_DAY_0_BUTTON]
@@ -120,8 +141,11 @@ class TestFunnelButtonsRU:
 
 
 class TestFunnelOutOfRange:
-    def test_en_stage_6_returns_none(self):
-        assert get_funnel_message(6, "en") is None
+    def test_en_stage_11_returns_none(self):
+        assert get_funnel_message(11, "en") is None
+
+    def test_ar_stage_6_returns_none(self):
+        assert get_funnel_message(6, "ar") is None
 
     def test_ru_stage_8_returns_none(self):
         assert get_funnel_message(8, "ru") is None
@@ -138,27 +162,32 @@ class TestFunnelOutOfRange:
 
 class TestFullFunnelCycleEN:
     @pytest.mark.asyncio
+    @patch("src.funnel.sender.send_local_photo", new_callable=AsyncMock)
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
-    async def test_full_cycle_en(self, mock_targets, mock_update_stage):
+    async def test_full_cycle_en(self, mock_targets, mock_update_stage, mock_photo):
         bot = make_bot()
         strings = get_strings("en")
         chat_id = 300002
 
-        for day in range(6):
+        for stage in range(11):
             mock_targets.return_value = [
-                {"chat_id": chat_id, "funnel_stage": day, "language": "en"}
+                {"chat_id": chat_id, "funnel_stage": stage, "language": "en"}
             ]
             mock_update_stage.reset_mock()
             bot.send_message.reset_mock()
+            mock_photo.reset_mock()
 
             await send_funnel_messages(bot)
 
-            send_kwargs = bot.send_message.call_args.kwargs
-            expected_text = getattr(strings, f"FUNNEL_DAY_{day}")
-            assert send_kwargs["text"] == expected_text, f"Day {day} (EN): text mismatch"
+            expected = get_funnel_message(stage, "en")
+            if expected.photo_name:
+                mock_photo.assert_called_once()
+            else:
+                send_kwargs = bot.send_message.call_args.kwargs
+                assert send_kwargs["text"] == expected.text, f"Stage {stage} (EN): text mismatch"
             mock_update_stage.assert_called_once_with(
-                chat_id, language="en", current_stage=day
+                chat_id, language="en", current_stage=stage
             )
 
 
@@ -236,10 +265,11 @@ class TestFunnelErrorResilience:
     async def test_one_user_error_does_not_block_others(self, mock_targets, mock_update):
         bot = make_bot()
 
+        # Use stage 1 (text-only, no photo) for EN
         mock_targets.return_value = [
-            {"chat_id": 500001, "funnel_stage": 0, "language": "en"},
-            {"chat_id": 500002, "funnel_stage": 0, "language": "en"},
-            {"chat_id": 500003, "funnel_stage": 0, "language": "en"},
+            {"chat_id": 500001, "funnel_stage": 1, "language": "en"},
+            {"chat_id": 500002, "funnel_stage": 1, "language": "en"},
+            {"chat_id": 500003, "funnel_stage": 1, "language": "en"},
         ]
 
         call_count = 0
@@ -268,11 +298,11 @@ class TestFunnelMixedLanguages:
     @pytest.mark.asyncio
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
-    async def test_mixed_stages_get_correct_day_messages(self, mock_targets, mock_update):
+    async def test_mixed_stages_get_correct_messages(self, mock_targets, mock_update):
         bot = make_bot()
 
         mock_targets.return_value = [
-            {"chat_id": 700001, "funnel_stage": 0, "language": "en"},
+            {"chat_id": 700001, "funnel_stage": 1, "language": "en"},
             {"chat_id": 700002, "funnel_stage": 2, "language": "en"},
             {"chat_id": 700003, "funnel_stage": 4, "language": "en"},
         ]
@@ -282,9 +312,9 @@ class TestFunnelMixedLanguages:
         strings = get_strings("en")
         calls = bot.send_message.call_args_list
 
-        assert calls[0].kwargs["text"] == strings.FUNNEL_DAY_0
-        assert calls[1].kwargs["text"] == strings.FUNNEL_DAY_2
-        assert calls[2].kwargs["text"] == strings.FUNNEL_DAY_4
+        assert calls[0].kwargs["text"] == strings.FUNNEL_STAGE_1
+        assert calls[1].kwargs["text"] == strings.FUNNEL_STAGE_2
+        assert calls[2].kwargs["text"] == strings.FUNNEL_STAGE_4
 
 
 # ─── EN keyboard verification ───────────────────────────────────────────
@@ -292,10 +322,11 @@ class TestFunnelMixedLanguages:
 
 class TestFunnelKeyboardConfigurationEN:
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("stage", [0, 1, 2, 3, 4, 5])
+    @pytest.mark.parametrize("stage", [1, 2, 3, 4, 5, 7, 8])
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
     async def test_keyboard_buttons_sent_correctly(self, mock_targets, mock_update, stage):
+        """Test text-only stages (no photo) have correct keyboard buttons."""
         bot = make_bot()
 
         mock_targets.return_value = [

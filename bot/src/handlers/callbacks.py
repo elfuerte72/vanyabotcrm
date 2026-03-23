@@ -1,7 +1,8 @@
 """Callback query handlers — inline button presses.
 
 Callbacks: buy_now, show_info, show_results, check_suitability,
-           remind_later, none, video_workout, learn_workout, video_circle
+           remind_later, none, video_workout, learn_workout, video_circle,
+           en_funnel_q_<stage>, upsell_decline
 """
 
 from __future__ import annotations
@@ -13,7 +14,9 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import mark_as_buyer
+from src.db.queries import get_user, mark_as_buyer, update_funnel_stage
+from src.funnel.messages import get_funnel_message
+from src.funnel.sender import _build_keyboard, _send_single_funnel_message
 from src.i18n import get_strings
 from src.models.user import User
 from src.services.media import (
@@ -44,8 +47,12 @@ def _get_payment_url(language: str) -> str:
 
 @router.callback_query(F.data == "buy_now")
 async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
@@ -65,14 +72,17 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
         text=strings.BUY_MESSAGE,
         reply_markup=keyboard,
     )
-    await callback.answer()
     logger.info("buy_now_callback", user_id=user_id, language=language)
 
 
 @router.callback_query(F.data == "show_info")
 async def handle_show_info(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     try:
@@ -82,13 +92,16 @@ async def handle_show_info(callback: CallbackQuery, bot: Bot, **data: Any) -> No
         language = _get_language(db_user)
         logger.error("show_info_failed", error=str(e), chat_id=chat_id, language=language)
         await bot.send_message(chat_id, get_strings(language).VIDEO_UNAVAILABLE)
-    await callback.answer()
 
 
 @router.callback_query(F.data == "show_results")
 async def handle_show_results(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     db_user = data.get("db_user")
@@ -99,26 +112,32 @@ async def handle_show_results(callback: CallbackQuery, bot: Bot, **data: Any) ->
         await send_random_result_photo(bot, chat_id, caption=strings.RESULTS_CAPTION)
     except Exception as e:
         logger.error("show_results_failed", error=str(e), chat_id=chat_id)
-    await callback.answer()
 
 
 @router.callback_query(F.data == "check_suitability")
 async def handle_check_suitability(callback: CallbackQuery, bot: Bot) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     try:
         await send_suitability_video(bot, chat_id)
     except Exception as e:
         logger.error("check_suitability_failed", error=str(e), chat_id=chat_id)
-    await callback.answer()
 
 
 @router.callback_query(F.data == "remind_later")
 async def handle_remind_later(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     db_user = data.get("db_user")
@@ -126,13 +145,16 @@ async def handle_remind_later(callback: CallbackQuery, bot: Bot, **data: Any) ->
     strings = get_strings(language)
 
     await bot.send_message(chat_id, strings.REMIND_LATER, parse_mode="HTML")
-    await callback.answer()
 
 
 @router.callback_query(F.data == "none")
 async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    if not callback.message:
+    try:
         await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
         return
     chat_id = callback.message.chat.id
     db_user = data.get("db_user")
@@ -140,7 +162,6 @@ async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     strings = get_strings(language)
 
     await bot.send_message(chat_id, strings.NONE_RESPONSE, parse_mode="HTML")
-    await callback.answer()
 
 
 @router.callback_query(F.data == "video_workout")
@@ -231,3 +252,77 @@ async def handle_video_circle(callback: CallbackQuery, bot: Bot, **data: Any) ->
         strings = get_strings(language)
         logger.error("video_circle_failed", error=str(e), chat_id=chat_id)
         await bot.send_message(chat_id, strings.VIDEO_UNAVAILABLE)
+
+
+@router.callback_query(F.data.startswith("en_funnel_q_"))
+async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
+    """EN funnel question button — instantly sends next stage message."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
+        return
+
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+
+    # Parse stage from callback data: en_funnel_q_0 → 0
+    try:
+        clicked_stage = int(callback.data.split("_")[-1])
+    except (ValueError, IndexError):
+        logger.error("en_funnel_q_invalid_data", data=callback.data, user_id=user_id)
+        return
+
+    # Fetch current user state
+    db_user = data.get("db_user")
+    if not db_user:
+        db_user = await get_user(user_id)
+    if not db_user:
+        logger.debug("en_funnel_q_no_user", user_id=user_id)
+        return
+
+    # Skip if user is buyer or already past this stage
+    if db_user.is_buyer:
+        logger.debug("en_funnel_q_buyer_skip", user_id=user_id, stage=clicked_stage)
+        return
+    if db_user.funnel_stage != clicked_stage:
+        logger.debug(
+            "en_funnel_q_stage_mismatch",
+            user_id=user_id, clicked=clicked_stage, current=db_user.funnel_stage,
+        )
+        return
+
+    # Send next stage message instantly
+    next_stage = clicked_stage + 1
+    next_msg = get_funnel_message(next_stage, "en")
+    if next_msg is None:
+        logger.debug("en_funnel_q_no_next_msg", user_id=user_id, next_stage=next_stage)
+        return
+
+    keyboard = _build_keyboard(next_msg)
+    try:
+        await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
+        await update_funnel_stage(chat_id, language="en", current_stage=next_stage)
+        logger.info(
+            "en_funnel_question_advance",
+            user_id=user_id, from_stage=clicked_stage, to_stage=next_stage,
+        )
+    except Exception as e:
+        logger.error(
+            "en_funnel_question_send_failed",
+            user_id=user_id, stage=next_stage, error=str(e),
+        )
+
+
+@router.callback_query(F.data == "upsell_decline")
+async def handle_upsell_decline(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
+    """User declined an upsell offer."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    user_id = callback.from_user.id
+    logger.info("upsell_declined", user_id=user_id)

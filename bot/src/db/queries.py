@@ -16,14 +16,15 @@ logger = structlog.get_logger()
 _MSK = timezone(timedelta(hours=3))
 
 # Max funnel stage per language
-_MAX_STAGE = {"ru": 7, "en": 5, "ar": 5}
+_MAX_STAGE = {"ru": 7, "en": 10, "ar": 5}
 
 
 def calculate_next_send_time(current_stage: int, language: str) -> datetime | None:
     """Calculate absolute UTC time for the NEXT funnel message after current_stage is sent.
 
     RU has 8 stages (0-7) with specific MSK times.
-    EN/AR have 6 stages (0-5) with simple interval delays.
+    EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
+    AR has 6 stages (0-5) with simple interval delays.
     Returns None if current_stage is the last stage.
     """
     now = datetime.now(timezone.utc)
@@ -32,8 +33,18 @@ def calculate_next_send_time(current_stage: int, language: str) -> datetime | No
     if current_stage >= max_stage:
         return None
 
+    if language == "en":
+        # EN: 5 min after stage 0, 1h for stages 1-8, 24h for upsell stage 9
+        if current_stage == 0:
+            return now + timedelta(minutes=5)
+        elif current_stage <= 8:
+            return now + timedelta(hours=1)
+        elif current_stage == 9:
+            return now + timedelta(hours=24)
+        return None
+
     if language != "ru":
-        # EN/AR: 2h after stage 0, 23h after stages 1-4
+        # AR: 2h after stage 0, 23h after stages 1-4
         if current_stage == 0:
             return now + timedelta(hours=2)
         return now + timedelta(hours=23)

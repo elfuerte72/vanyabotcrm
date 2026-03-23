@@ -30,3 +30,6 @@ photos:
   funnel:
     stage_1: "before_after_1.jpg"
     stage_2: "before_after_2.jpg"
+    # EN funnel photos
+    en_stage_0: "en_funnel_stage_0.jpg"
+    en_stage_6: "en_funnel_stage_6.png"

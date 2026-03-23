@@ -6,91 +6,170 @@ ALREADY_CALCULATED = "Champion, I'm sorry. I cannot calculate your macros a seco
 
 CALCULATING_MENU = "Got it! Calculating your calories and selecting a menu from the database, please wait a few seconds..."
 
-# --- Funnel Day messages (EN versions) ---
-FUNNEL_DAY_0 = (
-    'Hey! 🤍\n\n'
-    'I want to say a huge thank you for your trust — I truly appreciate that you decided to take care of yourself.\n\n'
-    '<b>Nutrition is the first and most important step.</b>\n'
-    'But there is one thing almost nobody talks about…\n\n'
-    'If your body is <i>"asleep"</i>,\n'
-    'food is absorbed poorly,\n'
-    'circulation is weak,\n'
-    'muscles are turned off.\n\n'
-    '<b>And then you get:</b>\n'
-    '— swelling\n— lower belly\n— "love handles"\n— flabbiness\n— fatigue\n— heaviness in the body\n\n'
-    "It's not laziness or weak willpower. <b>It's just a sleeping body.</b> So it's important to wake it up.\n\n"
-    'I recorded a short workout\n'
-    '<b>"Wake up your body in 7 minutes"</b> ✨\n\n'
-    '<i>No jumping. No strain. No stress.</i>\n\n'
-    'This is a gentle activation, after which:\n'
-    '→ tension goes away\n→ energy appears\n→ your body starts working properly\n\n'
-    '<b>Do it now — and feel the difference.</b>'
-)
-FUNNEL_DAY_0_BUTTON = "Wake up your body"
+# --- Funnel Stage messages (EN — 9 stages 0-8 + 2 upsells 9-10) ---
+# Audience: men, workout for muscle retention during cut, price 49 AED.
 
-FUNNEL_DAY_1 = (
-    '<b>Now your body is activated.</b>\n'
-    'And in this state, workouts give results 2-3 times faster.\n\n'
-    '<b>Nutrition + activation = foundation.</b>\n'
-    'Then you can target problem areas:\n\n'
-    '• Lower belly\n• Love handles\n• Flabby arms\n• Glute shaping\n• Posture\n\n'
-    'I created a workout that targets all these areas in <b>20 minutes a day</b>. No jumping, no exhaustion.\n\n'
-    'Girls feel first changes after <b>2-3 sessions</b>.\n\n'
-    'While you are in the bot — you can get it at a discount:\n'
-    '<s>$25</s> → <b>$15</b>'
+FUNNEL_STAGE_0 = (
+    'bro 👊 This is what happens when nutrition meets the right training.\n\n'
+    'Most men cut calories, lose weight — and end up looking smaller and flat.\n'
+    'Not lean. Not muscular. Just… smaller.\n\n'
+    'I see this every day. Men who train hard, eat right —\n'
+    'but lose muscle because their training method is wrong.\n\n'
+    "That's exactly what this workout is built to fix.\n\n"
+    'One method. Protects your muscle while you lose the fat.\n'
+    'Used by men in Abu Dhabi, London, New York, Mumbai — same result.\n\n'
+    '🔒 Special price for you: 49 AED — only inside this chat.\n'
+    "Outside it costs 99 AED. This offer won't stay here long."
 )
-FUNNEL_DAY_1_BUTTON = "Buy with discount"
+FUNNEL_STAGE_0_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_0_QUESTION = "❓ Does training really matter?"
 
-FUNNEL_DAY_2 = (
-    '<b>Social proof</b>\n\n'
-    "You can't imagine how many messages I get after this workout 🙈\n\n"
-    'Here are some typical ones:\n'
-    '✨ "Swelling gone — legs became drier in three days"\n'
-    '✨ "Belly got smaller, even though weight barely changed"\n'
-    '✨ "Cellulite became softer and less visible"\n'
-    '✨ "Heaviness in the body disappeared"\n\n'
-    "This is <b>NOT magic</b> — it's proper work with lymph + muscles that nobody usually talks about.\n\n"
-    'Want to try it too?'
+FUNNEL_STAGE_1 = (
+    'Great question — and you\'re right to ask.\n\n'
+    "Here's the truth most coaches won't tell you:\n\n"
+    'When you\'re in a calorie deficit, your body looks for energy everywhere.\n'
+    'Without the right training signal — it burns muscle alongside fat.\n\n'
+    'Perfect nutrition + wrong training = lose fat AND muscle.\n'
+    'Perfect nutrition + right training = lose fat, KEEP muscle.\n\n'
+    "The difference isn't how hard you work.\n"
+    "It's whether your training tells your body to protect the muscle.\n\n"
+    'This workout does exactly that.'
 )
-FUNNEL_DAY_2_BUTTONS = [("Yes, I want results!", "buy_now"), ("Will it suit me?", "check_suitability")]
+FUNNEL_STAGE_1_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_1_QUESTION = "❓ Can I just do cardio?"
 
-FUNNEL_DAY_3 = (
-    '📅 <b>Pain → Solution</b>\n\n'
-    "Let's be honest.\n"
-    '90% of girls face the same problems:\n'
-    '• puffy face and body\n• love handles\n• tense lower belly\n'
-    '• flabby arms\n• poor posture\n• visible cellulite\n\n'
-    'The reason is almost always the same:\n'
-    '👉 poor lymph function\n👉 inactive deep muscles\n👉 weak posture\n\n'
-    'My <b>20-minute workout</b> fixes all of this — gently and effectively.\n\n'
-    'Want to start today?'
+FUNNEL_STAGE_2 = (
+    'Cardio burns calories. That part is true.\n\n'
+    'But cardio alone during a cut will cost you:\n\n'
+    '❌ Your muscle — body breaks it down for energy\n'
+    '❌ Your shape — you lose size, not just fat\n'
+    '❌ Your strength — you get smaller, not leaner\n\n'
+    'Men who only do cardio during a cut end up looking softer — not harder.\n\n'
+    'To keep your muscle, your body needs a specific strength signal.\n'
+    'Not more cardio. The right training method.\n\n'
+    "That's what this workout gives you."
 )
-FUNNEL_DAY_3_BUTTONS = [("Yes!", "buy_now"), ("What's in the program?", "show_info")]
+FUNNEL_STAGE_2_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_2_QUESTION = "❓ What makes it different?"
 
-FUNNEL_DAY_4 = (
-    '📅 <b>Price as a reason to buy</b>\n\n'
-    'If I conducted this workout in person, it would cost $30-50.\n'
-    'But I want every girl to be able to afford it.\n\n'
-    'So in the bot it costs only <b>$15</b>.\n'
-    "That's less than:\n• dinner out\n• a new mascara\n• one coffee shop visit\n• food delivery\n\n"
-    'The effect is like 2-3 personal training sessions.\n'
-    'And the best part — 20 minutes, at home, no equipment.\n\n'
-    'Want to grab it at the "friends" price?'
+FUNNEL_STAGE_3 = (
+    'Most programs are built for bulking or general fitness.\n\n'
+    'This one is built for one specific situation:\n'
+    '→ You\'re cutting calories\n'
+    '→ You want to keep your muscle\n'
+    '→ You train in a normal gym\n\n'
+    'Equipment you need:\n'
+    '✅ Barbell\n✅ Dumbbells\n✅ Bodyweight\n\n'
+    "That's it. No machines. No special setup.\n"
+    "Any gym in Abu Dhabi, London, Mumbai, New York — you're ready.\n\n"
+    "The difference isn't the exercises.\n"
+    "It's the training logic built specifically for fat loss + muscle retention."
 )
-FUNNEL_DAY_4_BUTTONS = [("I want a discount", "buy_now"), ("Not for me", "none")]
+FUNNEL_STAGE_3_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_3_QUESTION = "❓ Need a special gym?"
 
-FUNNEL_DAY_5 = (
-    '📅 <b>Day 5 — Soft Deadline</b>\n\n'
-    "Today is the last day the workout is available for <b>$15</b>.\n\n"
-    'After this, the price goes back.\n'
-    'And yes… these small postponements are what most often prevent girls from getting their dream body.\n\n'
-    'You can start your journey to:\n'
-    '✔️ light legs\n✔️ a flatter belly\n✔️ reduced love handles\n'
-    '✔️ better posture\n✔️ firmer glutes\n✔️ less cellulite\n\n'
-    'in just 20 minutes a day.\n\n'
-    'Ready to grab the workout?'
+FUNNEL_STAGE_4 = (
+    'No special gym needed. ✅\n\n'
+    'Any standard gym works. Anywhere in the world.\n\n'
+    'You need:\n'
+    '→ Barbell + plates\n→ Dumbbells\n→ Space for bodyweight work\n\n'
+    'The method works because of HOW you train —\n'
+    'not what equipment you have.\n\n'
+    'Smart programming > expensive equipment.'
 )
-FUNNEL_DAY_5_BUTTONS = [("Yes, I'm in!", "buy_now"), ("Remind me later", "remind_later")]
+FUNNEL_STAGE_4_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_4_QUESTION = "❓ I'm a beginner — will it work?"
+
+FUNNEL_STAGE_5 = (
+    'Perfect — beginners get results the fastest. ✅\n\n'
+    'Your body responds quickly when you start training correctly from day one.\n\n'
+    'Everything is explained clearly:\n'
+    '→ What to do\n→ How to do it\n→ Why it works for fat loss + muscle retention\n\n'
+    'No guessing. No confusion. No wasted sessions.\n\n'
+    'Most men waste months doing the wrong thing.\n'
+    "You won't."
+)
+FUNNEL_STAGE_5_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_5_QUESTION = "❓ What do I get after paying?"
+
+FUNNEL_STAGE_6 = (
+    'After payment — instant access. ✅\n\n'
+    'You get:\n'
+    '✅ Full workout structure — session by session\n'
+    '✅ Exercises: barbell + dumbbells + bodyweight\n'
+    '✅ The training logic for fat loss + muscle retention explained clearly\n'
+    '✅ No machines needed\n'
+    '✅ Works in any gym — Abu Dhabi, London, Mumbai, anywhere\n'
+    '✅ PDF guide — how to progressively overload so your body keeps changing '
+    'and you retain even more muscle over time\n\n'
+    'This is not a random exercise list.\n'
+    "It's a proven method — for men who want to lose fat without losing their physique.\n\n"
+    'And one more thing:\n'
+    'If you have any questions — message me directly on Telegram. 💬\n'
+    "I'm not sending you somewhere else.\n"
+    'You write to me — I answer personally.\n\n'
+    '👉 @Ivan_Razmazin'
+)
+FUNNEL_STAGE_6_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_6_QUESTION = "❓ Why only 49 AED?"
+
+FUNNEL_STAGE_7 = (
+    'Because I want every serious man to have access to this. ✅\n\n'
+    '49 AED is less than one dinner out.\n'
+    'But the wrong training method can cost you months of lost progress —\n'
+    "and muscle you won't get back easily.\n\n"
+    "You're not paying for a workout.\n"
+    "You're paying for the method that makes your cut actually work.\n\n"
+    'One time. No subscription. Instant access.\n\n'
+    '🔒 This price exists only inside this chat.\n'
+    "Come back later — it's 99 AED.\n"
+    'This offer is yours right now.'
+)
+FUNNEL_STAGE_7_BUY = "✅ Get Access — 49 AED"
+FUNNEL_STAGE_7_QUESTION = "❓ I want personal help"
+
+FUNNEL_STAGE_8 = (
+    'You eat right. You show up to the gym.\n'
+    'You want to look lean and muscular — not just lighter.\n\n'
+    'But every week without the right training method —\n'
+    "you're losing muscle that won't come back easily.\n\n"
+    'Men from Abu Dhabi to London to Mumbai have fixed this\n'
+    'with one workout. One clear method.\n\n'
+    '🔒 49 AED — only here, only now.\n'
+    'After this chat — 99 AED.\n\n'
+    "Don't leave without it."
+)
+FUNNEL_STAGE_8_BUY = "✅ GET ACCESS — 49 AED"
+FUNNEL_STAGE_8_QUESTION = "❓ I want coaching"
+
+# --- Upsell messages (after purchase) ---
+UPSELL_1 = (
+    'One more thing before you start. 👊\n\n'
+    'Most men lose 20–30% of their results because of form mistakes\n'
+    "they don't even know they're making.\n\n"
+    '→ Send me 3–5 videos of your key exercises\n'
+    '→ I review each one personally\n'
+    '→ You get exact corrections — what to fix, how to fix it\n\n'
+    'One session of correct form builds more muscle than weeks of sloppy reps.\n\n'
+    'This is how you make sure the workout actually delivers.'
+)
+UPSELL_1_BUY = "✅ Technique Check — 79 AED"
+UPSELL_1_DECLINE = "⬅️ No thanks, just workout"
+
+UPSELL_2 = (
+    'How was your first session? 👊\n\n'
+    'If you want to move faster — and not figure everything out alone:\n\n'
+    '<b>7-Day Personal Coaching — 129 AED</b> ✅\n\n'
+    '→ Daily check-ins with me personally\n'
+    '→ Workout adjusted to your body and schedule\n'
+    '→ Nutrition tweaks based on your real progress\n'
+    '→ Direct answers to every question\n\n'
+    '7 days with the right guidance gets you further\n'
+    'than most men go training alone in a month.\n\n'
+    'The closest thing to a personal trainer — at a fraction of the cost.'
+)
+UPSELL_2_BUY = "✅ 7-Day Coaching — 129 AED"
+UPSELL_2_DECLINE = "⬅️ No thanks, I'm good"
 
 # --- Callback responses ---
 BUY_MESSAGE = (
@@ -103,8 +182,8 @@ WATCH_VIDEO_BUTTON = "▶️ Watch video"
 WATCH_VIDEO_PROMPT = "Here's a free workout from me! Tap the button below to watch 👇"
 
 LEARN_WORKOUT_RESPONSE = (
-    "Here's what's inside: hips, arms, belly, glutes, posture — 40 minutes, at home, "
-    "no equipment. Only for bot subscribers — $15 instead of $25."
+    "Here's what's inside: a proven training method for fat loss + muscle retention. "
+    "Barbell, dumbbells, bodyweight — any gym works. Only for bot subscribers — 49 AED instead of 99 AED."
 )
 LEARN_WORKOUT_BUTTON = "I want it"
 
@@ -174,14 +253,9 @@ WELCOME_WITH_QUESTIONS = (
 LANGUAGE_CHANGED = "Language changed to English."
 
 VIDEO_WORKOUT_RESPONSE = (
-    "Now your body is activated 🤍\n"
-    "And in this state, workouts give results 2-3 times faster.\n\n"
-    "Nutrition + activation = foundation.\n"
-    "Then you can target problem areas:\n\n"
-    "— lower belly\n— love handles\n— flabby arms\n— glute shaping\n— posture\n\n"
-    "I created a workout that targets these areas in 20 minutes a day.\n"
-    "No jumping, no exhaustion.\n\n"
-    "Girls feel first changes after 2-3 sessions 🫶\n\n"
-    "While you're in the bot — you can get it at a discount\n"
-    "$15 instead of $25."
+    "Great choice 👊\n"
+    "Now check out the workout method designed specifically for men cutting calories.\n\n"
+    "One method. Protects your muscle while you lose the fat.\n"
+    "Works in any gym — barbell, dumbbells, bodyweight.\n\n"
+    "Special price for you: 49 AED instead of 99 AED."
 )
