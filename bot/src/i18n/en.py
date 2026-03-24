@@ -174,8 +174,8 @@ UPSELL_2_DECLINE = "⬅️ No thanks, I'm good"
 # --- Callback responses ---
 BUY_MESSAGE = (
     "💳 Great! Proceed to payment:\n\n"
-    "👇 Press the button below to get the workout\n\n"
-    "After payment, access will open automatically! ✅"
+    "👇 Press the button below to pay\n\n"
+    "After payment, you'll receive a confirmation message ✅"
 )
 BUY_BUTTON = " 💳 Pay"
 WATCH_VIDEO_BUTTON = "▶️ Watch video"
@@ -229,6 +229,7 @@ MEAL_TOTAL = "Total"
 VOICE_ERROR = "Sorry, I couldn't process your voice message. Please type your answer."
 VIDEO_UNAVAILABLE = "Sorry, video is temporarily unavailable."
 PAYMENT_CONFIRMED = "Payment received! Your workout access is now active. Check your messages."
+PAYMENT_FAILED = "❌ Payment failed. Please try again or contact support."
 AI_ERROR = "Sorry, something went wrong. Please try again in a moment."
 
 # --- Start ---

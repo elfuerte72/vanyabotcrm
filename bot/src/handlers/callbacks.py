@@ -14,11 +14,12 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user, mark_as_buyer, update_funnel_stage
+from src.db.queries import get_user, mark_as_buyer, save_ziina_payment, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.funnel.sender import _build_keyboard, _send_single_funnel_message
 from src.i18n import get_strings
 from src.models.user import User
+from src.services.ziina import ZiinaAPIError, create_payment_intent
 from src.services.media import (
     send_info_video,
     send_random_result_photo,
@@ -39,10 +40,26 @@ def _get_language(db_user: User | None, fallback: str = "en") -> str:
 
 
 def _get_payment_url(language: str) -> str:
-    """Get payment URL based on language (Tribute for RU, Ziina for EN/AR)."""
+    """Get fallback payment URL based on language (Tribute for RU, Ziina for EN/AR)."""
     if language == "ru":
         return settings.tribute_link
     return settings.ziina_link or settings.tribute_link
+
+
+def _get_payment_amount(db_user: User | None) -> int:
+    """Determine payment amount (AED) based on user's funnel stage.
+
+    Stage is incremented AFTER sending, so callback from stage N message
+    arrives when user is at stage N+1. Upsell buttons come from stages 9,10.
+    """
+    if not db_user:
+        return 49
+    stage = db_user.funnel_stage
+    if stage >= 11:  # clicked upsell stage 10 button (129 AED)
+        return 129
+    if stage >= 10:  # clicked upsell stage 9 button (79 AED)
+        return 79
+    return 49  # main product (stages 0-8)
 
 
 @router.callback_query(F.data == "buy_now")
@@ -76,17 +93,33 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
         )
         logger.info("buy_now_link_sent", user_id=user_id, language="ru", marked_buyer=False)
     else:
-        # EN/AR: mark immediately (Ziina webhook handles real confirmation)
-        await mark_as_buyer(user_id)
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)]
-        ])
-        await bot.send_message(
-            chat_id=chat_id,
-            text=strings.BUY_MESSAGE,
-            reply_markup=keyboard,
-        )
-        logger.info("buy_now_callback", user_id=user_id, language=language)
+        # EN/AR: create Ziina payment intent — don't mark buyer until webhook confirms
+        amount_aed = _get_payment_amount(db_user)
+        try:
+            intent_id, redirect_url = await create_payment_intent(
+                amount_aed, message=f"Workout access — {amount_aed} AED",
+            )
+            await save_ziina_payment(user_id, intent_id, amount_aed)
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=strings.BUY_BUTTON, url=redirect_url)]
+            ])
+            await bot.send_message(
+                chat_id=chat_id,
+                text=strings.BUY_MESSAGE,
+                reply_markup=keyboard,
+            )
+            logger.info("buy_now_ziina_intent", user_id=user_id, language=language, intent_id=intent_id, amount=amount_aed)
+        except (ZiinaAPIError, Exception) as exc:
+            # Fallback: static link only (webhook will still confirm if user pays)
+            logger.error("buy_now_ziina_fallback", user_id=user_id, error=str(exc))
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)]
+            ])
+            await bot.send_message(
+                chat_id=chat_id,
+                text=strings.BUY_MESSAGE,
+                reply_markup=keyboard,
+            )
 
 
 @router.callback_query(F.data == "confirm_paid_ru")

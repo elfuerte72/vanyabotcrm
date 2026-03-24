@@ -1,21 +1,24 @@
 """Ziina payment webhook handler.
 
-Receives payment confirmation from Ziina and:
-1. Validates webhook secret (required — rejects if not configured)
-2. Updates user as buyer in DB
-3. Sends confirmation + content to user via Telegram
+Receives payment status updates from Ziina via webhook:
+- Event: payment_intent.status.updated
+- Header: X-Hmac-Signature (HMAC-SHA256 of body)
+- Looks up chat_id via payment_intent_id stored in users_nutrition.id_ziina
+- On "completed": marks user as buyer and sends confirmation
+- On "failed": sends failure notification
 """
 
 from __future__ import annotations
 
 import hmac
 import hashlib
+import json
 
 import structlog
 from aiohttp import web
 
 from config.settings import settings
-from src.db.queries import mark_as_buyer, get_user
+from src.db.queries import get_chat_id_by_ziina_payment, get_user, mark_as_buyer
 from src.i18n import get_strings
 
 logger = structlog.get_logger()
@@ -28,7 +31,8 @@ async def handle_ziina_webhook(request: web.Request) -> web.Response:
         logger.error("ziina_webhook_secret_not_configured")
         return web.Response(status=503, text="Webhook secret not configured")
 
-    signature = request.headers.get("X-Webhook-Signature", "")
+    # Validate HMAC-SHA256 signature (Ziina uses X-Hmac-Signature header)
+    signature = request.headers.get("X-Hmac-Signature", "")
     body = await request.read()
     expected = hmac.new(
         settings.ziina_webhook_secret.encode(),
@@ -40,45 +44,55 @@ async def handle_ziina_webhook(request: web.Request) -> web.Response:
         return web.Response(status=401, text="Invalid signature")
 
     try:
-        import json
-        data = json.loads(body)
+        payload = json.loads(body)
     except Exception:
         return web.Response(status=400, text="Invalid JSON")
 
-    # Log only safe fields
+    # Ziina webhook format: {event: "payment_intent.status.updated", data: PaymentIntentDto}
+    event = payload.get("event", "")
+    intent_data = payload.get("data", {})
+    payment_intent_id = intent_data.get("id")
+    payment_status = intent_data.get("status")
+
     logger.info(
         "ziina_webhook_received",
-        status=data.get("status"),
-        has_chat_id=bool(data.get("metadata", {}).get("chat_id")),
+        event=event,
+        intent_id=payment_intent_id,
+        status=payment_status,
     )
 
-    # Extract payment info
-    payment_status = data.get("status")
-    chat_id_raw = data.get("metadata", {}).get("chat_id")
-
-    if not chat_id_raw:
-        logger.warning("ziina_webhook_no_chat_id")
+    if not payment_intent_id:
+        logger.warning("ziina_webhook_no_intent_id")
         return web.Response(status=200, text="OK")
 
-    try:
-        chat_id = int(chat_id_raw)
-    except (ValueError, TypeError):
-        logger.warning("ziina_webhook_invalid_chat_id", chat_id_raw=str(chat_id_raw)[:20])
-        return web.Response(status=400, text="Invalid chat_id")
+    # Look up chat_id from payment_intent_id stored in users_nutrition.id_ziina
+    chat_id = await get_chat_id_by_ziina_payment(payment_intent_id)
+    if not chat_id:
+        logger.warning("ziina_webhook_unknown_intent", intent_id=payment_intent_id)
+        return web.Response(status=200, text="OK")
+
+    bot = request.app.get("bot")
+    user = await get_user(chat_id)
+    language = user.language if user else "en"
+    strings = get_strings(language)
 
     if payment_status == "completed":
         await mark_as_buyer(chat_id)
-        logger.info("ziina_payment_completed", chat_id=chat_id)
+        logger.info("ziina_payment_completed", chat_id=chat_id, intent_id=payment_intent_id)
 
-        # Send confirmation via bot (bot instance passed via app context)
-        bot = request.app.get("bot")
         if bot:
-            user = await get_user(chat_id)
-            language = user.language if user else "en"
-            strings = get_strings(language)
             await bot.send_message(
                 chat_id=chat_id,
                 text=strings.PAYMENT_CONFIRMED,
+            )
+
+    elif payment_status == "failed":
+        logger.warning("ziina_payment_failed", chat_id=chat_id, intent_id=payment_intent_id)
+
+        if bot and hasattr(strings, "PAYMENT_FAILED"):
+            await bot.send_message(
+                chat_id=chat_id,
+                text=strings.PAYMENT_FAILED,
             )
 
     return web.Response(status=200, text="OK")

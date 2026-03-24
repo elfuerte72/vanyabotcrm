@@ -23,7 +23,8 @@ class Settings(BaseSettings):
 
     # Payment
     tribute_link: str = "https://t.me/tribute/app?startapp=pnvi"
-    ziina_link: str = ""  # Ziina payment link for EN/AR users
+    ziina_link: str = ""  # Fallback static Ziina link (used if API unavailable)
+    ziina_api_key: str = ""  # Ziina API Bearer token for Payment Intent creation
     ziina_webhook_secret: str = ""
 
     # Logging

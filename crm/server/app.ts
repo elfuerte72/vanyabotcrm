@@ -33,6 +33,7 @@ app.use(cors({
 app.use(express.json({ limit: '100kb' }));
 
 // Request logging
+// @ts-expect-error pino-http CJS default export not callable under NodeNext
 app.use(pinoHttp({ logger }));
 
 // Rate limiting on API routes

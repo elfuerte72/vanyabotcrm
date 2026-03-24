@@ -145,6 +145,28 @@ async def mark_as_buyer(chat_id: int) -> None:
     logger.info("user_marked_as_buyer", chat_id=chat_id)
 
 
+async def save_ziina_payment(chat_id: int, payment_intent_id: str, amount_aed: int) -> None:
+    """Store Ziina payment intent ID for later webhook lookup."""
+    pool = await get_pool()
+    await pool.execute(
+        "UPDATE users_nutrition SET id_ziina = $1, type_ziina = $2 WHERE chat_id = $3",
+        payment_intent_id,
+        amount_aed,
+        chat_id,
+    )
+    logger.info("ziina_payment_saved", chat_id=chat_id, intent_id=payment_intent_id, amount=amount_aed)
+
+
+async def get_chat_id_by_ziina_payment(payment_intent_id: str) -> int | None:
+    """Look up chat_id by Ziina payment intent ID."""
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        "SELECT chat_id FROM users_nutrition WHERE id_ziina = $1",
+        payment_intent_id,
+    )
+    return int(row["chat_id"]) if row else None
+
+
 async def set_food_received(chat_id: int, language: str = "ru") -> None:
     next_send = datetime.now(timezone.utc) + timedelta(minutes=30)
     pool = await get_pool()

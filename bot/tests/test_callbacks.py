@@ -58,8 +58,11 @@ def _make_bot():
 class TestHandleBuyNow:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("language", ["en", "ar"])
+    @patch("src.handlers.callbacks.save_ziina_payment", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.create_payment_intent", new_callable=AsyncMock, return_value=("intent_123", "https://checkout.ziina.com/test"))
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_en_ar_marks_buyer_immediately(self, mock_mark_buyer, language):
+    async def test_buy_now_en_ar_creates_payment_intent(self, mock_mark_buyer, mock_create, mock_save, language):
+        """EN/AR: creates Ziina payment intent, does NOT mark buyer immediately."""
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
         strings = get_strings(language)
@@ -67,11 +70,15 @@ class TestHandleBuyNow:
 
         await handle_buy_now(callback, bot, db_user=db_user)
 
-        mock_mark_buyer.assert_called_once_with(callback.from_user.id)
+        mock_mark_buyer.assert_not_called()
+        mock_create.assert_called_once()
+        mock_save.assert_called_once()
         bot.send_message.assert_called_once()
         call_kwargs = bot.send_message.call_args
         assert call_kwargs.kwargs["text"] == strings.BUY_MESSAGE
-        assert call_kwargs.kwargs["reply_markup"] is not None
+        # Button URL should be the redirect_url from Ziina
+        markup = call_kwargs.kwargs["reply_markup"]
+        assert markup.inline_keyboard[0][0].url == "https://checkout.ziina.com/test"
         callback.answer.assert_called_once()
 
     @pytest.mark.asyncio
@@ -112,31 +119,34 @@ class TestHandleBuyNow:
         assert markup.inline_keyboard[1][0].text == strings.CONFIRM_PAID_BUTTON
 
     @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.create_payment_intent", new_callable=AsyncMock, side_effect=Exception("API down"))
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_en_keyboard_has_url_button(self, mock_mark_buyer):
+    async def test_buy_now_en_fallback_on_ziina_error(self, mock_mark_buyer, mock_create):
+        """EN/AR: when Ziina API fails, falls back to static link only."""
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
         db_user = make_user("en")
 
         await handle_buy_now(callback, bot, db_user=db_user)
 
+        mock_mark_buyer.assert_not_called()
         markup = bot.send_message.call_args.kwargs["reply_markup"]
-        buttons = markup.inline_keyboard[0]
-        assert len(buttons) == 1
-        assert buttons[0].url is not None
-        strings = get_strings("en")
-        assert buttons[0].text == strings.BUY_BUTTON
+        assert len(markup.inline_keyboard) == 1
+        assert markup.inline_keyboard[0][0].url is not None
 
     @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.save_ziina_payment", new_callable=AsyncMock)
+    @patch("src.handlers.callbacks.create_payment_intent", new_callable=AsyncMock, return_value=("intent_456", "https://checkout.ziina.com/test2"))
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_default_language_en(self, mock_mark_buyer):
-        """If db_user is None, defaults to English (marks buyer immediately)."""
+    async def test_buy_now_default_language_en(self, mock_mark_buyer, mock_create, mock_save):
+        """If db_user is None, defaults to English (creates Ziina intent)."""
         callback = _make_callback(data="buy_now")
         bot = _make_bot()
 
         await handle_buy_now(callback, bot, db_user=None)
 
-        mock_mark_buyer.assert_called_once()
+        mock_mark_buyer.assert_not_called()
+        mock_create.assert_called_once()
         strings = get_strings("en")
         assert bot.send_message.call_args.kwargs["text"] == strings.BUY_MESSAGE
 
