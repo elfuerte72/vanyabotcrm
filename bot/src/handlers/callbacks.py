@@ -2,7 +2,7 @@
 
 Callbacks: buy_now, show_info, show_results, check_suitability,
            remind_later, none, video_workout, learn_workout, video_circle,
-           en_funnel_q_<stage>, upsell_decline
+           en_funnel_q_<stage>, ar_funnel_q_<stage>, upsell_decline
 """
 
 from __future__ import annotations
@@ -312,6 +312,68 @@ async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     except Exception as e:
         logger.error(
             "en_funnel_question_send_failed",
+            user_id=user_id, stage=next_stage, error=str(e),
+        )
+
+
+@router.callback_query(F.data.startswith("ar_funnel_q_"))
+async def handle_ar_funnel_question(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
+    """AR funnel question button — instantly sends next stage message."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
+        return
+
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+
+    # Parse stage from callback data: ar_funnel_q_0 → 0
+    try:
+        clicked_stage = int(callback.data.split("_")[-1])
+    except (ValueError, IndexError):
+        logger.error("ar_funnel_q_invalid_data", data=callback.data, user_id=user_id)
+        return
+
+    # Fetch current user state
+    db_user = data.get("db_user")
+    if not db_user:
+        db_user = await get_user(user_id)
+    if not db_user:
+        logger.debug("ar_funnel_q_no_user", user_id=user_id)
+        return
+
+    # Skip if user is buyer or already past this stage
+    if db_user.is_buyer:
+        logger.debug("ar_funnel_q_buyer_skip", user_id=user_id, stage=clicked_stage)
+        return
+    if db_user.funnel_stage != clicked_stage:
+        logger.debug(
+            "ar_funnel_q_stage_mismatch",
+            user_id=user_id, clicked=clicked_stage, current=db_user.funnel_stage,
+        )
+        return
+
+    # Send next stage message instantly
+    next_stage = clicked_stage + 1
+    next_msg = get_funnel_message(next_stage, "ar")
+    if next_msg is None:
+        logger.debug("ar_funnel_q_no_next_msg", user_id=user_id, next_stage=next_stage)
+        return
+
+    keyboard = _build_keyboard(next_msg)
+    try:
+        await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
+        await update_funnel_stage(chat_id, language="ar", current_stage=next_stage)
+        logger.info(
+            "ar_funnel_question_advance",
+            user_id=user_id, from_stage=clicked_stage, to_stage=next_stage,
+        )
+    except Exception as e:
+        logger.error(
+            "ar_funnel_question_send_failed",
             user_id=user_id, stage=next_stage, error=str(e),
         )
 

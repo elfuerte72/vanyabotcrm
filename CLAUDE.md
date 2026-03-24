@@ -34,6 +34,16 @@ uv add --dev <package>                # Add dev dependency
 # Connection string from DATABASE_URL env var
 psql "$DATABASE_URL"
 # Schema reference: db/schema.sql
+# Migrations: db/migrations/ (sequential SQL files, applied manually)
+```
+
+### Funnel Testing Scripts (`/scripts/`, `/scripts_en/`, `/scripts_ar/`)
+```bash
+./scripts/run.sh stage_0.py          # Send RU funnel stage message to test user
+./scripts_en/run.sh stage_0.py       # Send EN funnel stage message to test user
+./scripts_ar/run.sh stage_0.py       # Send AR funnel stage message to test user
+./scripts/run.sh reset.py            # Reset test user funnel state
+# See scripts/GUIDE.md for full stage-by-stage testing workflow
 ```
 
 No lint commands are configured.
@@ -50,7 +60,7 @@ Two services share the same PostgreSQL database:
 
 **CRM** (`/crm`): Modular monolith — Express API + React SPA in a single TypeScript project. Shared types between server and client in `shared/`. Server modules in `server/modules/{users,chat,stats,events}/routes.ts`. Client is a Telegram Mini App with two views (list/detail) and two tabs (clients/recent). `server/app.ts` creates Express app; `server/index.ts` calls `app.listen()` (split for supertest). Auth middleware in `server/auth.ts` validates Telegram `initData`. In production, server serves client SPA via catch-all `*` route from `public/`.
 
-**Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a 5-day sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts polling + APScheduler (daily funnel at 23:00 UTC) + aiohttp webhook server (Ziina payments on port 8080).
+**Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Mifflin-St Jeor), generates meal plans, and runs a sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts 3 concurrent services: polling + APScheduler (funnel sender every 15 min) + aiohttp webhook server (Ziina payments on port 8080).
 
 **Deployment**: Bot runs locally (deployment target TBD). CRM deployment is being migrated. Database is on Supabase.
 
@@ -116,13 +126,15 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Chat history**: Bot reads/writes to `chat_histories` table. `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
 
-**Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. Allowed statuses: `member`, `administrator`, `creator`. Blocks handler if not subscribed — sends localized "please subscribe" message. If check fails (bot not admin), defaults to blocking.
+**Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. **Currently disabled** in `src/bot.py` (commented out, pending bot admin access to channel).
 
-**Funnel stages** (0→5): After user receives meal plan (`get_food=TRUE`), daily cron sends progressive sales messages. `get_funnel_targets()` fetches non-buyers with `funnel_stage` 0-4. Each send increments `funnel_stage` by 1. Important: stage is incremented by scheduler *after* sending, so when user clicks a callback button from stage N message, they are already at stage N+1.
+**Funnel system**: RU funnel has **8 stages (0→7)** with MSK time-of-day scheduling; EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 1h for stages 1-8, 24h for upsell stage 9. After user receives meal plan (`get_food=TRUE`), the scheduler (every 15 min) checks `next_funnel_msg_at` column and sends messages when the time has arrived. Timing logic is in `src/db/queries.py:calculate_next_send_time()` — RU messages are scheduled at specific Moscow times (10:00, 11:00, 19:00 MSK), while EN/AR use interval delays (5min/1h/24h). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when user is already at stage N+1.
+
+**Media** (`config/media.yaml` + `bot/media/photos/`): RU funnel messages include local photos (`photo_name` field) and video notes (circles from Google Drive via `video_note_id`). EN and AR funnels include photos at stages 0 and 6 (shared `en_stage_0`/`en_stage_6` photos) plus question buttons for instant next-stage delivery. Video notes are sent as separate messages after the main content.
 
 ## Bot Testing Patterns
 
-Tests use pytest + pytest-asyncio in `bot/tests/`. Env vars are set in `conftest.py` (fake `BOT_TOKEN`, `DATABASE_URL`, `OPENROUTER_API_KEY`) to prevent `Settings` validation errors. No database or API mocking needed for unit tests — calculator, language detection, formatter, funnel messages, and i18n are all pure functions.
+Tests use pytest + pytest-asyncio (`asyncio_mode = "auto"`) in `bot/tests/`. Env vars are set in `conftest.py` (fake `BOT_TOKEN`, `DATABASE_URL`, `OPENROUTER_API_KEY`) to prevent `Settings` validation errors. No database or API mocking needed for unit tests — calculator, language detection, formatter, funnel messages, and i18n are all pure functions. Test helpers in `tests/helpers.py` provide `make_bot`, `make_message`, `make_user`, `AGENT_RESPONSES`, `MEAL_PLANS`.
 
 ## API Endpoints
 
@@ -146,7 +158,7 @@ Default sort (no `sort` param): `is_buyer DESC, funnel_stage DESC, first_name`.
 
 ### Key Tables
 
-**`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-6), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`.
+**`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-7 for RU, 0-10 for EN/AR), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`, `funnel_start_at`, `last_funnel_msg_at`, `next_funnel_msg_at` (UTC, calculated by `calculate_next_send_time()`).
 
 **`chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
 

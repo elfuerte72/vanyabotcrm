@@ -1,6 +1,6 @@
 """Funnel integration tests — message content, sender logic, full cycle.
 
-RU: 8 stages (0-7), EN: 11 stages (0-10), AR: 6 stages (0-5).
+RU: 8 stages (0-7), EN: 11 stages (0-10), AR: 11 stages (0-10).
 """
 
 from __future__ import annotations
@@ -50,36 +50,33 @@ class TestFunnelMessageContentEN:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Part 1b: AR message content verification (6 stages, legacy)
+# Part 1b: AR message content verification (11 stages)
 # ═══════════════════════════════════════════════════════════════════════════
-
-EXPECTED_AR_BUTTONS = {
-    0: ["video_workout"],
-    1: ["buy_now"],
-    2: ["buy_now", "check_suitability"],
-    3: ["buy_now", "show_info"],
-    4: ["buy_now", "none"],
-    5: ["buy_now", "remind_later"],
-}
 
 
 class TestFunnelMessageContentAR:
-    def test_stage_0_has_callback_button(self):
+    def test_stages_0_to_8_have_buy_and_question(self):
+        for stage in range(9):
+            msg = get_funnel_message(stage, "ar")
+            assert msg is not None
+            assert len(msg.buttons) == 2
+            assert msg.buttons[0][1] == "buy_now"
+            assert msg.buttons[1][1] == f"ar_funnel_q_{stage}"
+
+    def test_upsell_stages_have_buy_and_decline(self):
+        for stage in (9, 10):
+            msg = get_funnel_message(stage, "ar")
+            assert msg is not None
+            assert msg.buttons[0][1] == "buy_now"
+            assert msg.buttons[1][1] == "upsell_decline"
+
+    def test_stage_0_has_photo(self):
         msg = get_funnel_message(0, "ar")
-        assert msg is not None
-        assert msg.buttons[0][1] == "video_workout"
+        assert msg.photo_name
 
-    def test_stage_1_buy_button(self):
-        msg = get_funnel_message(1, "ar")
-        assert msg is not None
-        assert len(msg.buttons) == 1
-        assert msg.buttons[0][1] == "buy_now"
-
-    @pytest.mark.parametrize("stage", [2, 3, 4, 5])
-    def test_ar_buttons_match_expected(self, stage):
-        msg = get_funnel_message(stage, "ar")
-        callbacks = [b[1] for b in msg.buttons]
-        assert callbacks == EXPECTED_AR_BUTTONS[stage]
+    def test_stage_6_has_photo(self):
+        msg = get_funnel_message(6, "ar")
+        assert msg.photo_name
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -133,7 +130,7 @@ class TestFunnelMessageText:
         assert msg is not None
         assert len(msg.text) > 50
 
-    @pytest.mark.parametrize("stage", range(6))
+    @pytest.mark.parametrize("stage", range(11))
     def test_ar_message_text_not_empty(self, stage):
         msg = get_funnel_message(stage, "ar")
         assert msg is not None

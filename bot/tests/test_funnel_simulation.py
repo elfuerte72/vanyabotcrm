@@ -2,7 +2,7 @@
 
 RU: 8 stages (0-7) with photos, video notes, and specific callbacks.
 EN: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
-AR: 6 stages (0-5) with text + buttons only.
+AR: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 """
 
 from __future__ import annotations
@@ -33,14 +33,11 @@ EXPECTED_BUTTONS_EN = {
     10: [("buy_now",), ("upsell_decline",)],
 }
 
-# Expected button callbacks for AR (6 stages, legacy)
+# Expected button callbacks for AR (11 stages, same structure as EN)
 EXPECTED_BUTTONS_AR = {
-    0: [("video_workout",)],
-    1: [("buy_now",)],
-    2: [("buy_now",), ("check_suitability",)],
-    3: [("buy_now",), ("show_info",)],
-    4: [("buy_now",), ("none",)],
-    5: [("buy_now",), ("remind_later",)],
+    **{stage: [("buy_now",), (f"ar_funnel_q_{stage}",)] for stage in range(9)},
+    9: [("buy_now",), ("upsell_decline",)],
+    10: [("buy_now",), ("upsell_decline",)],
 }
 
 # Expected button callbacks for RU (8 stages)
@@ -68,12 +65,12 @@ class TestFunnelMessageTextMatchesI18nEN:
         expected_text = getattr(strings, f"FUNNEL_STAGE_{stage}")
         assert msg.text == expected_text
 
-    @pytest.mark.parametrize("stage", range(6))
+    @pytest.mark.parametrize("stage", range(9))
     def test_ar_funnel_text_matches_i18n(self, stage):
         strings = get_strings("ar")
         msg = get_funnel_message(stage, "ar")
         assert msg is not None
-        expected_text = getattr(strings, f"FUNNEL_DAY_{stage}")
+        expected_text = getattr(strings, f"FUNNEL_STAGE_{stage}")
         assert msg.text == expected_text
 
 
@@ -99,7 +96,7 @@ class TestFunnelButtonsEN:
         actual_cbs = [(btn[1],) for btn in msg.buttons]
         assert actual_cbs == expected_cbs
 
-    @pytest.mark.parametrize("stage", range(6))
+    @pytest.mark.parametrize("stage", range(11))
     def test_ar_buttons_have_correct_callback_data(self, stage):
         msg = get_funnel_message(stage, "ar")
         assert msg is not None
@@ -107,17 +104,15 @@ class TestFunnelButtonsEN:
         actual_cbs = [(btn[1],) for btn in msg.buttons]
         assert actual_cbs == expected_cbs
 
-    @pytest.mark.parametrize("stage", range(6))
+    @pytest.mark.parametrize("stage", range(9))
     def test_ar_button_labels_match_i18n(self, stage):
         strings = get_strings("ar")
         msg = get_funnel_message(stage, "ar")
         assert msg is not None
-        if stage == 0:
-            expected_labels = [strings.FUNNEL_DAY_0_BUTTON]
-        elif stage == 1:
-            expected_labels = [strings.FUNNEL_DAY_1_BUTTON]
-        else:
-            expected_labels = [btn[0] for btn in getattr(strings, f"FUNNEL_DAY_{stage}_BUTTONS")]
+        expected_labels = [
+            getattr(strings, f"FUNNEL_STAGE_{stage}_BUY"),
+            getattr(strings, f"FUNNEL_STAGE_{stage}_QUESTION"),
+        ]
         actual_labels = [btn[0] for btn in msg.buttons]
         assert actual_labels == expected_labels
 
@@ -144,8 +139,8 @@ class TestFunnelOutOfRange:
     def test_en_stage_11_returns_none(self):
         assert get_funnel_message(11, "en") is None
 
-    def test_ar_stage_6_returns_none(self):
-        assert get_funnel_message(6, "ar") is None
+    def test_ar_stage_11_returns_none(self):
+        assert get_funnel_message(11, "ar") is None
 
     def test_ru_stage_8_returns_none(self):
         assert get_funnel_message(8, "ru") is None
@@ -193,27 +188,32 @@ class TestFullFunnelCycleEN:
 
 class TestFullFunnelCycleAR:
     @pytest.mark.asyncio
+    @patch("src.funnel.sender.send_local_photo", new_callable=AsyncMock)
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
-    async def test_full_cycle_ar(self, mock_targets, mock_update_stage):
+    async def test_full_cycle_ar(self, mock_targets, mock_update_stage, mock_photo):
         bot = make_bot()
         strings = get_strings("ar")
         chat_id = 300003
 
-        for day in range(6):
+        for stage in range(11):
             mock_targets.return_value = [
-                {"chat_id": chat_id, "funnel_stage": day, "language": "ar"}
+                {"chat_id": chat_id, "funnel_stage": stage, "language": "ar"}
             ]
             mock_update_stage.reset_mock()
             bot.send_message.reset_mock()
+            mock_photo.reset_mock()
 
             await send_funnel_messages(bot)
 
-            send_kwargs = bot.send_message.call_args.kwargs
-            expected_text = getattr(strings, f"FUNNEL_DAY_{day}")
-            assert send_kwargs["text"] == expected_text, f"Day {day} (AR): text mismatch"
+            expected = get_funnel_message(stage, "ar")
+            if expected.photo_name:
+                mock_photo.assert_called_once()
+            else:
+                send_kwargs = bot.send_message.call_args.kwargs
+                assert send_kwargs["text"] == expected.text, f"Stage {stage} (AR): text mismatch"
             mock_update_stage.assert_called_once_with(
-                chat_id, language="ar", current_stage=day
+                chat_id, language="ar", current_stage=stage
             )
 
 

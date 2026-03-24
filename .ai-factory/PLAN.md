@@ -1,8 +1,8 @@
-# Plan: Оптимизация скорости ответа бота
+# Plan: AR Funnel Rework — перевод EN воронки на арабский (ОАЭ)
 
+**Branch:** feature/funnel-en-rework (текущая)
+**Created:** 2026-03-24
 **Mode:** Fast
-**Created:** 2026-03-22
-**Source:** `.ai-factory/plans/performance-optimization.md`
 
 ## Settings
 
@@ -10,88 +10,83 @@
 - **Logging:** Verbose (DEBUG)
 - **Docs:** No
 
-## Summary
+## Description
 
-4 оптимизации для ускорения ответа бота на inline-кнопки:
-1. Увеличение пула соединений (min_size 2→5)
-2. Устранение дублирующих DB-запросов в callback-хендлерах
-3. In-memory кеш Telegram file_id для медиа-файлов
-4. Partial index для запроса funnel targets
+Полная замена старой AR воронки (6 стадий, женская аудитория, $15) на новую 11-стадийную (перевод EN воронки). Арабский диалект ОАЭ (Gulf Arabic / خليجي). Мужская аудитория, 49 AED, тема сушки с сохранением мышц. Те же фото что в EN (stage 0, 6). Callback-кнопки с вопросами для мгновенной отправки следующей стадии. Тестовые скрипты в `/scripts_ar/`.
 
 ## Tasks
 
-### Phase 1: Quick Wins (1 коммит)
+### Phase 1: Локализация и данные
 
-#### ~~Task 1: Увеличить min_size пула соединений до 5~~ [x]
-- **File:** `bot/src/db/pool.py:36`
-- **Change:** `min_size=2` → `min_size=5`
-- **Logging:** DEBUG лог при создании пула с min_size/max_size
-- **Risk:** Низкий — одна строка
+#### Task 1: Перевести EN funnel строки на арабский (ОАЭ) в ar.py
+- **Файл:** `bot/src/i18n/ar.py`
+- Удалить старые `FUNNEL_DAY_*` строки (6 стадий, женская аудитория, $15)
+- Добавить `FUNNEL_STAGE_0` ... `FUNNEL_STAGE_8` + `FUNNEL_STAGE_*_BUY` + `FUNNEL_STAGE_*_QUESTION`
+- Добавить `UPSELL_1`, `UPSELL_2` + кнопки (`UPSELL_1_BUY`, `UPSELL_1_DECLINE`, `UPSELL_2_BUY`, `UPSELL_2_DECLINE`)
+- Обновить `BUY_MESSAGE`, `VIDEO_WORKOUT_RESPONSE`, `LEARN_WORKOUT_RESPONSE` под мужскую аудиторию и 49 AED
+- Арабский: Gulf Arabic (خليجي) — основной диалект ОАЭ, мужские формы обращения (يا بطل, أخوي)
+- Logging: DEBUG при загрузке строк
 
-#### ~~Task 2: Убрать дублирующие DB-запросы в callbacks.py~~ [x]
-- **File:** `bot/src/handlers/callbacks.py`
-- **Change:** В 8 хендлерах заменить `await get_user_language(user_id)` на `data["db_user"].language` (уже загружен UserDataMiddleware)
-- **Pattern:**
-  ```python
-  # Было:
-  language = await get_user_language(user_id) or "en"
-  # Стало:
-  db_user = data.get("db_user")
-  language = db_user.language if db_user else "en"
-  ```
-- **Handlers:** handle_buy_now, handle_show_info, handle_show_results, handle_remind_later, handle_none, handle_video_workout, handle_learn_workout, handle_video_circle
-- **Logging:** DEBUG лог при получении языка из db_user
-- **Depends on:** UserDataMiddleware уже работает (`src/middlewares/user_data.py`)
+### Phase 2: Логика воронки
 
-### Phase 2: File ID Cache (1 коммит)
+#### Task 2: Обновить messages.py — заменить AR funnel на 11-стадийную
+- **Файл:** `bot/src/funnel/messages.py`
+- Заменить `_get_default_funnel_message()` → `_get_ar_funnel_message()`
+- 11 стадий (0-8 + upsell 9-10), структура как `_get_en_funnel_message()`
+- Фото: `en_stage_0` (stage 0), `en_stage_6` (stage 6) — те же файлы
+- Кнопки: `buy_now` + `ar_funnel_q_{stage}` для стадий 0-8
+- Upsell 9-10: `buy_now` + `upsell_decline`
+- Обновить `get_funnel_message()`: для `language=="ar"` вызывать `_get_ar_funnel_message()`
+- Обновить docstrings (AR: 11 stages)
+- **Blocked by:** Task 1
 
-#### ~~Task 3: Реализовать file_id кеш в media.py~~ [x]
-- **File:** `bot/src/services/media.py`
-- **Change:** Добавить `_tg_file_id_cache: dict[str, str] = {}`. Все 5 send-функций: проверять кеш перед скачиванием, сохранять file_id после первой отправки.
-- **Functions:** send_info_video, send_suitability_video, send_random_result_photo, send_video_note_from_drive, send_local_photo
-- **File ID extraction:** `message.video.file_id`, `message.photo[-1].file_id`, `message.video_note.file_id`
-- **Logging:** DEBUG лог cache hit/miss с ключом
-- **Effect:** -90% время отправки медиа после прогрева
+#### Task 3: Обновить queries.py — _MAX_STAGE и timing для AR
+- **Файл:** `bot/src/db/queries.py`
+- `_MAX_STAGE["ar"]` = 10 (было 5)
+- Timing AR = timing EN: 5min (stage 0), 1h (1-8), 24h (upsell 9)
+- Удалить старый AR timing блок (2h/23h)
+- Обновить docstring функции `calculate_next_send_time()`
 
-### Phase 3: Database Index (1 коммит)
+#### Task 4: Добавить AR callback handler для кнопок-вопросов
+- **Файл:** `bot/src/handlers/callbacks.py`
+- Добавить `@router.callback_query(F.data.startswith("ar_funnel_q_"))` handler
+- Логика: копия `handle_en_funnel_question()` с `language="ar"`
+- Обновить docstring модуля, добавив `ar_funnel_q_<stage>`
+- **Blocked by:** Task 2
 
-#### ~~Task 4: Создать миграцию с составным индексом~~ [x]
-- **File:** `db/migrations/003_add_funnel_targets_index.sql`
-- **SQL:**
-  ```sql
-  CREATE INDEX IF NOT EXISTS idx_funnel_targets
-  ON users_nutrition (next_funnel_msg_at)
-  WHERE get_food = TRUE
-    AND (is_buyer IS FALSE OR is_buyer IS NULL)
-    AND funnel_stage >= 0;
-  ```
-- **Also:** Обновить `db/schema.sql`
+### Phase 3: Тестовые скрипты
 
-### Phase 4: Tests (1 коммит)
+#### Task 5: Создать /scripts_ar/
+- **Директория:** `scripts_ar/`
+- `_common.py` — по структуре `scripts_en/_common.py`, `language='ar'`
+- `run.sh` — runner, аналог `scripts_en/run.sh`
+- `reset.py` — сброс на stage 0, language='ar'
+- `stage_0.py` ... `stage_10.py` — 11 файлов, каждый вызывает `_common.send_stage(N)`
+- Docstring каждого stage файла: описание стадии на английском + кнопки + фото (если есть)
 
-#### ~~Task 5: Обновить тесты callbacks (blocked by: Task 2)~~ [x]
-- **File:** `bot/tests/test_callbacks.py`, `bot/tests/test_callbacks_multilang.py`
-- **Change:** Убрать mock `get_user_language`, передавать `db_user` через data dict
-- **Verify:** db_user=None → fallback "en"
+### Phase 4: Тесты
 
-#### ~~Task 6: Добавить тесты для file_id кеша (blocked by: Task 3)~~ [x]
-- **File:** `bot/tests/test_media.py` (новый)
-- **Tests:** cache miss → download, cache hit → no download, local photo cache, reset between tests
+#### Task 6: Написать тесты для AR воронки
+- **Файл:** `bot/tests/test_funnel_ar.py` (новый файл)
+- Тест: все 11 стадий AR возвращают корректные `FunnelMessage`
+- Тест: stage 0 и 6 имеют `photo_name`
+- Тест: `_MAX_STAGE["ar"]` == 10
+- Тест: `calculate_next_send_time()` для AR: 5min/1h/24h
+- Тест: callback data формат `ar_funnel_q_{0-8}`
+- Паттерн: по аналогии с `bot/tests/test_funnel.py`
 
 ## Commit Plan
 
 | # | Tasks | Commit Message |
 |---|-------|---------------|
-| 1 | 1, 2 | `perf(bot): increase pool min_size, eliminate duplicate DB queries in callbacks` |
-| 2 | 3 | `perf(bot): add in-memory Telegram file_id cache for media` |
-| 3 | 4 | `perf(db): add partial index for funnel targets query` |
-| 4 | 5, 6 | `test(bot): update callback tests, add media cache tests` |
+| 1 | 1-4 | `feat(bot): rework AR funnel to 11 stages — UAE Arabic translation of EN funnel` |
+| 2 | 5 | `feat(scripts): add scripts_ar/ for AR funnel testing` |
+| 3 | 6 | `test(bot): add AR funnel tests` |
 
-## Expected Impact
+## Key Decisions
 
-| Optimization | Before | After |
-|---|---|---|
-| Callback media response | 1.5-2.5 sec | ~0.1 sec (after warmup) |
-| DB queries per callback | 2 | 1 |
-| Pool cold connections | 8 on-demand | 5 always warm |
-| Funnel query | seq scan | index scan |
+- **Диалект:** Gulf Arabic (خليجي) — основной разговорный диалект ОАЭ. Используем مزيج из MSA + خليجي для маркетинговых текстов (понятно всем арабоговорящим, но звучит естественно для ОАЭ)
+- **Фото:** Переиспользуем EN фото (en_stage_0, en_stage_6) — нет языко-зависимого текста на фото
+- **Timing:** Идентичен EN — 5min/1h/24h (заменяет старый AR 2h/23h)
+- **Callback prefix:** `ar_funnel_q_` (по аналогии с `en_funnel_q_`)
+- **Старая AR воронка:** Полностью заменяется, FUNNEL_DAY_* удаляются из ar.py

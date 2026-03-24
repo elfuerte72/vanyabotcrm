@@ -26,7 +26,7 @@ monitoringsql/
 │   │   ├── db/                 # asyncpg pool + SQL queries
 │   │   └── models/             # User dataclass
 │   ├── config/                 # Pydantic Settings + media.yaml
-│   ├── tests/                  # pytest tests (340+)
+│   ├── tests/                  # pytest tests (420+)
 │   └── scripts/                # Utility scripts (trigger_funnel)
 ├── crm/                        # CRM modular monolith (TypeScript)
 │   ├── shared/                 # Shared types and constants
@@ -60,6 +60,8 @@ monitoringsql/
 │   └── railway.json            # Railway deployment
 ├── db/                         # Database schema (shared contract)
 │   └── schema.sql              # CREATE TABLE + triggers (pg_dump)
+├── scripts_en/                 # EN funnel testing scripts (stage_0..10, reset)
+├── scripts_ar/                 # AR funnel testing scripts (stage_0..10, reset)
 ├── docs/                       # Documentation
 │   └── bot-documentation.md    # Bot feature documentation
 ├── .ai-factory/                # AI Factory context
