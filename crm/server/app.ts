@@ -20,8 +20,15 @@ app.set('trust proxy', true);
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Security headers
-app.use(helmet());
+// Security headers — allow Telegram Web App SDK
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'script-src': ["'self'", "https://telegram.org"],
+    },
+  },
+}));
 
 // CORS: in production SPA is served by the same server (no CORS needed)
 // In dev, allow Vite dev server
