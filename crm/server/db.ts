@@ -10,7 +10,7 @@ const sslDisabled = dsn.includes('sslmode=disable');
 
 const pool = new Pool({
   connectionString: dsn,
-  ssl: sslDisabled ? false : true,
+  ssl: sslDisabled ? false : { rejectUnauthorized: false },
 });
 
 export default pool;
