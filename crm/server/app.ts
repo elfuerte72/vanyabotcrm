@@ -16,6 +16,7 @@ import statsRouter from './modules/stats/routes.js';
 import eventsRouter from './modules/events/routes.js';
 
 const app = express();
+app.set('trust proxy', true);
 
 const isProduction = process.env.NODE_ENV === 'production';
 
