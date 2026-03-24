@@ -26,7 +26,7 @@ def _make_language_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="\U0001f1ec\U0001f1e7 English", callback_data="lang_en"),
-            InlineKeyboardButton(text="\U0001f1f8\U0001f1e6 \u0627\u0644\u0639\u0631\u0628\u064a\u0629", callback_data="lang_ar"),
+            InlineKeyboardButton(text="\U0001f1e6\U0001f1ea \u0627\u0644\u0639\u0631\u0628\u064a\u0629", callback_data="lang_ar"),
             InlineKeyboardButton(text="\U0001f1f7\U0001f1fa \u0420\u0443\u0441\u0441\u043a\u0438\u0439", callback_data="lang_ru"),
         ]
     ])
