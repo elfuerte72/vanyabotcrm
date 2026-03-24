@@ -1,0 +1,9 @@
+[build]
+builder = "railpack"
+buildCommand = "uv sync --no-dev"
+watchPatterns = ["bot/**"]
+
+[deploy]
+startCommand = "uv run python -m src.main"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
