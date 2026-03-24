@@ -1,6 +1,6 @@
 """Callback query handlers — inline button presses.
 
-Callbacks: buy_now, show_info, show_results, check_suitability,
+Callbacks: buy_now, confirm_paid_ru, show_info, show_results, check_suitability,
            remind_later, none, video_workout, learn_workout, video_circle,
            en_funnel_q_<stage>, ar_funnel_q_<stage>, upsell_decline
 """
@@ -60,19 +60,56 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
     language = _get_language(db_user)
     strings = get_strings(language)
 
+    payment_url = _get_payment_url(language)
+
+    if language == "ru":
+        # RU: two-step confirmation — Tribute has no webhook,
+        # so we don't mark as buyer until user confirms payment
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)],
+            [InlineKeyboardButton(text=strings.CONFIRM_PAID_BUTTON, callback_data="confirm_paid_ru")],
+        ])
+        await bot.send_message(
+            chat_id=chat_id,
+            text=strings.BUY_MESSAGE_WITH_CONFIRM,
+            reply_markup=keyboard,
+        )
+        logger.info("buy_now_link_sent", user_id=user_id, language="ru", marked_buyer=False)
+    else:
+        # EN/AR: mark immediately (Ziina webhook handles real confirmation)
+        await mark_as_buyer(user_id)
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)]
+        ])
+        await bot.send_message(
+            chat_id=chat_id,
+            text=strings.BUY_MESSAGE,
+            reply_markup=keyboard,
+        )
+        logger.info("buy_now_callback", user_id=user_id, language=language)
+
+
+@router.callback_query(F.data == "confirm_paid_ru")
+async def handle_confirm_paid_ru(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
+    """RU user confirms they paid on Tribute."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
+        return
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+
     await mark_as_buyer(user_id)
 
-    payment_url = _get_payment_url(language)
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)]
-    ])
-
+    strings = get_strings("ru")
     await bot.send_message(
         chat_id=chat_id,
-        text=strings.BUY_MESSAGE,
-        reply_markup=keyboard,
+        text=strings.PAYMENT_CONFIRMED,
     )
-    logger.info("buy_now_callback", user_id=user_id, language=language)
+    logger.info("confirm_paid_ru", user_id=user_id)
 
 
 @router.callback_query(F.data == "show_info")

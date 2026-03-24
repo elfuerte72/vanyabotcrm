@@ -24,6 +24,7 @@ import pytest
 
 from src.handlers.callbacks import (
     handle_buy_now,
+    handle_confirm_paid_ru,
     handle_check_suitability,
     handle_none,
     handle_remind_later,
@@ -42,12 +43,12 @@ logger = logging.getLogger(__name__)
 
 
 class TestBuyNowMultilang:
-    """buy_now: marks buyer, sends payment message in user's language."""
+    """buy_now: EN/AR marks buyer immediately; RU uses two-step confirmation."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
+    @pytest.mark.parametrize("lang", ["en", "ar"])
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_text_per_language(self, mock_mark, lang):
+    async def test_buy_now_en_ar_text(self, mock_mark, lang):
         db_user = make_user(lang)
         callback = make_callback(data="buy_now", chat_id=10000, user_id=10000)
         bot = make_bot()
@@ -55,15 +56,28 @@ class TestBuyNowMultilang:
 
         await handle_buy_now(callback, bot, db_user=db_user)
 
-        # Text matches i18n
         call_kwargs = bot.send_message.call_args.kwargs
         assert call_kwargs["text"] == strings.BUY_MESSAGE, f"{lang}: BUY_MESSAGE mismatch"
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_marks_buyer_in_db(self, mock_mark, lang):
-        """CRM update: mark_as_buyer sets is_buyer=TRUE."""
+    async def test_buy_now_ru_text_with_confirm(self, mock_mark):
+        """RU: shows BUY_MESSAGE_WITH_CONFIRM instead of BUY_MESSAGE."""
+        db_user = make_user("ru")
+        callback = make_callback(data="buy_now", chat_id=10000, user_id=10000)
+        bot = make_bot()
+        strings = get_strings("ru")
+
+        await handle_buy_now(callback, bot, db_user=db_user)
+
+        call_kwargs = bot.send_message.call_args.kwargs
+        assert call_kwargs["text"] == strings.BUY_MESSAGE_WITH_CONFIRM
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("lang", ["en", "ar"])
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_buy_now_en_ar_marks_buyer_in_db(self, mock_mark, lang):
+        """EN/AR: mark_as_buyer called immediately."""
         db_user = make_user(lang)
         callback = make_callback(data="buy_now", user_id=20000)
         bot = make_bot()
@@ -73,10 +87,22 @@ class TestBuyNowMultilang:
         mock_mark.assert_called_once_with(20000)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_keyboard_has_url_button(self, mock_mark, lang):
-        """Payment button is a URL button (not callback)."""
+    async def test_buy_now_ru_does_not_mark_buyer(self, mock_mark):
+        """RU: mark_as_buyer is NOT called on buy_now (two-step)."""
+        db_user = make_user("ru")
+        callback = make_callback(data="buy_now", user_id=20000)
+        bot = make_bot()
+
+        await handle_buy_now(callback, bot, db_user=db_user)
+
+        mock_mark.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("lang", ["en", "ar"])
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_buy_now_en_ar_keyboard_has_url_button(self, mock_mark, lang):
+        """EN/AR: single URL button."""
         db_user = make_user(lang)
         callback = make_callback(data="buy_now")
         bot = make_bot()
@@ -92,13 +118,31 @@ class TestBuyNowMultilang:
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_buy_now_ru_keyboard_has_confirm_button(self, mock_mark):
+        """RU: 2 rows — URL button + confirm_paid_ru callback button."""
+        db_user = make_user("ru")
+        callback = make_callback(data="buy_now")
+        bot = make_bot()
+        strings = get_strings("ru")
+
+        await handle_buy_now(callback, bot, db_user=db_user)
+
+        markup = bot.send_message.call_args.kwargs["reply_markup"]
+        assert len(markup.inline_keyboard) == 2
+        assert markup.inline_keyboard[0][0].url is not None
+        assert markup.inline_keyboard[1][0].callback_data == "confirm_paid_ru"
+        assert markup.inline_keyboard[1][0].text == strings.CONFIRM_PAID_BUTTON
+
+    @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
     async def test_buy_now_none_db_user_defaults_en(self, mock_mark):
-        """db_user=None defaults to English."""
+        """db_user=None defaults to English (marks buyer immediately)."""
         callback = make_callback(data="buy_now")
         bot = make_bot()
 
         await handle_buy_now(callback, bot, db_user=None)
 
+        mock_mark.assert_called_once()
         strings = get_strings("en")
         assert bot.send_message.call_args.kwargs["text"] == strings.BUY_MESSAGE
 
@@ -109,6 +153,35 @@ class TestBuyNowMultilang:
         callback = make_callback(data="buy_now")
 
         await handle_buy_now(callback, make_bot(), db_user=db_user)
+
+        callback.answer.assert_called_once()
+
+
+# ─── handle_confirm_paid_ru ─────────────────────────────────────────────
+
+
+class TestConfirmPaidRuMultilang:
+    """confirm_paid_ru: marks buyer and sends PAYMENT_CONFIRMED."""
+
+    @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_confirm_paid_marks_buyer(self, mock_mark):
+        callback = make_callback(data="confirm_paid_ru", user_id=30000, chat_id=30000)
+        bot = make_bot()
+
+        await handle_confirm_paid_ru(callback, bot)
+
+        mock_mark.assert_called_once_with(30000)
+        strings = get_strings("ru")
+        assert bot.send_message.call_args.kwargs["text"] == strings.PAYMENT_CONFIRMED
+
+    @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_confirm_paid_answers_callback(self, mock_mark):
+        callback = make_callback(data="confirm_paid_ru")
+        bot = make_bot()
+
+        await handle_confirm_paid_ru(callback, bot)
 
         callback.answer.assert_called_once()
 
@@ -288,13 +361,22 @@ class TestCRMDataFlow:
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_buy_now_sets_is_buyer_true(self, mock_mark):
-        """buy_now → CRM: is_buyer changes from FALSE to TRUE."""
+    async def test_buy_now_en_sets_is_buyer_true(self, mock_mark):
+        """buy_now (EN/AR) → CRM: is_buyer changes from FALSE to TRUE."""
         db_user = make_user("en")
         callback = make_callback(data="buy_now", user_id=90001)
         await handle_buy_now(callback, make_bot(), db_user=db_user)
 
         mock_mark.assert_called_once_with(90001)
+
+    @pytest.mark.asyncio
+    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
+    async def test_confirm_paid_ru_sets_is_buyer_true(self, mock_mark):
+        """confirm_paid_ru → CRM: is_buyer changes from FALSE to TRUE."""
+        callback = make_callback(data="confirm_paid_ru", user_id=90010)
+        await handle_confirm_paid_ru(callback, make_bot())
+
+        mock_mark.assert_called_once_with(90010)
 
     @pytest.mark.asyncio
     async def test_video_workout_sends_video_link(self):
