@@ -1,4 +1,9 @@
-"""Middleware to check Telegram channel subscription."""
+"""Middleware to check Telegram channel subscription.
+
+Only checks subscription for users with language='ru'.
+EN/AR users skip the check entirely.
+Requires UserDataMiddleware to run first (needs data["db_user"]).
+"""
 
 from __future__ import annotations
 
@@ -10,7 +15,6 @@ from aiogram.types import TelegramObject, Message
 
 from config.settings import settings
 from src.i18n import get_strings
-from src.services.language import detect_language
 
 logger = structlog.get_logger()
 
@@ -18,9 +22,10 @@ ALLOWED_STATUSES = {"member", "administrator", "creator"}
 
 
 class SubscriptionMiddleware(BaseMiddleware):
-    """Check if user is subscribed to the required channel.
+    """Check if RU user is subscribed to the required channel.
 
-    Skips callback queries (they are handled separately).
+    Skips non-RU users and callback queries.
+    Must be registered AFTER UserDataMiddleware.
     """
 
     async def __call__(
@@ -38,10 +43,20 @@ class SubscriptionMiddleware(BaseMiddleware):
         if user_id is None:
             return await handler(event, data)
 
+        # Only check subscription for RU users
+        db_user = data.get("db_user")
+        if db_user is None or db_user.language != "ru":
+            logger.debug(
+                "subscription_check_skipped",
+                user_id=user_id,
+                language=db_user.language if db_user else "unknown",
+                reason="non-ru user",
+            )
+            return await handler(event, data)
+
         bot: Bot = data["bot"]
 
         try:
-            # Use @username if numeric ID fails (bot must be channel admin)
             channel = f"@{settings.channel_username}" if settings.channel_username else settings.channel_id
             member = await bot.get_chat_member(
                 chat_id=channel,
@@ -66,12 +81,9 @@ class SubscriptionMiddleware(BaseMiddleware):
             is_subscribed = False
 
         if not is_subscribed:
-            lang = detect_language(message.text or "")
-            strings = get_strings(lang)
+            strings = get_strings("ru")
             await message.answer(
-                f"<b>RU:</b>\n{get_strings('ru').SUBSCRIBE_MESSAGE}\n\n"
-                f"<b>EN:</b>\n{get_strings('en').SUBSCRIBE_MESSAGE}\n\n"
-                f"<b>AR:</b>\n{get_strings('ar').SUBSCRIBE_MESSAGE}",
+                strings.SUBSCRIBE_MESSAGE,
                 parse_mode="HTML",
             )
             logger.info("user_not_subscribed", user_id=user_id)

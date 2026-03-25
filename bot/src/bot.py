@@ -28,15 +28,15 @@ def create_dispatcher() -> Dispatcher:
     """Create Dispatcher with all routers and middlewares registered."""
     dp = Dispatcher()
 
-    # Register middlewares (order matters: logging → subscription → user_data)
+    # Register middlewares (order matters: logging → user_data → subscription)
     dp.message.middleware(LoggingMiddleware())
     dp.callback_query.middleware(LoggingMiddleware())
 
-    # TODO: включить после добавления бота админом в канал
-    # dp.message.middleware(SubscriptionMiddleware())
-
     dp.message.middleware(UserDataMiddleware())
     dp.callback_query.middleware(UserDataMiddleware())
+
+    # Subscription check only for RU users (requires db_user from UserDataMiddleware)
+    dp.message.middleware(SubscriptionMiddleware())
 
     # Register routers (order matters: start first, then callbacks, then messages)
     dp.include_router(start.router)
