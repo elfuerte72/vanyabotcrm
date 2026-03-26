@@ -1,4 +1,4 @@
-"""Mifflin-St Jeor KBJU calculator."""
+"""Harris-Benedict KBJU calculator."""
 
 from __future__ import annotations
 
@@ -8,12 +8,11 @@ import structlog
 
 logger = structlog.get_logger()
 
-ACTIVITY_MULTIPLIERS = {
-    "sedentary": 1.2,
-    "light": 1.375,
-    "moderate": 1.55,
-    "high": 1.725,
-    "extreme": 1.9,
+# Protein coefficients per goal (g per kg of body weight)
+PROTEIN_COEFFICIENTS = {
+    "weight_loss": 1.7,
+    "muscle_gain": 1.5,
+    "maintenance": 1.2,
 }
 
 
@@ -33,51 +32,55 @@ def calculate_macros(
     activity_level: str,
     goal: str,
 ) -> MacroResult:
-    """Calculate KBJU using Mifflin-St Jeor formula.
+    """Calculate KBJU using Harris-Benedict formula.
+
+    BMR × 1.2, then goal adjustment:
+      - maintenance: no adjustment
+      - muscle_gain (weight_gain): +15%
+      - weight_loss: −20%
+
+    Protein: 1.2–1.7 g/kg (goal-dependent)
+    Fats: 1 g/kg
+    Carbs: remaining calories
 
     Args:
         sex: 'male' or 'female'
         weight: body weight in kg
         height: height in cm
         age: age in years
-        activity_level: one of sedentary/light/moderate/high/extreme
-        goal: one of weight_loss/maintenance/muscle_gain
+        activity_level: kept for API compatibility (not used in calculation)
+        goal: one of weight_loss/maintenance/muscle_gain/weight_gain
 
     Returns:
         MacroResult with calories, protein, fats, carbs
     """
     is_male = sex in ("male", "m", "м")
 
-    # BMR (Basal Metabolic Rate)
+    # BMR (Harris-Benedict)
     if is_male:
-        bmr = 10 * weight + 6.25 * height - 5 * age + 5
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age
     else:
-        bmr = 10 * weight + 6.25 * height - 5 * age - 161
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.330 * age
 
-    # TDEE (Total Daily Energy Expenditure)
-    multiplier = ACTIVITY_MULTIPLIERS.get(activity_level, 1.375)
-    tdee = bmr * multiplier
+    # Base expenditure: BMR × 1.2
+    base = bmr * 1.2
 
     # Goal adjustment
     if goal == "weight_loss":
-        target_calories = tdee * 0.85
-    elif goal == "muscle_gain":
-        target_calories = tdee * 1.10
+        target_calories = base * 0.80
+    elif goal in ("muscle_gain", "weight_gain"):
+        target_calories = base * 1.15
     else:
-        target_calories = tdee
+        target_calories = base
 
     # Macros
-    # Fat: 1 g/kg (fixed)
+    # Fat: 1 g/kg
     fat_g = weight * 1.0
     fat_cals = fat_g * 9
 
-    # Protein: 1.3-1.5 g/kg depending on goal
-    if goal in ("weight_loss", "muscle_gain"):
-        protein_coeff = 1.5
-    else:
-        protein_coeff = 1.4
-    protein_coeff = max(1.3, min(1.5, protein_coeff))
-
+    # Protein: 1.2–1.7 g/kg depending on goal
+    normalized_goal = "muscle_gain" if goal == "weight_gain" else goal
+    protein_coeff = PROTEIN_COEFFICIENTS.get(normalized_goal, 1.2)
     protein_g = weight * protein_coeff
     protein_cals = protein_g * 4
 

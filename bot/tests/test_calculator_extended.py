@@ -1,6 +1,6 @@
-"""Extended KBJU calculator tests — precise calculations, edge cases, all activity levels.
+"""Extended KBJU calculator tests — Harris-Benedict formula, precise calculations, edge cases.
 
-All expected values are manually calculated using Mifflin-St Jeor formula.
+All expected values are manually calculated using Harris-Benedict formula.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ os.environ.setdefault("OPENROUTER_API_KEY", "test_key_fake")
 
 import pytest
 
-from src.services.calculator import calculate_macros, ACTIVITY_MULTIPLIERS, MacroResult
+from src.services.calculator import calculate_macros, PROTEIN_COEFFICIENTS, MacroResult
 
 
 # ─── Helper ──────────────────────────────────────────────────────────────
@@ -21,26 +21,25 @@ from src.services.calculator import calculate_macros, ACTIVITY_MULTIPLIERS, Macr
 
 def _calc_expected(sex: str, weight: float, height: float, age: int,
                    activity: str, goal: str) -> MacroResult:
-    """Calculate expected result manually."""
+    """Calculate expected result manually using Harris-Benedict."""
     is_male = sex in ("male", "m", "м")
     if is_male:
-        bmr = 10 * weight + 6.25 * height - 5 * age + 5
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age
     else:
-        bmr = 10 * weight + 6.25 * height - 5 * age - 161
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.330 * age
 
-    mult = ACTIVITY_MULTIPLIERS.get(activity, 1.375)
-    tdee = bmr * mult
+    base = bmr * 1.2
 
     if goal == "weight_loss":
-        cals = tdee * 0.85
-    elif goal == "muscle_gain":
-        cals = tdee * 1.10
+        cals = base * 0.80
+    elif goal in ("muscle_gain", "weight_gain"):
+        cals = base * 1.15
     else:
-        cals = tdee
+        cals = base
 
     fat_g = weight * 1.0
-    protein_coeff = 1.5 if goal in ("weight_loss", "muscle_gain") else 1.4
-    protein_coeff = max(1.3, min(1.5, protein_coeff))
+    normalized_goal = "muscle_gain" if goal == "weight_gain" else goal
+    protein_coeff = PROTEIN_COEFFICIENTS.get(normalized_goal, 1.2)
     protein_g = weight * protein_coeff
 
     carb_cals = cals - protein_g * 4 - fat_g * 9
@@ -60,44 +59,44 @@ def _calc_expected(sex: str, weight: float, height: float, age: int,
 
 
 class TestPreciseCalculations:
-    def test_male_80kg_180cm_30y_sedentary_weight_loss(self):
-        """Male, 80kg, 180cm, 30yo, sedentary, weight loss."""
-        result = calculate_macros("male", 80.0, 180.0, 30, "sedentary", "weight_loss")
-        expected = _calc_expected("male", 80.0, 180.0, 30, "sedentary", "weight_loss")
+    def test_male_80kg_180cm_30y_weight_loss(self):
+        """Male, 80kg, 180cm, 30yo, weight loss."""
+        result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "weight_loss")
+        expected = _calc_expected("male", 80.0, 180.0, 30, "moderate", "weight_loss")
         assert result == expected
-        # Manual: BMR = 800 + 1125 - 150 + 5 = 1780
-        # TDEE = 1780 * 1.2 = 2136
-        # Target = 2136 * 0.85 = 1815.6 → 1816
-        assert result.calories == 1816
+        # BMR = 88.362 + 1071.76 + 863.82 - 170.31 = 1853.632
+        # Base = 1853.632 * 1.2 = 2224.3584
+        # Target = 2224.3584 * 0.80 = 1779.487 → 1779
+        assert result.calories == 1779
 
-    def test_female_60kg_165cm_25y_moderate_maintenance(self):
-        """Female, 60kg, 165cm, 25yo, moderate, maintenance."""
+    def test_female_60kg_165cm_25y_maintenance(self):
+        """Female, 60kg, 165cm, 25yo, maintenance."""
         result = calculate_macros("female", 60.0, 165.0, 25, "moderate", "maintenance")
         expected = _calc_expected("female", 60.0, 165.0, 25, "moderate", "maintenance")
         assert result == expected
-        # BMR = 600 + 1031.25 - 125 - 161 = 1345.25
-        # TDEE = 1345.25 * 1.55 = 2085.1375 → 2085
-        assert result.calories == 2085
+        # BMR = 447.593 + 554.82 + 511.17 - 108.25 = 1405.333
+        # Base = 1405.333 * 1.2 = 1686.4 → 1686
+        assert result.calories == 1686
 
-    def test_male_100kg_190cm_40y_high_muscle_gain(self):
-        """Male, 100kg, 190cm, 40yo, high, muscle gain."""
+    def test_male_100kg_190cm_40y_muscle_gain(self):
+        """Male, 100kg, 190cm, 40yo, muscle gain."""
         result = calculate_macros("male", 100.0, 190.0, 40, "high", "muscle_gain")
         expected = _calc_expected("male", 100.0, 190.0, 40, "high", "muscle_gain")
         assert result == expected
-        # BMR = 1000 + 1187.5 - 200 + 5 = 1992.5
-        # TDEE = 1992.5 * 1.725 = 3437.0625
-        # Target = 3437.0625 * 1.10 = 3780.77 → 3781
-        assert result.calories == 3781
+        # BMR = 88.362 + 1339.7 + 911.81 - 227.08 = 2112.792
+        # Base = 2112.792 * 1.2 = 2535.3504
+        # Target = 2535.3504 * 1.15 = 2915.653 → 2916
+        assert result.calories == 2916
 
-    def test_female_50kg_155cm_20y_extreme_weight_loss(self):
-        """Female, 50kg, 155cm, 20yo, extreme, weight loss."""
+    def test_female_50kg_155cm_20y_weight_loss(self):
+        """Female, 50kg, 155cm, 20yo, weight loss."""
         result = calculate_macros("female", 50.0, 155.0, 20, "extreme", "weight_loss")
         expected = _calc_expected("female", 50.0, 155.0, 20, "extreme", "weight_loss")
         assert result == expected
-        # BMR = 500 + 968.75 - 100 - 161 = 1207.75
-        # TDEE = 1207.75 * 1.9 = 2294.725
-        # Target = 2294.725 * 0.85 = 1950.52 → 1951
-        assert result.calories == 1951
+        # BMR = 447.593 + 462.35 + 480.19 - 86.6 = 1303.533
+        # Base = 1303.533 * 1.2 = 1564.2396
+        # Target = 1564.2396 * 0.80 = 1251.392 → 1251
+        assert result.calories == 1251
 
 
 # ─── Edge cases: extreme body parameters ────────────────────────────────
@@ -128,12 +127,11 @@ class TestEdgeCases:
         """80 year old."""
         result = calculate_macros("female", 55.0, 160.0, 80, "sedentary", "maintenance")
         assert result.calories > 0
-        # Should be lower due to age penalty
         result_young = calculate_macros("female", 55.0, 160.0, 25, "sedentary", "maintenance")
         assert result.calories < result_young.calories
 
     def test_carbs_never_negative_extreme_case(self):
-        """Very low weight + high activity should not produce negative carbs."""
+        """Very low weight + high protein should not produce negative carbs."""
         result = calculate_macros("female", 40.0, 140.0, 60, "sedentary", "weight_loss")
         assert result.carbs >= 0
 
@@ -141,37 +139,28 @@ class TestEdgeCases:
         """Very heavy person — protein and fats are proportional to weight."""
         result = calculate_macros("male", 200.0, 190.0, 30, "moderate", "maintenance")
         assert result.fats == 200  # 1 g/kg
-        assert result.protein == 280  # 1.4 g/kg for maintenance
+        assert result.protein == 240  # 200 * 1.2 for maintenance
 
 
-# ─── Activity levels: each higher level gives more calories ──────────────
+# ─── Activity level is ignored ──────────────────────────────────────────
 
 
-class TestActivityLevels:
-    def test_activity_levels_ascending_calories(self):
-        """Each activity level produces more calories than the previous."""
+class TestActivityLevelIgnored:
+    def test_all_activity_levels_produce_same_result(self):
+        """Activity level is not used — all levels give the same result."""
         levels = ["sedentary", "light", "moderate", "high", "extreme"]
         results = [
             calculate_macros("male", 80.0, 180.0, 30, level, "maintenance")
             for level in levels
         ]
+        for r in results[1:]:
+            assert r.calories == results[0].calories
 
-        for i in range(len(results) - 1):
-            assert results[i].calories < results[i + 1].calories, (
-                f"{levels[i]} ({results[i].calories}) should be < "
-                f"{levels[i + 1]} ({results[i + 1].calories})"
-            )
-
-    def test_unknown_activity_defaults_to_light(self):
-        """Unknown activity_level defaults to 1.375 (light)."""
+    def test_unknown_activity_same_result(self):
+        """Unknown activity_level produces same result as any known one."""
         result_unknown = calculate_macros("male", 80.0, 180.0, 30, "ultra_extreme", "maintenance")
-        result_light = calculate_macros("male", 80.0, 180.0, 30, "light", "maintenance")
-        assert result_unknown.calories == result_light.calories
-
-    def test_all_five_activity_levels_exist(self):
-        assert len(ACTIVITY_MULTIPLIERS) == 5
-        expected = {"sedentary", "light", "moderate", "high", "extreme"}
-        assert set(ACTIVITY_MULTIPLIERS.keys()) == expected
+        result_moderate = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
+        assert result_unknown.calories == result_moderate.calories
 
 
 # ─── Macro distribution rules ───────────────────────────────────────────
@@ -184,27 +173,27 @@ class TestMacroDistribution:
             result = calculate_macros("male", weight, 180.0, 30, "moderate", "maintenance")
             assert result.fats == weight
 
-    def test_protein_15_for_weight_loss(self):
-        """Protein = 1.5 g/kg for weight_loss."""
+    def test_protein_17_for_weight_loss(self):
+        """Protein = 1.7 g/kg for weight_loss."""
         result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "weight_loss")
-        assert result.protein == 120  # 80 * 1.5
+        assert result.protein == 136  # 80 * 1.7
 
     def test_protein_15_for_muscle_gain(self):
         """Protein = 1.5 g/kg for muscle_gain."""
         result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "muscle_gain")
-        assert result.protein == 120
+        assert result.protein == 120  # 80 * 1.5
 
-    def test_protein_14_for_maintenance(self):
-        """Protein = 1.4 g/kg for maintenance."""
+    def test_protein_12_for_maintenance(self):
+        """Protein = 1.2 g/kg for maintenance."""
         result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
-        assert result.protein == 112  # 80 * 1.4
+        assert result.protein == 96  # 80 * 1.2
 
     def test_carbs_are_remaining_calories(self):
         """Carbs = (calories - protein*4 - fats*9) / 4."""
         result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
         expected_carb_cals = result.calories - result.protein * 4 - result.fats * 9
         expected_carbs = round(expected_carb_cals / 4)
-        assert abs(result.carbs - expected_carbs) <= 1  # rounding tolerance
+        assert abs(result.carbs - expected_carbs) <= 1
 
 
 # ─── Sex identifiers ────────────────────────────────────────────────────
@@ -222,16 +211,13 @@ class TestSexIdentifiers:
         """'female' and other non-male identifiers use female formula."""
         r1 = calculate_macros("female", 60.0, 165.0, 25, "moderate", "maintenance")
         r2 = calculate_macros("f", 60.0, 165.0, 25, "moderate", "maintenance")
-        # 'f' is not in ("male", "m", "м") → uses female formula
         assert r1 == r2
 
     def test_male_vs_female_formula_difference(self):
-        """Male formula gives higher BMR (+166 difference)."""
+        """Male formula gives different BMR than female."""
         r_male = calculate_macros("male", 70.0, 170.0, 30, "moderate", "maintenance")
         r_female = calculate_macros("female", 70.0, 170.0, 30, "moderate", "maintenance")
-        # Male: +5, Female: -161 → difference = 166 * 1.55 = 257.3 calories
-        assert r_male.calories > r_female.calories
-        assert r_male.calories - r_female.calories == round(166 * 1.55)
+        assert r_male.calories != r_female.calories
 
 
 # ─── Goal adjustments ───────────────────────────────────────────────────
@@ -248,17 +234,17 @@ class TestGoalAdjustments:
         r_maint = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
         assert r_gain.calories > r_maint.calories
 
-    def test_weight_loss_is_85_percent_tdee(self):
-        """Weight loss = 85% of TDEE."""
+    def test_weight_loss_is_80_percent_of_base(self):
+        """Weight loss = 80% of BMR*1.2."""
         r_loss = calculate_macros("male", 80.0, 180.0, 30, "moderate", "weight_loss")
         r_maint = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
-        assert r_loss.calories == round(r_maint.calories * 0.85)
+        assert r_loss.calories == round(r_maint.calories * 0.80)
 
-    def test_muscle_gain_is_110_percent_tdee(self):
-        """Muscle gain = 110% of TDEE."""
+    def test_muscle_gain_is_115_percent_of_base(self):
+        """Muscle gain = 115% of BMR*1.2."""
         r_gain = calculate_macros("male", 80.0, 180.0, 30, "moderate", "muscle_gain")
         r_maint = calculate_macros("male", 80.0, 180.0, 30, "moderate", "maintenance")
-        assert r_gain.calories == round(r_maint.calories * 1.10)
+        assert r_gain.calories == round(r_maint.calories * 1.15)
 
     def test_unknown_goal_is_maintenance(self):
         """Unknown goal treated as maintenance."""
@@ -267,7 +253,6 @@ class TestGoalAdjustments:
         assert r_unknown.calories == r_maint.calories
 
     def test_all_results_are_integers(self):
-        """All result fields are int."""
         result = calculate_macros("male", 80.0, 180.0, 30, "moderate", "weight_loss")
         assert isinstance(result.calories, int)
         assert isinstance(result.protein, int)
