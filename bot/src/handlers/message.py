@@ -25,7 +25,7 @@ from aiogram.types import (
 
 from pydantic import ValidationError
 
-from src.db.queries import save_user_data, set_food_received
+from src.db.queries import save_user_data, save_user_event, set_food_received
 from src.handlers.start import LANGUAGE_CHOOSE_MESSAGE, _make_language_keyboard
 from src.i18n import get_strings
 from src.models.user import User
@@ -316,6 +316,7 @@ async def handle_confirm_data(callback: CallbackQuery, bot: Bot, db_user: User |
     confirm_text = _CONFIRM_PHRASES.get(lang, _CONFIRM_PHRASES["en"])
 
     logger.info("confirm_data_callback", chat_id=chat_id, lang=lang)
+    await save_user_event(chat_id, "button_click", "confirm_data", lang, "conversation")
 
     # Remove buttons from the confirmation message
     try:
@@ -339,6 +340,7 @@ async def handle_fix_data(callback: CallbackQuery, bot: Bot, db_user: User | Non
     lang = (db_user.language if db_user else None) or "en"
 
     logger.info("fix_data_callback", chat_id=chat_id, lang=lang)
+    await save_user_event(chat_id, "button_click", "fix_data", lang, "conversation")
 
     # Remove buttons from the confirmation message
     try:

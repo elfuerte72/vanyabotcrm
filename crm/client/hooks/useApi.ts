@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { User, ChatMessage, UserFilters, Stats, UserEvent } from '../../shared/types';
 
 export type { User, ChatMessage, UserFilters, Stats, UserEvent };
-export { goalLabels, activityLabels, eventButtonLabels } from '../../shared/constants';
+export { goalLabels, activityLabels, eventButtonLabels, funnelStageLabels } from '../../shared/constants';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 

@@ -14,7 +14,7 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user, mark_as_buyer, save_ziina_payment, update_funnel_stage
+from src.db.queries import get_user, mark_as_buyer, save_user_event, save_ziina_payment, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.funnel.sender import _build_keyboard, _send_single_funnel_message
 from src.i18n import get_strings
@@ -77,6 +77,8 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
     language = _get_language(db_user)
     strings = get_strings(language)
 
+    await save_user_event(chat_id, "button_click", "buy_now", language, "funnel")
+
     payment_url = _get_payment_url(language)
 
     if language == "ru":
@@ -136,6 +138,7 @@ async def handle_confirm_paid_ru(callback: CallbackQuery, bot: Bot, **data: Any)
     user_id = callback.from_user.id
 
     await mark_as_buyer(user_id)
+    await save_user_event(chat_id, "button_click", "confirm_paid_ru", "ru", "funnel")
 
     strings = get_strings("ru")
     await bot.send_message(
@@ -155,11 +158,12 @@ async def handle_show_info(callback: CallbackQuery, bot: Bot, **data: Any) -> No
     if not callback.message:
         return
     chat_id = callback.message.chat.id
+    db_user = data.get("db_user")
+    language = _get_language(db_user)
+    await save_user_event(chat_id, "button_click", "show_info", language, "funnel")
     try:
         await send_info_video(bot, chat_id)
     except Exception as e:
-        db_user = data.get("db_user")
-        language = _get_language(db_user)
         logger.error("show_info_failed", error=str(e), chat_id=chat_id, language=language)
         await bot.send_message(chat_id, get_strings(language).VIDEO_UNAVAILABLE)
 
@@ -178,6 +182,7 @@ async def handle_show_results(callback: CallbackQuery, bot: Bot, **data: Any) ->
     language = _get_language(db_user)
     strings = get_strings(language)
 
+    await save_user_event(chat_id, "button_click", "show_results", language, "funnel")
     try:
         await send_random_result_photo(bot, chat_id, caption=strings.RESULTS_CAPTION)
     except Exception as e:
@@ -194,6 +199,7 @@ async def handle_check_suitability(callback: CallbackQuery, bot: Bot) -> None:
     if not callback.message:
         return
     chat_id = callback.message.chat.id
+    await save_user_event(chat_id, "button_click", "check_suitability", language=None, workflow_name="funnel")
     try:
         await send_suitability_video(bot, chat_id)
     except Exception as e:
@@ -214,6 +220,7 @@ async def handle_remind_later(callback: CallbackQuery, bot: Bot, **data: Any) ->
     language = _get_language(db_user)
     strings = get_strings(language)
 
+    await save_user_event(chat_id, "button_click", "remind_later", language, "funnel")
     await bot.send_message(chat_id, strings.REMIND_LATER, parse_mode="HTML")
 
 
@@ -231,6 +238,7 @@ async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     language = _get_language(db_user)
     strings = get_strings(language)
 
+    await save_user_event(chat_id, "button_click", "none", language, "funnel")
     await bot.send_message(chat_id, strings.NONE_RESPONSE, parse_mode="HTML")
 
 
@@ -249,6 +257,8 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
     db_user = data.get("db_user")
     language = _get_language(db_user)
     strings = get_strings(language)
+
+    await save_user_event(chat_id, "button_click", "video_workout", language, "funnel")
 
     workout_url = media_config["videos"].get("workout_url", "")
     rows = []
@@ -280,6 +290,8 @@ async def handle_learn_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
     language = _get_language(db_user, fallback="ru")
     strings = get_strings(language)
 
+    await save_user_event(chat_id, "button_click", "learn_workout", language, "funnel")
+
     payment_url = _get_payment_url(language)
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=strings.LEARN_WORKOUT_BUTTON, url=payment_url)]
@@ -306,6 +318,10 @@ async def handle_video_circle(callback: CallbackQuery, bot: Bot, **data: Any) ->
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
 
+    db_user = data.get("db_user")
+    language = _get_language(db_user, fallback="ru")
+    await save_user_event(chat_id, "button_click", "video_circle", language, "funnel")
+
     video_notes = media_config.get("video_notes", {})
     file_id = video_notes.get("how_it_works", "")
 
@@ -317,8 +333,6 @@ async def handle_video_circle(callback: CallbackQuery, bot: Bot, **data: Any) ->
         await send_video_note_from_drive(bot, chat_id, file_id)
         logger.info("video_circle_callback", user_id=user_id)
     except Exception as e:
-        db_user = data.get("db_user")
-        language = _get_language(db_user, fallback="ru")
         strings = get_strings(language)
         logger.error("video_circle_failed", error=str(e), chat_id=chat_id)
         await bot.send_message(chat_id, strings.VIDEO_UNAVAILABLE)
@@ -344,6 +358,8 @@ async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     except (ValueError, IndexError):
         logger.error("en_funnel_q_invalid_data", data=callback.data, user_id=user_id)
         return
+
+    await save_user_event(chat_id, "button_click", callback.data, "en", "funnel")
 
     # Fetch current user state
     db_user = data.get("db_user")
@@ -407,6 +423,8 @@ async def handle_ar_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
         logger.error("ar_funnel_q_invalid_data", data=callback.data, user_id=user_id)
         return
 
+    await save_user_event(chat_id, "button_click", callback.data, "ar", "funnel")
+
     # Fetch current user state
     db_user = data.get("db_user")
     if not db_user:
@@ -457,4 +475,8 @@ async def handle_upsell_decline(callback: CallbackQuery, bot: Bot, **data: Any) 
         pass
 
     user_id = callback.from_user.id
+    chat_id = callback.message.chat.id if callback.message else user_id
+    db_user = data.get("db_user")
+    language = _get_language(db_user)
+    await save_user_event(chat_id, "button_click", "upsell_decline", language, "funnel")
     logger.info("upsell_declined", user_id=user_id)

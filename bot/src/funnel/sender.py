@@ -8,7 +8,7 @@ import structlog
 from aiogram import Bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.db.queries import get_funnel_targets, update_funnel_stage
+from src.db.queries import get_funnel_targets, save_user_event, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.services.media import send_local_photo, send_video_note_from_drive
 
@@ -82,6 +82,7 @@ async def send_funnel_messages(bot: Bot) -> None:
 
         try:
             await _send_single_funnel_message(bot, chat_id, msg, keyboard)
+            await save_user_event(chat_id, "funnel_message", f"stage_{stage}", language, "funnel")
             await update_funnel_stage(chat_id, language=language, current_stage=stage)
             sent += 1
             logger.debug(

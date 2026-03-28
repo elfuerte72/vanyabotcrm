@@ -10,7 +10,7 @@ from aiogram.types import (
     Message,
 )
 
-from src.db.queries import save_user_language, update_user_language, clear_chat_history
+from src.db.queries import save_user_event, save_user_language, update_user_language, clear_chat_history
 from src.i18n import get_strings
 from src.models.user import User
 
@@ -54,6 +54,7 @@ async def handle_language_selection(callback: CallbackQuery, db_user: User | Non
     first_name = callback.from_user.first_name or ""
 
     logger.info("language_selected", chat_id=chat_id, lang=lang)
+    await save_user_event(chat_id, "button_click", f"lang_{lang}", lang, "onboarding")
 
     if db_user is None:
         await save_user_language(chat_id, lang, username, first_name)

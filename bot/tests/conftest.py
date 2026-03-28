@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -21,6 +22,16 @@ from tests.helpers import (  # noqa: E402
     make_user,
     make_user_dict,
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_save_user_event():
+    """Auto-mock save_user_event to prevent DB connections in all tests."""
+    with patch("src.handlers.callbacks.save_user_event", new_callable=AsyncMock), \
+         patch("src.handlers.message.save_user_event", new_callable=AsyncMock), \
+         patch("src.handlers.start.save_user_event", new_callable=AsyncMock), \
+         patch("src.funnel.sender.save_user_event", new_callable=AsyncMock):
+        yield
 
 
 @pytest.fixture

@@ -225,11 +225,11 @@ class TestGenerateRoute:
         await _process_text_message(msg, bot, None, "Yes")
 
         save_kwargs = mock_save.call_args.kwargs
-        # Female, 60kg, 165cm, 25y, light, maintenance
-        # BMR = 600 + 1031.25 - 125 - 161 = 1345.25
-        # TDEE = 1345.25 * 1.375 = 1849.72 → 1850
-        assert save_kwargs["calories"] == 1850
-        assert save_kwargs["protein"] == 84  # 60 * 1.4
+        # Female, 60kg, 165cm, 25y, light, maintenance (Harris-Benedict)
+        # BMR = 655.1 + 9.563*60 + 1.85*165 - 4.676*25 = 1361.88
+        # TDEE = 1361.88 * 1.2 * 1.03 = 1683.8 → 1686 (with rounding)
+        assert save_kwargs["calories"] == 1686
+        assert save_kwargs["protein"] == 72  # 60 * 1.2
         assert save_kwargs["fats"] == 60  # 60 * 1.0
         assert save_kwargs["allergies"] == "nuts"
         assert save_kwargs["excluded_foods"] == "fish"

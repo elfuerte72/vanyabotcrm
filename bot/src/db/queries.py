@@ -320,6 +320,32 @@ async def update_user_language(chat_id: int, language: str) -> None:
     logger.info("user_language_updated", chat_id=chat_id, language=language)
 
 
+async def save_user_event(
+    chat_id: int,
+    event_type: str,
+    event_data: str,
+    language: str | None = None,
+    workflow_name: str | None = None,
+) -> None:
+    """Save a user interaction event (button click, funnel message, etc.) to user_events."""
+    pool = await get_pool()
+    await pool.execute(
+        """
+        INSERT INTO user_events (chat_id, event_type, event_data, language, workflow_name)
+        VALUES ($1, $2, $3, $4, $5)
+        """,
+        chat_id, event_type, event_data, language, workflow_name,
+    )
+    logger.debug(
+        "user_event_saved",
+        chat_id=chat_id,
+        event_type=event_type,
+        event_data=event_data,
+        language=language,
+        workflow_name=workflow_name,
+    )
+
+
 async def clear_chat_history(session_id: str) -> None:
     """Delete all chat history for a given session."""
     pool = await get_pool()

@@ -71,7 +71,7 @@ router.get('/', async (req: Request, res: Response) => {
     const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
     const orderClause = sort
       ? `ORDER BY ${sortColumn} ${sortOrder} NULLS LAST`
-      : `ORDER BY is_buyer DESC, funnel_stage DESC, first_name`;
+      : `ORDER BY updated_at DESC NULLS LAST, created_at DESC`;
 
     const result = await pool.query(`
       SELECT

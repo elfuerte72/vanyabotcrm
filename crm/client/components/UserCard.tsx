@@ -11,7 +11,8 @@ interface UserCardProps {
 }
 
 export function UserCard({ user, onClick }: UserCardProps) {
-  const displayName = user.first_name || user.username || `User ${user.chat_id}`;
+  const username = user.username ? `@${user.username}` : null;
+  const displayName = username || user.first_name || `User ${user.chat_id}`;
   const goalLabel = user.goal ? goalLabels[user.goal] || user.goal : null;
 
   const handleClick = () => {
@@ -26,7 +27,7 @@ export function UserCard({ user, onClick }: UserCardProps) {
     >
       <Avatar className="w-10 h-10">
         <AvatarFallback className="text-sm">
-          {displayName.charAt(0).toUpperCase()}
+          {(user.username || user.first_name || '?').charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
@@ -41,7 +42,6 @@ export function UserCard({ user, onClick }: UserCardProps) {
         </div>
         <div className="text-sm text-muted-foreground truncate mt-0.5">
           {[
-            user.username ? `@${user.username}` : null,
             goalLabel,
             user.funnel_stage != null ? `Этап ${user.funnel_stage}` : null,
           ].filter(Boolean).join(' · ')}
