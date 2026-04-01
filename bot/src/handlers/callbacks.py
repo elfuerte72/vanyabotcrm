@@ -276,7 +276,7 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
 
 @router.callback_query(F.data == "learn_workout")
 async def handle_learn_workout(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    """Stage 1 button (RU): show workout details + buy button (690₽)."""
+    """Stage 1 button (RU): show workout details (teaser for tomorrow)."""
     try:
         await callback.answer()
     except Exception:
@@ -292,15 +292,9 @@ async def handle_learn_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
 
     await save_user_event(chat_id, "button_click", "learn_workout", language, "funnel")
 
-    payment_url = _get_payment_url(language)
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=strings.LEARN_WORKOUT_BUTTON, url=payment_url)]
-    ])
-
     await bot.send_message(
         chat_id=chat_id,
         text=strings.LEARN_WORKOUT_RESPONSE,
-        reply_markup=keyboard,
     )
     logger.info("learn_workout_callback", user_id=user_id, language=language)
 
