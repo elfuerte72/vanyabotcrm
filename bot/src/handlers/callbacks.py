@@ -14,7 +14,7 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user, mark_as_buyer, save_user_event, save_ziina_payment, update_funnel_stage
+from src.db.queries import get_user, mark_as_buyer, save_user_event, save_ziina_payment, set_funnel_variant, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.funnel.sender import _build_keyboard, _send_single_funnel_message
 from src.i18n import get_strings
@@ -242,6 +242,52 @@ async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     await bot.send_message(chat_id, strings.NONE_RESPONSE, parse_mode="HTML")
 
 
+@router.callback_query(F.data.startswith("zone_"))
+async def handle_zone_selection(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
+    """Zone selection callback: set funnel_variant, send instant response, advance to stage 1."""
+    try:
+        await callback.answer()
+    except Exception:
+        pass
+
+    if not callback.message:
+        return
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+
+    # Parse zone from callback data: zone_belly → belly
+    variant = callback.data.replace("zone_", "")
+    valid_variants = ("belly", "thighs", "arms", "glutes")
+    if variant not in valid_variants:
+        logger.error("zone_invalid_variant", data=callback.data, user_id=user_id)
+        return
+
+    db_user = data.get("db_user")
+    if not db_user:
+        db_user = await get_user(user_id)
+
+    # Skip if user already has a variant set (already chose zone)
+    if db_user and db_user.funnel_variant:
+        logger.debug("zone_already_set", user_id=user_id, existing=db_user.funnel_variant)
+        return
+
+    await save_user_event(chat_id, "button_click", f"zone_{variant}", "ru", "funnel")
+
+    # Set variant in DB + advance to stage 1 + schedule +1h
+    await set_funnel_variant(user_id, variant)
+
+    # Send instant response based on zone
+    strings = get_strings("ru")
+    response_map = {
+        "belly": strings.ZONE_BELLY_RESPONSE,
+    }
+    response_text = response_map.get(variant)
+    if response_text:
+        await bot.send_message(chat_id=chat_id, text=response_text, parse_mode="HTML")
+
+    logger.info("zone_selected", user_id=user_id, variant=variant)
+
+
 @router.callback_query(F.data == "video_workout")
 async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     """Stage 0 button: send free 7-min workout video link."""
@@ -260,7 +306,11 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
 
     await save_user_event(chat_id, "button_click", "video_workout", language, "funnel")
 
-    workout_url = media_config["videos"].get("workout_url", "")
+    # RU uses Yandex Disk link for morning activation; EN/AR use Google Drive
+    if language == "ru":
+        workout_url = getattr(strings, "FUNNEL_STAGE_0_WAKEUP_URL", "") or media_config["videos"].get("workout_url", "")
+    else:
+        workout_url = media_config["videos"].get("workout_url", "")
     rows = []
     if workout_url:
         rows.append([InlineKeyboardButton(text=strings.WATCH_VIDEO_BUTTON, url=workout_url)])

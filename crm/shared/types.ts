@@ -15,6 +15,7 @@ export interface User {
   fats: number | null;
   carbs: number | null;
   funnel_stage: number | null;
+  funnel_variant: string | null;
   is_buyer: boolean;
   get_food: boolean;
   language?: string | null;

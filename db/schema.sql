@@ -113,6 +113,7 @@ CREATE TABLE public.users_nutrition (
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now(),
     funnel_stage integer DEFAULT 0,
+    funnel_variant text,
     funnel_start_at timestamp without time zone,
     last_funnel_msg_at timestamp without time zone,
     next_funnel_msg_at timestamp with time zone,

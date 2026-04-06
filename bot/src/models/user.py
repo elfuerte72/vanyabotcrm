@@ -25,6 +25,7 @@ class User:
     get_food: bool = False
     is_buyer: bool = False
     funnel_stage: int = 0
+    funnel_variant: str | None = None
     language: str = "en"
     id_ziina: str | None = None
     type_ziina: int | None = None
@@ -55,6 +56,7 @@ class User:
             get_food=bool(row.get("get_food", False)),
             is_buyer=bool(row.get("is_buyer", False)),
             funnel_stage=int(row.get("funnel_stage", 0)),
+            funnel_variant=row.get("funnel_variant"),
             language=row.get("language", "en"),
             id_ziina=row.get("id_ziina"),
             type_ziina=row.get("type_ziina"),

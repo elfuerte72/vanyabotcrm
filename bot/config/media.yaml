@@ -28,8 +28,16 @@ photos:
 
   # Funnel photos (local files in bot/media/photos/)
   funnel:
+    # Old RU photos (kept for reference)
     stage_1: "before_after_1.jpg"
     stage_2: "before_after_2.jpg"
     # EN funnel photos
     en_stage_0: "en_funnel_stage_0.jpg"
     en_stage_6: "en_funnel_stage_6.png"
+    # RU belly zone funnel photos
+    ru_belly_stage_1: "ru_belly_stage_1.jpeg"
+    ru_belly_stage_2a: "ru_belly_stage_2a.jpeg"
+    ru_belly_stage_2b: "ru_belly_stage_2b.jpeg"
+    ru_belly_stage_9a: "ru_belly_stage_9a.jpeg"
+    ru_belly_stage_9b: "ru_belly_stage_9b.jpeg"
+    ru_belly_stage_11: "ru_belly_stage_11.png"

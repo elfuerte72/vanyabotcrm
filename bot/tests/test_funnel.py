@@ -132,67 +132,95 @@ class TestGetFunnelMessageAR:
 
 
 class TestGetFunnelMessageRU:
-    """RU funnel: 8 stages (0-7) with photos and video notes."""
+    """RU funnel: 13 stages (0-12) with zone branching."""
 
-    def test_all_ru_stages_exist(self):
-        for stage in range(8):
-            msg = get_funnel_message(stage, "ru")
-            assert msg is not None, f"Missing RU message for stage={stage}"
-            assert msg.text, f"Empty text for RU stage={stage}"
+    def test_stage_0_common_exists(self):
+        msg = get_funnel_message(0, "ru")
+        assert msg is not None
+        assert msg.text
+
+    def test_stage_0_has_zone_buttons(self):
+        msg = get_funnel_message(0, "ru")
+        callbacks = [b[1] for b in msg.buttons]
+        assert "zone_belly" in callbacks
+        assert "zone_thighs" in callbacks
+        assert "zone_arms" in callbacks
+        assert "zone_glutes" in callbacks
+
+    def test_stage_0_zone_buttons_only(self):
+        msg = get_funnel_message(0, "ru")
+        assert not msg.has_url_button  # wakeup is sent separately
+        assert len(msg.buttons) == 4
+
+    def test_stages_1_to_12_require_variant(self):
+        for stage in range(1, 13):
+            msg = get_funnel_message(stage, "ru", variant=None)
+            assert msg is None, f"Stage {stage} without variant should return None"
+
+    def test_all_belly_stages_exist(self):
+        for stage in range(13):
+            msg = get_funnel_message(stage, "ru", variant="belly" if stage > 0 else None)
+            assert msg is not None, f"Missing RU belly message for stage={stage}"
+            assert msg.text, f"Empty text for stage={stage}"
 
     def test_ru_stage_out_of_range(self):
-        assert get_funnel_message(8, "ru") is None
+        assert get_funnel_message(13, "ru", variant="belly") is None
         assert get_funnel_message(-1, "ru") is None
 
-    def test_stage_0_video_workout(self):
-        msg = get_funnel_message(0, "ru")
-        assert msg.buttons[0][1] == "video_workout"
+    def test_stage_1_has_photo_and_buy(self):
+        msg = get_funnel_message(1, "ru", variant="belly")
+        assert msg.photo_name
+        assert msg.buttons[0][1] == "buy_now"
 
-    def test_stage_1_learn_workout_with_photo(self):
-        msg = get_funnel_message(1, "ru")
-        assert msg.buttons[0][1] == "learn_workout"
-        assert msg.photo_name, "Stage 1 should have a photo"
+    def test_stage_2_media_group(self):
+        msg = get_funnel_message(2, "ru", variant="belly")
+        assert msg.photo_name, "Stage 2 should have primary photo"
+        assert len(msg.extra_photos) > 0, "Stage 2 should have extra photos (media group)"
+        assert msg.buttons[0][1] == "buy_now"
 
-    def test_stage_2_has_photo_no_buttons(self):
-        msg = get_funnel_message(2, "ru")
-        assert msg.photo_name, "Stage 2 should have a photo"
-        assert len(msg.buttons) == 0, "Stage 2 should have no buttons"
-
-    def test_stage_3_video_circle(self):
-        msg = get_funnel_message(3, "ru")
-        assert msg.buttons[0][1] == "video_circle"
+    def test_stage_3_video_note(self):
+        msg = get_funnel_message(3, "ru", variant="belly")
         assert msg.video_note_id, "Stage 3 should have a video note"
+        assert len(msg.buttons) == 0
 
-    def test_stage_4_text_only(self):
-        msg = get_funnel_message(4, "ru")
-        assert len(msg.buttons) == 0, "Stage 4 should have no buttons"
-        assert not msg.photo_name
-        assert not msg.video_note_id
-
-    def test_stage_5_buy_with_video_note(self):
-        msg = get_funnel_message(5, "ru")
+    def test_stage_4_buy_button(self):
+        msg = get_funnel_message(4, "ru", variant="belly")
         assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_5_video_note(self):
+        msg = get_funnel_message(5, "ru", variant="belly")
         assert msg.video_note_id, "Stage 5 should have a video note"
+        assert len(msg.buttons) == 0
 
-    def test_stage_6_buy(self):
-        msg = get_funnel_message(6, "ru")
+    def test_stage_6_hard_sell(self):
+        msg = get_funnel_message(6, "ru", variant="belly")
         assert msg.buttons[0][1] == "buy_now"
 
-    def test_stage_7_channel_url_button(self):
-        msg = get_funnel_message(7, "ru")
+    def test_stages_7_8_no_buttons(self):
+        for stage in (7, 8):
+            msg = get_funnel_message(stage, "ru", variant="belly")
+            assert len(msg.buttons) == 0, f"Stage {stage} should have no buttons"
+
+    def test_stage_9_media_group(self):
+        msg = get_funnel_message(9, "ru", variant="belly")
+        assert msg.photo_name
+        assert len(msg.extra_photos) > 0
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_10_buy(self):
+        msg = get_funnel_message(10, "ru", variant="belly")
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_11_photo_and_buy(self):
+        msg = get_funnel_message(11, "ru", variant="belly")
+        assert msg.photo_name
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_12_channel_url(self):
+        msg = get_funnel_message(12, "ru", variant="belly")
         assert msg.has_url_button
         assert "ivanfit_health" in msg.url
 
     def test_ru_price_690(self):
-        """New RU funnel uses 690₽ price."""
-        msg = get_funnel_message(5, "ru")
-        assert "690" in msg.text, "Stage 5 should mention 690₽ price"
-
-    def test_no_emojis_in_ru_texts(self):
-        """New RU funnel texts should not contain emojis."""
-        emoji_chars = set("🤍✨🙈📅👉💳✅▶️🔥💪🏻😊🌸😌😄💬🎥🌬📋🎓")
-        for stage in range(8):
-            msg = get_funnel_message(stage, "ru")
-            text_chars = set(msg.text)
-            found = text_chars & emoji_chars
-            assert not found, f"Stage {stage} has emojis: {found}"
+        msg = get_funnel_message(1, "ru", variant="belly")
+        assert "690" in msg.text

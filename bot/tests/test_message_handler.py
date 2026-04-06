@@ -193,8 +193,8 @@ class TestGenerateRoute:
         # set_food_received called
         mock_set_food.assert_called_once()
 
-        # Two calls to answer: 1) "calculating..." 2) meal plan HTML
-        assert msg.answer.call_count == 2
+        # Four calls: 1) "calculating..." 2) meal plan HTML 3) wakeup 4) zone selection (RU)
+        assert msg.answer.call_count == 4
 
     @pytest.mark.asyncio
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)

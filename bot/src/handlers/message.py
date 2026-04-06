@@ -285,6 +285,41 @@ async def _process_text_message(
     # Mark as food received → starts funnel (skip for test account)
     if chat_id != TEST_CHAT_ID:
         await set_food_received(chat_id, language=detected_lang)
+
+        # RU: send "Разбуди тело" + zone selection (5 sec apart)
+        if detected_lang == "ru":
+            try:
+                ru_strings = get_strings("ru")
+                # Message 1: wakeup
+                wakeup_kb = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(
+                        text=ru_strings.FUNNEL_STAGE_0_WAKEUP_BUTTON,
+                        url=ru_strings.FUNNEL_STAGE_0_WAKEUP_URL,
+                    )]
+                ])
+                await message.answer(
+                    ru_strings.FUNNEL_STAGE_0_WAKEUP,
+                    reply_markup=wakeup_kb,
+                )
+                await save_user_event(chat_id, "funnel_message", "wakeup_sent", "ru", "funnel")
+                logger.info("wakeup_message_sent", chat_id=chat_id)
+
+                # Message 2: zone selection (5 sec later)
+                await asyncio.sleep(5)
+                from src.funnel.messages import get_funnel_message
+                from src.funnel.sender import _build_keyboard
+                zone_msg = get_funnel_message(0, "ru")
+                if zone_msg:
+                    zone_kb = _build_keyboard(zone_msg)
+                    await message.answer(
+                        zone_msg.text,
+                        reply_markup=zone_kb,
+                    )
+                    await save_user_event(chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel")
+                    logger.info("zone_selection_sent", chat_id=chat_id)
+            except Exception as e:
+                logger.error("wakeup_message_failed", chat_id=chat_id, error=str(e))
+
     logger.info("meal_plan_sent", chat_id=chat_id, calories=macros.calories)
 
 

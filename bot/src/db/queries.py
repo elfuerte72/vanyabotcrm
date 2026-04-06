@@ -16,13 +16,16 @@ logger = structlog.get_logger()
 _MSK = timezone(timedelta(hours=3))
 
 # Max funnel stage per language
-_MAX_STAGE = {"ru": 7, "en": 10, "ar": 10}
+_MAX_STAGE = {"ru": 12, "en": 10, "ar": 10}
 
 
-def calculate_next_send_time(current_stage: int, language: str) -> datetime | None:
+def calculate_next_send_time(current_stage: int, language: str, has_variant: bool = False) -> datetime | None:
     """Calculate absolute UTC time for the NEXT funnel message after current_stage is sent.
 
-    RU has 8 stages (0-7) with specific MSK times.
+    RU has 13 stages (0-12) with zone branching:
+      - Stage 0 (no zone selected): resend +24h
+      - Zone callback → stage 1: +1h
+      - Stages 1-12: MSK time schedule (see timing table)
     EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
     AR has 11 stages (0-10): same timing as EN (5min/1h/24h).
     Returns None if current_stage is the last stage.
@@ -43,33 +46,39 @@ def calculate_next_send_time(current_stage: int, language: str) -> datetime | No
             return now + timedelta(hours=24)
         return None
 
-    # RU stage timing map: after sending stage N, next message at:
+    # RU stage timing map (13 stages with zone branching)
     msk_now = now.astimezone(_MSK)
     tomorrow = msk_now.date() + timedelta(days=1)
 
     if current_stage == 0:
-        # Stage 1: +2.5h from now
-        return now + timedelta(hours=2, minutes=30)
+        if not has_variant:
+            # No zone selected yet — resend stage 0 in 24h
+            return now + timedelta(hours=24)
+        # Zone just selected via callback → stage 1 in +1h
+        return now + timedelta(hours=1)
     elif current_stage == 1:
         # Stage 2: tomorrow 10:00 MSK
         return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
     elif current_stage == 2:
-        # Stage 3: tomorrow 10:00 MSK
-        return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
-    elif current_stage == 3:
-        # Stage 4: today 19:00 MSK (same day, +9h)
+        # Stage 3: same day 19:00 MSK
         target = datetime.combine(msk_now.date(), time(19, 0), tzinfo=_MSK)
         if target <= msk_now:
             target = datetime.combine(tomorrow, time(19, 0), tzinfo=_MSK)
         return target.astimezone(timezone.utc)
+    elif current_stage == 3:
+        # Stage 4: tomorrow 10:00 MSK
+        return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
     elif current_stage == 4:
-        # Stage 5: tomorrow 19:00 MSK
-        return datetime.combine(tomorrow, time(19, 0), tzinfo=_MSK).astimezone(timezone.utc)
+        # Stage 5: tomorrow+1 10:00 MSK (Day 3)
+        return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
     elif current_stage == 5:
-        # Stage 6: tomorrow 11:00 MSK
-        return datetime.combine(tomorrow, time(11, 0), tzinfo=_MSK).astimezone(timezone.utc)
-    elif current_stage == 6:
-        # Stage 7: tomorrow 10:00 MSK
+        # Stage 6: same day 19:00 MSK
+        target = datetime.combine(msk_now.date(), time(19, 0), tzinfo=_MSK)
+        if target <= msk_now:
+            target = datetime.combine(tomorrow, time(19, 0), tzinfo=_MSK)
+        return target.astimezone(timezone.utc)
+    elif current_stage in (6, 7, 8, 9, 10, 11):
+        # Stages 7-12: tomorrow 10:00 MSK (one per day)
         return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
 
     return None
@@ -168,7 +177,12 @@ async def get_chat_id_by_ziina_payment(payment_intent_id: str) -> int | None:
 
 
 async def set_food_received(chat_id: int, language: str = "ru") -> None:
-    next_send = datetime.now(timezone.utc) + timedelta(minutes=30)
+    # RU: wakeup + zone selection sent immediately from handler; schedule resend in 24h
+    # EN/AR: first funnel message in 5 min
+    if language == "ru":
+        next_send = datetime.now(timezone.utc) + timedelta(hours=24)
+    else:
+        next_send = datetime.now(timezone.utc) + timedelta(minutes=5)
     pool = await get_pool()
     await pool.execute(
         """
@@ -186,7 +200,7 @@ async def get_funnel_targets() -> list[dict[str, Any]]:
     pool = await get_pool()
     rows = await pool.fetch(
         """
-        SELECT chat_id, funnel_stage, language
+        SELECT chat_id, funnel_stage, language, funnel_variant
         FROM users_nutrition
         WHERE (is_buyer IS FALSE OR is_buyer IS NULL)
           AND get_food = TRUE
@@ -207,10 +221,32 @@ async def get_funnel_targets() -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+async def set_funnel_variant(chat_id: int, variant: str) -> None:
+    """Set funnel_variant after user selects a zone, advance to stage 1, schedule +1h."""
+    next_send = datetime.now(timezone.utc) + timedelta(hours=1)
+    pool = await get_pool()
+    await pool.execute(
+        """
+        UPDATE users_nutrition
+        SET funnel_variant = $2,
+            funnel_stage = 1,
+            last_funnel_msg_at = NOW(),
+            next_funnel_msg_at = $3
+        WHERE chat_id = $1
+        """,
+        chat_id, variant, next_send,
+    )
+    logger.info(
+        "funnel_variant_set",
+        chat_id=chat_id, variant=variant,
+        next_send=next_send.isoformat(),
+    )
+
+
 async def update_funnel_stage(
-    chat_id: int, language: str = "ru", current_stage: int = 0
+    chat_id: int, language: str = "ru", current_stage: int = 0, has_variant: bool = True,
 ) -> None:
-    next_send = calculate_next_send_time(current_stage, language)
+    next_send = calculate_next_send_time(current_stage, language, has_variant=has_variant)
     pool = await get_pool()
     await pool.execute(
         """

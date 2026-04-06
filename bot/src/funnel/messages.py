@@ -1,7 +1,7 @@
 """Funnel message definitions for all stages and languages.
 
 Maps funnel_stage → (text, buttons, media) per language.
-RU: 8 stages (0-7) with photos and video notes.
+RU: 13 stages (0-12) with zone branching. Stage 0 common, 1-12 zone-specific.
 EN: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 AR: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 """
@@ -25,66 +25,104 @@ class FunnelMessage:
     has_url_button: bool = False
     url: str = ""
     photo_name: str = ""  # Local photo filename (bot/media/photos/)
+    extra_photos: list[str] = field(default_factory=list)  # Additional photos for media group
     video_note_id: str = ""  # Google Drive file ID for video note (circle)
 
 
-def _get_ru_funnel_message(stage: int, s) -> FunnelMessage | None:
-    """RU funnel: 8 stages (0-7) with photos and video notes."""
-    workout_url = media_config["videos"].get("workout_url", "")
+def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelMessage | None:
+    """RU funnel: 13 stages (0-12) with zone branching.
+
+    Stage 0 is common (zone selection). Stages 1-12 are zone-specific.
+    Currently only 'belly' variant is implemented.
+    """
     video_notes = media_config.get("video_notes", {})
     funnel_photos = media_config.get("photos", {}).get("funnel", {})
 
     if stage == 0:
-        # Gift: morning activation video link
+        # Zone selection only (4 buttons). Wakeup message is sent separately first.
         return FunnelMessage(
             text=s.FUNNEL_STAGE_0,
-            buttons=[(s.FUNNEL_STAGE_0_BUTTON, "video_workout")],
+            buttons=[
+                (s.ZONE_BELLY, "zone_belly"),
+                (s.ZONE_THIGHS, "zone_thighs"),
+                (s.ZONE_ARMS, "zone_arms"),
+                (s.ZONE_GLUTES, "zone_glutes"),
+            ],
         )
-    elif stage == 1:
-        # Before/after photo + learn_workout button
+
+    # Stages 1-12 require variant
+    if not variant or variant != "belly":
+        logger.warning("ru_funnel_no_variant", stage=stage, variant=variant)
+        return None
+
+    # --- Belly zone stages ---
+    if stage == 1:
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_1,
-            buttons=[(s.FUNNEL_STAGE_1_BUTTON, "learn_workout")],
-            photo_name=funnel_photos.get("stage_1", ""),
+            text=s.FUNNEL_BELLY_STAGE_1,
+            buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_1", ""),
         )
     elif stage == 2:
-        # Masha's story + before/after photo (no buttons)
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_2,
-            buttons=[],
-            photo_name=funnel_photos.get("stage_2", ""),
+            text=s.FUNNEL_BELLY_STAGE_2,
+            buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_2a", ""),
+            extra_photos=[funnel_photos.get("ru_belly_stage_2b", "")],
         )
     elif stage == 3:
-        # "How it works" — video note (circle)
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_3,
-            buttons=[(s.FUNNEL_STAGE_3_BUTTON, "video_circle")],
+            text=s.FUNNEL_BELLY_STAGE_3,
+            buttons=[],
             video_note_id=video_notes.get("how_it_works", ""),
         )
     elif stage == 4:
-        # Detailed workout description (text only, no buttons)
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_4,
-            buttons=[],
+            text=s.FUNNEL_BELLY_STAGE_4,
+            buttons=[(s.FUNNEL_TAKE_WORKOUT_BUTTON, "buy_now")],
         )
     elif stage == 5:
-        # Sales pitch: 690₽ + buy button + video note
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_5,
-            buttons=[(s.FUNNEL_STAGE_5_BUTTON, "buy_now")],
+            text=s.FUNNEL_BELLY_STAGE_5,
+            buttons=[],
             video_note_id=video_notes.get("will_it_suit", ""),
         )
     elif stage == 6:
-        # Soft reminder: 690₽ + buy button
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_6,
-            buttons=[(s.FUNNEL_STAGE_6_BUTTON, "buy_now")],
+            text=s.FUNNEL_BELLY_STAGE_6,
+            buttons=[(s.FUNNEL_HARD_SELL_BUTTON, "buy_now")],
         )
     elif stage == 7:
-        # Thank you + channel subscription (URL button)
         return FunnelMessage(
-            text=s.FUNNEL_STAGE_7,
-            buttons=[(s.FUNNEL_STAGE_7_BUTTON, "")],
+            text=s.FUNNEL_BELLY_STAGE_7,
+            buttons=[],
+        )
+    elif stage == 8:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_8,
+            buttons=[],
+        )
+    elif stage == 9:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_9,
+            buttons=[(s.FUNNEL_READY_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_9a", ""),
+            extra_photos=[funnel_photos.get("ru_belly_stage_9b", "")],
+        )
+    elif stage == 10:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_10,
+            buttons=[(s.FUNNEL_CHECKOUT_BUTTON, "buy_now")],
+        )
+    elif stage == 11:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_11,
+            buttons=[(s.FUNNEL_LAST_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_11", ""),
+        )
+    elif stage == 12:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_12,
+            buttons=[(s.FUNNEL_CHANNEL_BUTTON, "")],
             has_url_button=True,
             url="https://t.me/ivanfit_health",
         )
@@ -202,10 +240,10 @@ def _get_ar_funnel_message(stage: int, s) -> FunnelMessage | None:
     return None
 
 
-def get_funnel_message(stage: int, language: str) -> FunnelMessage | None:
+def get_funnel_message(stage: int, language: str, variant: str | None = None) -> FunnelMessage | None:
     """Get funnel message for a given stage and language.
 
-    RU: 8 stages (0-7).
+    RU: 13 stages (0-12) with zone branching (variant required for stages 1+).
     EN: 9 stages (0-8) + 2 upsells (9-10).
     AR: 9 stages (0-8) + 2 upsells (9-10).
     Returns None if stage is out of range.
@@ -213,7 +251,7 @@ def get_funnel_message(stage: int, language: str) -> FunnelMessage | None:
     s = get_strings(language)
 
     if language == "ru":
-        msg = _get_ru_funnel_message(stage, s)
+        msg = _get_ru_funnel_message(stage, s, variant=variant)
     elif language == "en":
         msg = _get_en_funnel_message(stage, s)
     elif language == "ar":
@@ -222,5 +260,5 @@ def get_funnel_message(stage: int, language: str) -> FunnelMessage | None:
         msg = _get_ar_funnel_message(stage, get_strings("ar"))
 
     if msg:
-        logger.debug("funnel_message_resolved", stage=stage, language=language, has_photo=bool(msg.photo_name), has_video_note=bool(msg.video_note_id), num_buttons=len(msg.buttons))
+        logger.debug("funnel_message_resolved", stage=stage, language=language, variant=variant, has_photo=bool(msg.photo_name), has_video_note=bool(msg.video_note_id), num_buttons=len(msg.buttons))
     return msg

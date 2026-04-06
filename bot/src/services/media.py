@@ -8,7 +8,7 @@ from pathlib import Path
 import httpx
 import structlog
 from aiogram import Bot
-from aiogram.types import BufferedInputFile, FSInputFile
+from aiogram.types import BufferedInputFile, FSInputFile, InputMediaPhoto
 
 from config.settings import media_config
 
@@ -135,6 +135,36 @@ async def send_local_photo(
     if msg.photo:
         _tg_file_id_cache[cache_key] = msg.photo[-1].file_id
         logger.debug("media_cache_stored", key=cache_key, file_id=msg.photo[-1].file_id)
+
+
+async def send_local_media_group(
+    bot: Bot, chat_id: int, photo_names: list[str], caption: str = "",
+) -> None:
+    """Send multiple local photos as a media group (album).
+
+    Caption is attached to the first photo only (Telegram API requirement).
+    """
+    if not photo_names:
+        return
+
+    media = []
+    for i, name in enumerate(photo_names):
+        photo_path = _MEDIA_DIR / "photos" / name
+        if not photo_path.exists():
+            logger.error("media_group_photo_not_found", path=str(photo_path))
+            continue
+        input_file = FSInputFile(photo_path)
+        if i == 0 and caption:
+            media.append(InputMediaPhoto(media=input_file, caption=caption, parse_mode="HTML"))
+        else:
+            media.append(InputMediaPhoto(media=input_file))
+
+    if not media:
+        logger.error("media_group_no_valid_photos", photo_names=photo_names)
+        return
+
+    await bot.send_media_group(chat_id=chat_id, media=media)
+    logger.debug("media_group_sent", chat_id=chat_id, count=len(media))
 
 
 async def send_video_note_from_drive(bot: Bot, chat_id: int, file_id: str) -> None:
