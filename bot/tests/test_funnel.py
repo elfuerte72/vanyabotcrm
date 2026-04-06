@@ -224,3 +224,83 @@ class TestGetFunnelMessageRU:
     def test_ru_price_690(self):
         msg = get_funnel_message(1, "ru", variant="belly")
         assert "690" in msg.text
+
+
+class TestGetFunnelMessageRUThighs:
+    """RU thighs funnel: 11 stages (1-11) after zone selection."""
+
+    def test_all_thighs_stages_exist(self):
+        for stage in range(1, 12):
+            msg = get_funnel_message(stage, "ru", variant="thighs")
+            assert msg is not None, f"Missing RU thighs message for stage={stage}"
+            assert msg.text, f"Empty text for stage={stage}"
+
+    def test_thighs_out_of_range(self):
+        assert get_funnel_message(12, "ru", variant="thighs") is None
+        assert get_funnel_message(13, "ru", variant="thighs") is None
+
+    def test_stage_1_has_photo_and_buy(self):
+        msg = get_funnel_message(1, "ru", variant="thighs")
+        assert msg.photo_name
+        assert "ru_thighs_stage_1" in msg.photo_name
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_2_media_group(self):
+        msg = get_funnel_message(2, "ru", variant="thighs")
+        assert msg.photo_name, "Stage 2 should have primary photo"
+        assert "ru_thighs_stage_2a" in msg.photo_name
+        assert len(msg.extra_photos) > 0, "Stage 2 should have extra photos (media group)"
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_3_video_note(self):
+        msg = get_funnel_message(3, "ru", variant="thighs")
+        assert msg.video_note_id, "Stage 3 should have a video note"
+        assert len(msg.buttons) == 0
+
+    def test_stage_4_buy_button(self):
+        msg = get_funnel_message(4, "ru", variant="thighs")
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_5_video_note(self):
+        msg = get_funnel_message(5, "ru", variant="thighs")
+        assert msg.video_note_id, "Stage 5 should have a video note"
+        assert len(msg.buttons) == 0
+
+    def test_stage_6_hard_sell(self):
+        msg = get_funnel_message(6, "ru", variant="thighs")
+        assert msg.buttons[0][1] == "buy_now"
+        assert "690" in msg.text
+
+    def test_stages_7_8_no_buttons(self):
+        for stage in (7, 8):
+            msg = get_funnel_message(stage, "ru", variant="thighs")
+            assert len(msg.buttons) == 0, f"Stage {stage} should have no buttons"
+
+    def test_stage_9_buy(self):
+        msg = get_funnel_message(9, "ru", variant="thighs")
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_10_photo_and_buy(self):
+        msg = get_funnel_message(10, "ru", variant="thighs")
+        assert msg.photo_name
+        assert "ru_thighs_stage_10" in msg.photo_name
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_11_channel_url(self):
+        msg = get_funnel_message(11, "ru", variant="thighs")
+        assert msg.has_url_button
+        assert "ivanfit_health" in msg.url
+
+    def test_thighs_price_690(self):
+        msg = get_funnel_message(6, "ru", variant="thighs")
+        assert "690" in msg.text
+
+    def test_thighs_mentions_galife(self):
+        """Thighs variant should mention галифе-зону."""
+        msg = get_funnel_message(1, "ru", variant="thighs")
+        assert "галифе" in msg.text.lower()
+
+    def test_thighs_educational_fact(self):
+        """Stage 8 should mention эстроген."""
+        msg = get_funnel_message(8, "ru", variant="thighs")
+        assert "эстроген" in msg.text.lower()
