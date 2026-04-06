@@ -281,6 +281,7 @@ async def handle_zone_selection(callback: CallbackQuery, bot: Bot, **data: Any) 
     response_map = {
         "belly": strings.ZONE_BELLY_RESPONSE,
         "thighs": strings.ZONE_THIGHS_RESPONSE,
+        "arms": strings.ZONE_ARMS_RESPONSE,
     }
     response_text = response_map.get(variant)
     if response_text:
