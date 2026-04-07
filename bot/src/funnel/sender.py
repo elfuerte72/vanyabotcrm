@@ -134,7 +134,7 @@ async def send_funnel_messages(bot: Bot) -> None:
         try:
             await _send_single_funnel_message(bot, chat_id, msg, keyboard)
             await save_user_event(chat_id, "funnel_message", f"stage_{stage}", language, "funnel")
-            await update_funnel_stage(chat_id, language=language, current_stage=stage)
+            await update_funnel_stage(chat_id, language=language, current_stage=stage, variant=variant)
             sent += 1
             logger.debug(
                 "funnel_message_sent",

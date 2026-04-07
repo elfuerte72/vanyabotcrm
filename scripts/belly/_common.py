@@ -9,7 +9,7 @@ from pathlib import Path
 
 # Resolve paths
 _SCRIPTS_DIR = Path(__file__).resolve().parent
-_PROJECT_DIR = _SCRIPTS_DIR.parent
+_PROJECT_DIR = _SCRIPTS_DIR.parent.parent
 _BOT_DIR = _PROJECT_DIR / "bot"
 
 # cd into bot/ so config/settings.py finds .env

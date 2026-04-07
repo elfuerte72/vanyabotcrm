@@ -61,6 +61,9 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
     if variant == "arms":
         return _get_ru_arms_message(stage, s, video_notes, funnel_photos)
 
+    if variant == "glutes":
+        return _get_ru_glutes_message(stage, s, video_notes, funnel_photos)
+
     if variant != "belly":
         logger.warning("ru_funnel_unknown_variant", stage=stage, variant=variant)
         return None
@@ -270,6 +273,76 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
     elif stage == 11:
         return FunnelMessage(
             text=s.FUNNEL_ARMS_STAGE_11,
+            buttons=[(s.FUNNEL_CHANNEL_BUTTON, "")],
+            has_url_button=True,
+            url="https://t.me/ivanfit_health",
+        )
+
+    return None
+
+
+def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict) -> FunnelMessage | None:
+    """RU glutes zone: 11 stages (1-11). No 'will_it_suit' video — hard sell on stage 5."""
+    if stage == 1:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_1,
+            buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_glutes_stage_1", ""),
+        )
+    elif stage == 2:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_2,
+            buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_glutes_stage_2a", ""),
+            extra_photos=[funnel_photos.get("ru_glutes_stage_2b", "")],
+        )
+    elif stage == 3:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_3,
+            buttons=[],
+            video_note_id=video_notes.get("how_it_works", ""),
+        )
+    elif stage == 4:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_4,
+            buttons=[(s.FUNNEL_TAKE_WORKOUT_BUTTON, "buy_now")],
+        )
+    elif stage == 5:
+        # Hard sell directly — NO video note "will_it_suit" in glutes!
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_5,
+            buttons=[(s.FUNNEL_HARD_SELL_BUTTON, "buy_now")],
+        )
+    elif stage == 6:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_6,
+            buttons=[],
+        )
+    elif stage == 7:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_7,
+            buttons=[],
+        )
+    elif stage == 8:
+        # Reviews photo + combined caption + button
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_8 + "\n\n" + s.FUNNEL_GLUTES_STAGE_8_AFTER,
+            buttons=[(s.FUNNEL_READY_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_glutes_stage_8", ""),
+        )
+    elif stage == 9:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_9,
+            buttons=[(s.FUNNEL_CHECKOUT_BUTTON, "buy_now")],
+        )
+    elif stage == 10:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_10,
+            buttons=[(s.FUNNEL_GLUTES_WANT_BUTTON, "buy_now")],
+        )
+    elif stage == 11:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_11,
             buttons=[(s.FUNNEL_CHANNEL_BUTTON, "")],
             has_url_button=True,
             url="https://t.me/ivanfit_health",

@@ -19,13 +19,16 @@ _MSK = timezone(timedelta(hours=3))
 _MAX_STAGE = {"ru": 12, "en": 10, "ar": 10}
 
 
-def calculate_next_send_time(current_stage: int, language: str, has_variant: bool = False) -> datetime | None:
+def calculate_next_send_time(
+    current_stage: int, language: str, has_variant: bool = False, variant: str | None = None,
+) -> datetime | None:
     """Calculate absolute UTC time for the NEXT funnel message after current_stage is sent.
 
     RU has 13 stages (0-12) with zone branching:
       - Stage 0 (no zone selected): resend +24h
       - Zone callback → stage 1: +1h
       - Stages 1-12: MSK time schedule (see timing table)
+      - Glutes variant: stage 5 → next day 10:00 MSK (no same-day 19:00)
     EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
     AR has 11 stages (0-10): same timing as EN (5min/1h/24h).
     Returns None if current_stage is the last stage.
@@ -69,10 +72,13 @@ def calculate_next_send_time(current_stage: int, language: str, has_variant: boo
         # Stage 4: tomorrow 10:00 MSK
         return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
     elif current_stage == 4:
-        # Stage 5: tomorrow+1 10:00 MSK (Day 3)
+        # Stage 5: tomorrow 10:00 MSK (Day 3)
         return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
     elif current_stage == 5:
-        # Stage 6: same day 19:00 MSK
+        if variant == "glutes":
+            # Glutes: no video note on stage 5, stage 6 = next day 10:00 MSK
+            return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
+        # Other zones: stage 6 = same day 19:00 MSK (hard sell after video)
         target = datetime.combine(msk_now.date(), time(19, 0), tzinfo=_MSK)
         if target <= msk_now:
             target = datetime.combine(tomorrow, time(19, 0), tzinfo=_MSK)
@@ -244,9 +250,10 @@ async def set_funnel_variant(chat_id: int, variant: str) -> None:
 
 
 async def update_funnel_stage(
-    chat_id: int, language: str = "ru", current_stage: int = 0, has_variant: bool = True,
+    chat_id: int, language: str = "ru", current_stage: int = 0,
+    has_variant: bool = True, variant: str | None = None,
 ) -> None:
-    next_send = calculate_next_send_time(current_stage, language, has_variant=has_variant)
+    next_send = calculate_next_send_time(current_stage, language, has_variant=has_variant, variant=variant)
     pool = await get_pool()
     await pool.execute(
         """
