@@ -145,10 +145,19 @@ class TestCalculateNextSendTimeRU:
         assert result_msk.minute == 0
 
     def test_after_stage_5_is_19pm_msk(self):
+        """Default (non-glutes): stage 5 → same day 19:00 MSK."""
         result = calculate_next_send_time(5, "ru")
         assert result is not None
         result_msk = result.astimezone(_MSK)
         assert result_msk.hour == 19
+        assert result_msk.minute == 0
+
+    def test_after_stage_5_glutes_is_next_day_10am_msk(self):
+        """Glutes variant: stage 5 → next day 10:00 MSK (no same-day 19:00)."""
+        result = calculate_next_send_time(5, "ru", variant="glutes")
+        assert result is not None
+        result_msk = result.astimezone(_MSK)
+        assert result_msk.hour == 10
         assert result_msk.minute == 0
 
     def test_after_stages_6_to_11_is_next_day_10am_msk(self):

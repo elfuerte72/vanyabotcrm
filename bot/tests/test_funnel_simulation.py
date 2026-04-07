@@ -202,7 +202,7 @@ class TestFullFunnelCycleEN:
                 send_kwargs = bot.send_message.call_args.kwargs
                 assert send_kwargs["text"] == expected.text, f"Stage {stage} (EN): text mismatch"
             mock_update_stage.assert_called_once_with(
-                chat_id, language="en", current_stage=stage
+                chat_id, language="en", current_stage=stage, variant=None
             )
 
 
@@ -233,7 +233,7 @@ class TestFullFunnelCycleAR:
                 send_kwargs = bot.send_message.call_args.kwargs
                 assert send_kwargs["text"] == expected.text, f"Stage {stage} (AR): text mismatch"
             mock_update_stage.assert_called_once_with(
-                chat_id, language="ar", current_stage=stage
+                chat_id, language="ar", current_stage=stage, variant=None
             )
 
 
@@ -255,7 +255,7 @@ class TestFunnelStageIncrement:
         await send_funnel_messages(bot)
 
         bot.send_message.assert_called_once()
-        mock_update.assert_called_once_with(chat_id, language="en", current_stage=2)
+        mock_update.assert_called_once_with(chat_id, language="en", current_stage=2, variant=None)
 
 
 # ─── Buyer exclusion ────────────────────────────────────────────────────

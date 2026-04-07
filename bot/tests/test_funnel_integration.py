@@ -239,7 +239,7 @@ class TestFunnelSender:
 
         assert bot.send_message.call_count == 2
         assert mock_update.call_count == 1
-        mock_update.assert_called_with(222, language="en", current_stage=1)
+        mock_update.assert_called_with(222, language="en", current_stage=1, variant=None)
 
     @pytest.mark.asyncio
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
@@ -289,7 +289,7 @@ class TestFullFunnelCycle:
             else:
                 call_kwargs = bot.send_message.call_args.kwargs
                 assert call_kwargs["text"] == expected.text, f"Stage {stage}: wrong text"
-            mock_update.assert_called_once_with(555, language="en", current_stage=stage)
+            mock_update.assert_called_once_with(555, language="en", current_stage=stage, variant=None)
 
     @pytest.mark.asyncio
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
