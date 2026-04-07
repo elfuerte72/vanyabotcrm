@@ -27,6 +27,7 @@ class FunnelMessage:
     photo_name: str = ""  # Local photo filename (bot/media/photos/)
     extra_photos: list[str] = field(default_factory=list)  # Additional photos for media group
     video_note_id: str = ""  # Google Drive file ID for video note (circle)
+    photo_first: bool = False  # Send photo before text (default: text first)
 
 
 def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelMessage | None:
@@ -219,6 +220,7 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
             text=s.FUNNEL_ARMS_STAGE_1,
             buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_arms_stage_1", ""),
+            photo_first=True,
         )
     elif stage == 2:
         return FunnelMessage(

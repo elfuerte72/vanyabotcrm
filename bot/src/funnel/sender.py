@@ -53,21 +53,27 @@ async def _send_single_funnel_message(bot: Bot, chat_id: int, msg, keyboard) -> 
     - Video note (circle) after the main content
     """
     if msg.extra_photos:
-        # Media group: photo_name + extra_photos as album, caption on first
+        # Text first, then media group (album), then buttons
         all_photos = [msg.photo_name] + msg.extra_photos if msg.photo_name else msg.extra_photos
-        await send_local_media_group(bot, chat_id, all_photos, caption=msg.text)
-        # Buttons in a separate message after the album (Telegram API limitation)
+        await bot.send_message(chat_id=chat_id, text=msg.text, parse_mode="HTML")
+        await send_local_media_group(bot, chat_id, all_photos)
         if keyboard:
-            # Use first button label as message text so the button is fully visible
             btn_text = msg.buttons[0][0] if msg.buttons else "👇"
             await bot.send_message(
                 chat_id=chat_id, text=btn_text, reply_markup=keyboard,
             )
+    elif msg.photo_name and msg.photo_first:
+        # Photo first, then text with keyboard
+        await send_local_photo(bot, chat_id, photo_name=msg.photo_name)
+        await bot.send_message(
+            chat_id=chat_id, text=msg.text, reply_markup=keyboard, parse_mode="HTML",
+        )
     elif msg.photo_name:
-        # Single photo with caption + inline keyboard
+        # Text first, then photo with keyboard
+        await bot.send_message(chat_id=chat_id, text=msg.text, parse_mode="HTML")
         await send_local_photo(
             bot, chat_id, photo_name=msg.photo_name,
-            caption=msg.text, reply_markup=keyboard,
+            reply_markup=keyboard,
         )
     else:
         # Text message with keyboard
