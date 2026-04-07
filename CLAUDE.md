@@ -22,7 +22,7 @@ cd bot
 uv sync                               # Install all deps (creates .venv automatically)
 uv sync --no-dev                      # Install production deps only
 uv run python -m src.main             # Start bot (polling + scheduler + webhook)
-uv run pytest tests/ -v               # Run all tests (~456 tests)
+uv run pytest tests/ -v               # Run all tests (~486 tests)
 uv run pytest tests/test_calculator.py  # Run single test file
 uv run python -m scripts.trigger_funnel  # Manually trigger funnel sender
 uv add <package>                      # Add dependency (updates pyproject.toml + uv.lock)
@@ -39,8 +39,10 @@ psql "$DATABASE_URL"
 
 ### Funnel Testing Scripts (`/scripts/`, `/scripts_en/`, `/scripts_ar/`)
 ```bash
-./scripts/run.sh belly/stage_0.py    # Send RU belly funnel stage to test user
-./scripts/run.sh belly/reset.py      # Reset test user RU funnel state
+./scripts/run.sh belly/stage_0.py     # Send RU belly funnel stage to test user
+./scripts/run.sh arms/stage_1.py      # Send RU arms funnel stage to test user
+./scripts/run.sh glutes/stage_5.py    # Send RU glutes funnel stage to test user
+./scripts/run.sh belly/reset.py       # Reset test user RU funnel state
 ./scripts_en/run.sh stage_0.py       # Send EN funnel stage message to test user
 ./scripts_ar/run.sh stage_0.py       # Send AR funnel stage message to test user
 # RU scripts organized by zone variant: scripts/belly/, scripts/thighs/, etc.
@@ -128,7 +130,7 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. Only enforced for **RU users** — EN/AR users skip the check. **Currently disabled** in `src/bot.py` (commented out, pending bot admin access to channel).
 
-**Funnel system**: RU funnel has **13 stages (0→12)** with zone branching. After meal plan delivery, bot sends two messages: "Разбуди тело" (wakeup with Yandex Disk URL) + zone selection (4 buttons: belly/thighs/arms/glutes) with 5-sec delay. Zone selection repeats every 24h until user picks. Zone callback (`zone_*`) sets `funnel_variant`, sends instant response, advances to stage 1 (+1h). Stages 1+ are zone-specific (`belly` has 12 stages 1-12, `thighs` has 11 stages 1-11; `arms` and `glutes` not yet implemented). EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 1h for stages 1-8, 24h for upsell stage 9. The scheduler (every 15 min) checks `next_funnel_msg_at` column and sends messages when the time has arrived. Timing logic is in `src/db/queries.py:calculate_next_send_time()` — RU messages are scheduled at specific Moscow times (10:00, 19:00 MSK), while EN/AR use interval delays (5min/1h/24h). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when user is already at stage N+1.
+**Funnel system**: RU funnel has **13 stages (0→12)** with zone branching. After meal plan delivery, bot sends two messages: "Разбуди тело" (wakeup with Yandex Disk URL) + zone selection (4 buttons: belly/thighs/arms/glutes) with 5-sec delay. Zone selection repeats every 24h until user picks. Zone callback (`zone_*`) sets `funnel_variant`, sends instant response, advances to stage 1 (+1h). Stages 1+ are zone-specific (`belly` has 12 stages 1-12, `thighs` has 11 stages 1-11, `arms` has 11 stages 1-11; `glutes` has 11 stages 1-11). EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 1h for stages 1-8, 24h for upsell stage 9. The scheduler (every 15 min) checks `next_funnel_msg_at` column and sends messages when the time has arrived. Timing logic is in `src/db/queries.py:calculate_next_send_time()` — accepts `variant` param for zone-specific timing. RU messages are scheduled at specific Moscow times (10:00, 19:00 MSK), while EN/AR use interval delays (5min/1h/24h). Key difference: belly/thighs/arms have stage 5 (video note) → stage 6 (same day 19:00 MSK), but glutes has stage 5 (hard sell directly) → stage 6 (next day 10:00 MSK). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when user is already at stage N+1.
 
 **Media** (`config/media.yaml` + `bot/media/photos/`): RU funnel messages include local photos (`photo_name` field), media groups (`extra_photos` for album stages 2 and 9), and video notes (circles from Google Drive via `video_note_id`). EN and AR funnels include photos at stages 0 and 6 (shared `en_stage_0`/`en_stage_6` photos) plus question buttons for instant next-stage delivery. Video notes are sent as separate messages after the main content.
 
@@ -216,6 +218,8 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 - `db/migrations/` — 5 sequential migrations (rename chat_histories, funnel timing, scheduler index, upsell price types, funnel_variant)
 - `new_ru(низ_живота).md` — RU belly zone funnel content spec (ТЗ)
 - `ушки_на_бедрах.md` — RU thighs zone funnel content spec (ТЗ)
+- `дряблость_рук.md` — RU arms zone funnel content spec (ТЗ)
+- `форма_ягодиц.md` — RU glutes zone funnel content spec (ТЗ)
 
 ## Security Notes
 
