@@ -168,12 +168,24 @@ class TestCalculateNextSendTimeRU:
             assert result_msk.hour == 10, f"Stage {stage} should be at 10:00 MSK, got {result_msk.hour}"
             assert result_msk.minute == 0
 
-    def test_after_last_stage_is_none(self):
-        assert calculate_next_send_time(12, "ru") is None
+    def test_after_last_stage_belly_is_none(self):
+        assert calculate_next_send_time(12, "ru", variant="belly") is None
+
+    def test_after_last_stage_thighs_is_none(self):
+        assert calculate_next_send_time(11, "ru", variant="thighs") is None
+
+    def test_after_last_stage_arms_is_none(self):
+        assert calculate_next_send_time(11, "ru", variant="arms") is None
+
+    def test_after_last_stage_glutes_is_none(self):
+        assert calculate_next_send_time(11, "ru", variant="glutes") is None
 
     def test_beyond_last_stage_is_none(self):
         assert calculate_next_send_time(13, "ru") is None
         assert calculate_next_send_time(20, "ru") is None
+        assert calculate_next_send_time(12, "ru", variant="thighs") is None
+        assert calculate_next_send_time(12, "ru", variant="arms") is None
+        assert calculate_next_send_time(12, "ru", variant="glutes") is None
 
     def test_all_results_are_utc(self):
         for stage in range(12):

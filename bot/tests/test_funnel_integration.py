@@ -206,11 +206,13 @@ class TestFunnelSender:
         assert call_kwargs["text"] == expected_msg.text
 
     @pytest.mark.asyncio
+    @patch("src.funnel.sender.get_pool", new_callable=AsyncMock)
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
-    async def test_sender_skips_invalid_stage(self, mock_targets, mock_update):
+    async def test_sender_skips_invalid_stage(self, mock_targets, mock_update, mock_pool):
         from src.funnel.sender import send_funnel_messages
 
+        mock_pool.return_value = AsyncMock()
         mock_targets.return_value = [
             {"chat_id": 111, "funnel_stage": 13, "language": "ru", "funnel_variant": "belly"},
         ]
@@ -221,6 +223,8 @@ class TestFunnelSender:
 
         bot.send_message.assert_not_called()
         mock_update.assert_not_called()
+        # Verify next_funnel_msg_at is cleared for out-of-range stages
+        mock_pool.return_value.execute.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
@@ -292,11 +296,13 @@ class TestFullFunnelCycle:
             mock_update.assert_called_once_with(555, language="en", current_stage=stage, variant=None)
 
     @pytest.mark.asyncio
+    @patch("src.funnel.sender.get_pool", new_callable=AsyncMock)
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
-    async def test_after_last_en_stage_no_messages(self, mock_targets, mock_update):
+    async def test_after_last_en_stage_no_messages(self, mock_targets, mock_update, mock_pool):
         from src.funnel.sender import send_funnel_messages
 
+        mock_pool.return_value = AsyncMock()
         mock_targets.return_value = [
             {"chat_id": 555, "funnel_stage": 11, "language": "en"},
         ]
@@ -305,3 +311,5 @@ class TestFullFunnelCycle:
 
         await send_funnel_messages(bot)
         bot.send_message.assert_not_called()
+        # Verify next_funnel_msg_at is cleared
+        mock_pool.return_value.execute.assert_called_once()

@@ -133,6 +133,12 @@ async def send_funnel_messages(bot: Bot) -> None:
         msg = get_funnel_message(stage, language, variant=variant)
         if msg is None:
             logger.debug("funnel_stage_out_of_range", chat_id=chat_id, stage=stage)
+            # Clear next_funnel_msg_at to prevent infinite polling
+            pool = await get_pool()
+            await pool.execute(
+                "UPDATE users_nutrition SET next_funnel_msg_at = NULL WHERE chat_id = $1",
+                chat_id,
+            )
             continue
 
         keyboard = _build_keyboard(msg)

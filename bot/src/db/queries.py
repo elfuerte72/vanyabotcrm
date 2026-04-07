@@ -15,8 +15,9 @@ logger = structlog.get_logger()
 # Moscow timezone: UTC+3
 _MSK = timezone(timedelta(hours=3))
 
-# Max funnel stage per language
+# Max funnel stage per language (RU varies by zone variant)
 _MAX_STAGE = {"ru": 12, "en": 10, "ar": 10}
+_MAX_STAGE_RU_VARIANT = {"belly": 12, "thighs": 11, "arms": 11, "glutes": 11}
 
 
 def calculate_next_send_time(
@@ -35,6 +36,8 @@ def calculate_next_send_time(
     """
     now = datetime.now(timezone.utc)
     max_stage = _MAX_STAGE.get(language, 5)
+    if language == "ru" and variant:
+        max_stage = _MAX_STAGE_RU_VARIANT.get(variant, max_stage)
 
     if current_stage >= max_stage:
         return None
