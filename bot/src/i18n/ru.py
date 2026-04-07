@@ -55,6 +55,7 @@ ZONE_BELLY_RESPONSE = (
 # Stages 1-12: belly zone messages
 # Stage 1: +1h after zone — selling, before/after photo
 FUNNEL_BELLY_STAGE_1 = (
+    "Надеюсь активация зашла 🌸\n\n"
     "Света начинала так же — с питания. Низ живота ушёл только когда добавила "
     "правильную нагрузку, точечно на эту зону.\n\n"
     "Я собрал такую тренировку 👇\n\n"
@@ -175,6 +176,7 @@ ZONE_THIGHS_RESPONSE = (
 # Stages 1-11: thighs zone messages
 # Stage 1: +1h after zone — selling, before/after photo (Катя)
 FUNNEL_THIGHS_STAGE_1 = (
+    "Надеюсь активация зашла 🌸\n\n"
     "Катя начинала так же — с питания. Ушки на бёдрах изменились только когда "
     "добавила изолированную нагрузку на эту зону.\n"
     "А посмотри, как еще и ушли бока и качество кожи на ягодицах 😍\n\n"
@@ -300,6 +302,7 @@ ZONE_ARMS_RESPONSE = (
 # Stages 1-11: arms zone messages
 # Stage 1: +1h after zone — selling, before/after photo (Лена)
 FUNNEL_ARMS_STAGE_1 = (
+    "Надеюсь активация зашла 🌸\n\n"
     "Лена начинала так же — с питания. Руки подтянулись только когда "
     "добавила конкретную нагрузку на трицепс 💪🏻\n\n"
     "А ты посмотри, как БОНУСОМ 🔥\n"
@@ -426,6 +429,7 @@ ZONE_GLUTES_RESPONSE = (
 # Stages 1-11: glutes zone messages
 # Stage 1: +1h after zone — selling, before/after photo (Оля)
 FUNNEL_GLUTES_STAGE_1 = (
+    "Надеюсь активация зашла 🌸\n\n"
     "Оля начинала так же — с питания. Форма ягодиц появилась только когда "
     "добавила два конкретных упражнения с правильными углами.\n\n"
     "Я собрал такую тренировку 👇\n\n"
