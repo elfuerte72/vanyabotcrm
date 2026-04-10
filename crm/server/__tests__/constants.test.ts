@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { eventButtonLabels, funnelStageLabels, funnelVariantLabels, getMaxFunnelStage } from '../../shared/constants';
+import { eventButtonLabels, funnelStageLabels, funnelVariantLabels, getMaxFunnelStage } from '../../shared/constants.js';
 
 describe('eventButtonLabels', () => {
   const knownEventData = [
