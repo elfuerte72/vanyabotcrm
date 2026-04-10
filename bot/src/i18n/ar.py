@@ -1,7 +1,5 @@
 """Arabic localization strings."""
 
-SUBSCRIBE_MESSAGE = "لاستخدام البوت، يرجى الاشتراك في القناة: https://t.me/ivanfit_health"
-
 ALREADY_CALCULATED = "بطل، اعتذر منك. لا يمكنني حساب السعرات والماكروز لك مرة ثانية."
 
 CALCULATING_MENU = "تم الاستلام! جاري حساب سعراتك الحرارية واختيار القائمة من قاعدة البيانات، يرجى الانتظار بضع ثوانٍ..."

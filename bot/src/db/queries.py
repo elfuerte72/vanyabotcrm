@@ -372,15 +372,16 @@ async def save_user_event(
     event_data: str,
     language: str | None = None,
     workflow_name: str | None = None,
+    message_text: str | None = None,
 ) -> None:
     """Save a user interaction event (button click, funnel message, etc.) to user_events."""
     pool = await get_pool()
     await pool.execute(
         """
-        INSERT INTO user_events (chat_id, event_type, event_data, language, workflow_name)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO user_events (chat_id, event_type, event_data, language, workflow_name, message_text)
+        VALUES ($1, $2, $3, $4, $5, $6)
         """,
-        chat_id, event_type, event_data, language, workflow_name,
+        chat_id, event_type, event_data, language, workflow_name, message_text,
     )
     logger.debug(
         "user_event_saved",

@@ -25,7 +25,7 @@ from aiogram.types import (
 
 from pydantic import ValidationError
 
-from src.db.queries import save_user_data, save_user_event, set_food_received
+from src.db.queries import save_chat_message, save_user_data, save_user_event, set_food_received
 from src.handlers.start import LANGUAGE_CHOOSE_MESSAGE, _make_language_keyboard
 from src.i18n import get_strings
 from src.models.user import User
@@ -144,10 +144,17 @@ async def _process_text_message(
     bot: Bot,
     db_user: User | None,
     text: str,
+    *,
+    override_username: str | None = None,
+    override_first_name: str | None = None,
 ) -> None:
-    """Core message processing logic."""
+    """Core message processing logic.
+
+    override_username/override_first_name: used when called from callback handlers
+    where message.from_user is the bot, not the actual user.
+    """
     chat_id = message.chat.id
-    username = message.from_user.username if message.from_user else "unknown"
+    username = override_username or (message.from_user.username if message.from_user else "unknown")
     detected_lang = db_user.language if db_user and db_user.language else detect_language(text)
 
     logger.debug("processing_message", chat_id=chat_id, lang=detected_lang, text=text[:100])
@@ -224,7 +231,7 @@ async def _process_text_message(
         await save_user_data(
             chat_id=chat_id,
             username=username,
-            first_name=message.from_user.first_name if message.from_user else "",
+            first_name=override_first_name or (message.from_user.first_name if message.from_user else ""),
             sex=user_data.sex,
             age=user_data.age,
             weight=user_data.weight,
@@ -278,8 +285,9 @@ async def _process_text_message(
     if not is_valid:
         logger.warning("meal_plan_validation_failed", error=error, chat_id=chat_id)
 
-    # Format and send
+    # Format, save to chat history, and send
     html = format_meal_plan_html(menu_data, calc_stats, target_stats, language=detected_lang)
+    await save_chat_message(str(chat_id), "ai", html)
     await message.answer(html, parse_mode="HTML")
 
     # Mark as food received → starts funnel (skip for test account)
@@ -360,8 +368,12 @@ async def handle_confirm_data(callback: CallbackQuery, bot: Bot, db_user: User |
         pass
 
     # Process as if the user typed the confirmation
-    # Create a fake-like flow: send the confirm text through the agent
-    await _process_text_message(callback.message, bot, db_user, confirm_text)
+    # Use override_ params because callback.message.from_user is the bot, not the user
+    await _process_text_message(
+        callback.message, bot, db_user, confirm_text,
+        override_username=callback.from_user.username if callback.from_user else None,
+        override_first_name=callback.from_user.first_name if callback.from_user else None,
+    )
 
 
 @router.callback_query(F.data == "fix_data")

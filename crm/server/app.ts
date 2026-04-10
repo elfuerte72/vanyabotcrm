@@ -40,9 +40,15 @@ app.use(cors({
 // Body parser with size limit
 app.use(express.json({ limit: '100kb' }));
 
-// Request logging
+// Request logging (compact: method + url + status + time)
 // @ts-expect-error pino-http CJS default export not callable under NodeNext
-app.use(pinoHttp({ logger }));
+app.use(pinoHttp({
+  logger,
+  serializers: {
+    req: (req: any) => ({ method: req.method, url: req.url }),
+    res: (res: any) => ({ statusCode: res.statusCode }),
+  },
+}));
 
 // Rate limiting on API routes
 const apiLimiter = rateLimit({

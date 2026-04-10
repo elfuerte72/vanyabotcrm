@@ -27,6 +27,7 @@ export interface ChatMessage {
   type: 'human' | 'ai' | string;
   content: string;
   tool_calls: any[];
+  created_at: string | null;
 }
 
 export interface UserFilters {
@@ -55,6 +56,7 @@ export interface UserEvent {
   event_data: string;
   language: string | null;
   workflow_name: string | null;
+  message_text: string | null;
   created_at: string;
 }
 

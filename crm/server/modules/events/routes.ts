@@ -22,7 +22,7 @@ router.get('/:chatId', async (req: Request, res: Response) => {
     const { type } = queryParsed.data;
 
     let query = `
-      SELECT id, chat_id, event_type, event_data, language, workflow_name, created_at
+      SELECT id, chat_id, event_type, event_data, language, workflow_name, message_text, created_at
       FROM user_events
       WHERE chat_id = $1
     `;

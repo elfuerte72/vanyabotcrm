@@ -65,7 +65,7 @@ class TestSaveUserEvent:
         query = args[0][0]
         params = args[0][1:]
         assert "INSERT INTO user_events" in query
-        assert params == (12345, "button_click", "buy_now", "ru", "funnel")
+        assert params == (12345, "button_click", "buy_now", "ru", "funnel", None)
 
     @pytest.mark.asyncio
     @patch("src.db.queries.get_pool")
@@ -80,7 +80,7 @@ class TestSaveUserEvent:
 
         args = mock_pool.execute.call_args
         params = args[0][1:]
-        assert params == (99999, "funnel_message", "stage_3", None, None)
+        assert params == (99999, "funnel_message", "stage_3", None, None, None)
 
 
 # ─── Callback handlers save events ──────────────────────────────────────

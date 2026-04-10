@@ -72,7 +72,7 @@ Two services share the same PostgreSQL database:
 crm/
 ├── shared/              # Shared types and constants (server + client)
 │   ├── types.ts         # User, ChatMessage, UserEvent, Stats, UserFilters
-│   └── constants.ts     # goalLabels, activityLabels, eventButtonLabels
+│   └── constants.ts     # goalLabels, activityLabels, eventButtonLabels, funnelStageLabels, funnelVariantLabels, getMaxFunnelStage
 ├── server/              # Express API
 │   ├── app.ts           # Express app (routes, middleware, static)
 │   ├── index.ts         # Entry point: app.listen()
@@ -113,7 +113,7 @@ crm/
 src/main.py          → Entry point: polling + scheduler + webhook server
 src/bot.py           → Factory: creates Bot + Dispatcher, registers routers/middlewares
 src/handlers/        → Telegram event handlers (start, message, callbacks, payment)
-src/middlewares/     → Middleware chain: logging → subscription check → user data loading
+src/middlewares/     → Middleware chain: logging → user data loading
 src/services/        → Business logic (AI agents, calculator, formatter, language, media)
 src/funnel/          → Sales funnel: message definitions, batch sender, scheduler
 src/i18n/            → Localized strings per language (ru.py, en.py, ar.py)
@@ -126,9 +126,7 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Config** (`config/settings.py`): Uses lazy initialization via proxy objects — `settings` and `media_config` are not instantiated at import time. This allows tests to run without a `.env` file by setting env vars in `conftest.py`.
 
-**Chat history**: Bot reads/writes to `chat_histories` table. `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`.
-
-**Subscription check** (`src/middlewares/subscription.py`): Checks channel membership (`@ivanfit_health` or numeric fallback `-1002504147240`) before processing messages. Only checks `Message` events, not callbacks. Only enforced for **RU users** — EN/AR users skip the check. **Currently disabled** in `src/bot.py` (commented out, pending bot admin access to channel).
+**Chat history**: Bot reads/writes to `chat_histories` table. `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`. ALL bot messages are saved via `save_chat_message()` — funnel messages (in sender.py) and callback responses (in callbacks.py). This ensures the CRM timeline shows the complete conversation.
 
 **Funnel system**: RU funnel has **13 stages (0→12)** with zone branching. After meal plan delivery, bot sends two messages: "Разбуди тело" (wakeup with Yandex Disk URL) + zone selection (4 buttons: belly/thighs/arms/glutes) with 5-sec delay. Zone selection repeats every 24h until user picks. Zone callback (`zone_*`) sets `funnel_variant`, sends instant response, advances to stage 1 (+1h). Stages 1+ are zone-specific (`belly` has 12 stages 1-12, `thighs` has 11 stages 1-11, `arms` has 11 stages 1-11; `glutes` has 11 stages 1-11). EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 1h for stages 1-8, 24h for upsell stage 9. The scheduler (every 15 min) checks `next_funnel_msg_at` column and sends messages when the time has arrived. Timing logic is in `src/db/queries.py:calculate_next_send_time()` — accepts `variant` param for zone-specific timing. RU messages are scheduled at specific Moscow times (10:00, 19:00 MSK), while EN/AR use interval delays (5min/1h/24h). Key difference: belly/thighs/arms have stage 5 (video note) → stage 6 (same day 19:00 MSK), but glutes has stage 5 (hard sell directly) → stage 6 (next day 10:00 MSK). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when user is already at stage N+1.
 
@@ -162,9 +160,9 @@ Default sort (no `sort` param): `updated_at DESC NULLS LAST, created_at DESC`.
 
 **`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-12 for RU, 0-10 for EN/AR), `funnel_variant` (belly/thighs/arms/glutes/NULL — zone for RU branching), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`, `funnel_start_at`, `last_funnel_msg_at`, `next_funnel_msg_at` (UTC, calculated by `calculate_next_send_time()`).
 
-**`chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`.
+**`chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`. `created_at` is `timestamptz DEFAULT now()`.
 
-**`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `created_at`. Used in CRM to show full user interaction timeline alongside chat messages.
+**`user_events`** — Button clicks and funnel events. Columns: `id`, `chat_id`, `event_type`, `event_data`, `language`, `workflow_name`, `message_text`, `created_at` (timestamptz). Used in CRM to show full user interaction timeline alongside chat messages. Both tables use `timestamptz` for consistent chronological sorting.
 
 ### Database Triggers
 
@@ -202,8 +200,6 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 | `BOT_TOKEN` | crm, bot | Telegram bot token |
 | `DATABASE_URL` | crm, bot | Supabase PostgreSQL connection string |
 | `VITE_API_URL` | crm | API base URL (empty = relative URLs with Vite proxy) |
-| `CHANNEL_ID` | bot | Telegram channel ID for subscription check (default: -1002504147240) |
-| `CHANNEL_USERNAME` | bot | Telegram channel username, preferred over ID (default: ivanfit_health) |
 | `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
 | `OPENROUTER_MODEL` | bot | LLM model (default: google/gemini-3-flash-preview) |
 | `TRIBUTE_LINK` | bot | Payment link for Tribute (RU users) |
@@ -215,7 +211,7 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 ## Related Documentation
 
 - `AGENTS.md` — AI agent project map
-- `db/migrations/` — 5 sequential migrations (rename chat_histories, funnel timing, scheduler index, upsell price types, funnel_variant)
+- `db/migrations/` — 8 sequential migrations (rename chat_histories, funnel timing, scheduler index, upsell price types, funnel_variant, event message text, chat_histories created_at, user_events timestamptz)
 - `new_ru(низ_живота).md` — RU belly zone funnel content spec (ТЗ)
 - `ушки_на_бедрах.md` — RU thighs zone funnel content spec (ТЗ)
 - `дряблость_рук.md` — RU arms zone funnel content spec (ТЗ)

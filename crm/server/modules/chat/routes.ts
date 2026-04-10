@@ -28,7 +28,8 @@ router.get('/:sessionId', async (req: Request, res: Response) => {
       SELECT
         id,
         session_id,
-        message
+        message,
+        created_at
       FROM chat_histories
       WHERE session_id = $1
       ORDER BY id ASC
@@ -41,7 +42,8 @@ router.get('/:sessionId', async (req: Request, res: Response) => {
         id: row.id,
         type: msg.type || 'unknown',
         content: msg.content || '',
-        tool_calls: msg.tool_calls || []
+        tool_calls: msg.tool_calls || [],
+        created_at: row.created_at || null,
       };
     });
 

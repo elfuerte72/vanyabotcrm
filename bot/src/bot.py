@@ -10,7 +10,6 @@ from config.settings import settings
 from src.handlers import callbacks, message, start
 from src.handlers.payment import setup_payment_routes
 from src.middlewares.logging import LoggingMiddleware
-from src.middlewares.subscription import SubscriptionMiddleware
 from src.middlewares.user_data import UserDataMiddleware
 
 logger = structlog.get_logger()
@@ -28,15 +27,13 @@ def create_dispatcher() -> Dispatcher:
     """Create Dispatcher with all routers and middlewares registered."""
     dp = Dispatcher()
 
-    # Register middlewares (order matters: logging → user_data → subscription)
+    # Register middlewares (order matters: logging → user_data)
     dp.message.middleware(LoggingMiddleware())
     dp.callback_query.middleware(LoggingMiddleware())
 
     dp.message.middleware(UserDataMiddleware())
     dp.callback_query.middleware(UserDataMiddleware())
 
-    # Subscription check only for RU users (requires db_user from UserDataMiddleware)
-    dp.message.middleware(SubscriptionMiddleware())
 
     # Register routers (order matters: start first, then callbacks, then messages)
     dp.include_router(start.router)

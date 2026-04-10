@@ -31,8 +31,8 @@
       "mcp": {
         "github": false,
         "filesystem": true,
-        "postgres": true,
-        "chromeDevtools": true,
+        "postgres": false,
+        "chromeDevtools": false,
         "playwright": true
       }
     }

@@ -1,4 +1,4 @@
-import { goalLabels, activityLabels } from '../hooks/useApi';
+import { goalLabels, activityLabels, funnelVariantLabels, getMaxFunnelStage } from '../hooks/useApi';
 import type { User } from '../../shared/types';
 import { ChatHistory } from './ChatHistory';
 import { Card, CardContent } from './ui/card';
@@ -26,7 +26,8 @@ interface UserDetailProps {
 
 export function UserDetail({ user, onBack }: UserDetailProps) {
   const displayName = user.first_name || user.username || `User ${user.chat_id}`;
-  const funnelPercent = Math.round(((user.funnel_stage || 0) / 6) * 100);
+  const maxStage = getMaxFunnelStage(user.language, user.funnel_variant);
+  const funnelPercent = Math.round(((user.funnel_stage || 0) / maxStage) * 100);
 
   return (
     <div className="pb-20">
@@ -138,12 +139,18 @@ export function UserDetail({ user, onBack }: UserDetailProps) {
         </h2>
         <Card>
           <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-foreground font-medium">Этап {user.funnel_stage || 0} из 6</span>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm text-foreground font-medium">Этап {user.funnel_stage || 0} из {maxStage}</span>
               <span className="text-sm text-muted-foreground">{funnelPercent}%</span>
             </div>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5, 6].map((stage) => (
+            {user.funnel_variant && (
+              <div className="text-xs text-muted-foreground mb-3">
+                Зона: {funnelVariantLabels[user.funnel_variant] || user.funnel_variant}
+              </div>
+            )}
+            {!user.funnel_variant && <div className="mb-2" />}
+            <div className="flex gap-1">
+              {Array.from({ length: maxStage }, (_, i) => i + 1).map((stage) => (
                 <div
                   key={stage}
                   className={`h-2 flex-1 rounded-full ${stage <= (user.funnel_stage || 0) ? 'bg-primary' : 'bg-secondary'}`}

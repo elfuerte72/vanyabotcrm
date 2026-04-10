@@ -23,6 +23,11 @@ export const eventButtonLabels: Record<string, { label: string; botResponse: str
   remind_later: { label: 'Напомнить позже', botResponse: 'Отправлено мотивационное сообщение' },
   check_suitability: { label: 'Подходит ли мне?', botResponse: 'Отправлено видео о подходимости' },
   none: { label: 'Отказ от покупки', botResponse: 'Отправлено прощальное сообщение' },
+  // Zone selection (RU)
+  zone_belly: { label: 'Выбрал зону: Низ живота', botResponse: 'Запущена воронка для зоны «Низ живота»' },
+  zone_thighs: { label: 'Выбрал зону: Ушки на бёдрах', botResponse: 'Запущена воронка для зоны «Ушки на бёдрах»' },
+  zone_arms: { label: 'Выбрал зону: Дряблость рук', botResponse: 'Запущена воронка для зоны «Дряблость рук»' },
+  zone_glutes: { label: 'Выбрал зону: Форма ягодиц', botResponse: 'Запущена воронка для зоны «Форма ягодиц»' },
   // callback_en
   nutrition_en: { label: 'Nutrition info', botResponse: 'Sent nutrition + training explanation' },
   cardio_en: { label: 'Cardio vs Muscle', botResponse: 'Sent cardio vs strength training info' },
@@ -74,17 +79,41 @@ export const eventButtonLabels: Record<string, { label: string; botResponse: str
   ar_funnel_q_10: { label: 'AR Question (upsell 10)', botResponse: 'Отправлено upsell сообщение воронки' },
 };
 
-// Labels for funnel_message events (event_data = "stage_N")
+// Labels for funnel_message events (event_data = "stage_N" or special keys)
 export const funnelStageLabels: Record<string, string> = {
-  stage_0: 'Воронка: этап 0',
-  stage_1: 'Воронка: этап 1',
-  stage_2: 'Воронка: этап 2',
-  stage_3: 'Воронка: этап 3',
-  stage_4: 'Воронка: этап 4',
-  stage_5: 'Воронка: этап 5',
-  stage_6: 'Воронка: этап 6',
-  stage_7: 'Воронка: этап 7',
-  stage_8: 'Воронка: этап 8',
-  stage_9: 'Воронка: этап 9 (upsell)',
-  stage_10: 'Воронка: этап 10 (upsell)',
+  wakeup_sent: 'Разбуди тело (утренняя зарядка)',
+  stage_0_zone_ask: 'Выбор проблемной зоны',
+  stage_0: 'Этап 0 — Знакомство',
+  stage_1: 'Этап 1 — Мотивация',
+  stage_2: 'Этап 2 — Фото результатов',
+  stage_3: 'Этап 3 — Видео-кружок',
+  stage_4: 'Этап 4 — Социальное доказательство',
+  stage_5: 'Этап 5 — Видео / Hard sell',
+  stage_6: 'Этап 6 — Повторное предложение',
+  stage_7: 'Этап 7 — Мягкое напоминание',
+  stage_8: 'Этап 8 — Финальный призыв',
+  stage_9: 'Этап 9 — Upsell',
+  stage_10: 'Этап 10 — Upsell повторный',
+  stage_11: 'Этап 11 — Дожим',
+  stage_12: 'Этап 12 — Финал',
 };
+
+// Human-readable labels for funnel_variant (zone)
+export const funnelVariantLabels: Record<string, string> = {
+  belly: 'Низ живота',
+  thighs: 'Ушки на бёдрах',
+  arms: 'Дряблость рук',
+  glutes: 'Форма ягодиц',
+};
+
+// Max funnel stage by language
+// RU: 12 stages (belly), 11 stages (thighs/arms/glutes)
+// EN/AR: 10 stages
+export function getMaxFunnelStage(language?: string | null, variant?: string | null): number {
+  if (!language || language === 'ru') {
+    if (variant === 'belly') return 12;
+    if (variant === 'thighs' || variant === 'arms' || variant === 'glutes') return 11;
+    return 12; // default for RU without variant
+  }
+  return 10; // EN, AR
+}

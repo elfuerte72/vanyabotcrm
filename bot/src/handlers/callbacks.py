@@ -14,7 +14,7 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user, mark_as_buyer, save_user_event, save_ziina_payment, set_funnel_variant, update_funnel_stage
+from src.db.queries import get_user, mark_as_buyer, save_chat_message, save_user_event, save_ziina_payment, set_funnel_variant, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.funnel.sender import _build_keyboard, _send_single_funnel_message
 from src.i18n import get_strings
@@ -93,6 +93,7 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
             text=strings.BUY_MESSAGE_WITH_CONFIRM,
             reply_markup=keyboard,
         )
+        await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE_WITH_CONFIRM)
         logger.info("buy_now_link_sent", user_id=user_id, language="ru", marked_buyer=False)
     else:
         # EN/AR: create Ziina payment intent — don't mark buyer until webhook confirms
@@ -110,6 +111,7 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
                 text=strings.BUY_MESSAGE,
                 reply_markup=keyboard,
             )
+            await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
             logger.info("buy_now_ziina_intent", user_id=user_id, language=language, intent_id=intent_id, amount=amount_aed)
         except (ZiinaAPIError, Exception) as exc:
             # Fallback: static link only (webhook will still confirm if user pays)
@@ -122,6 +124,7 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
                 text=strings.BUY_MESSAGE,
                 reply_markup=keyboard,
             )
+            await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
 
 
 @router.callback_query(F.data == "confirm_paid_ru")
@@ -145,6 +148,7 @@ async def handle_confirm_paid_ru(callback: CallbackQuery, bot: Bot, **data: Any)
         chat_id=chat_id,
         text=strings.PAYMENT_CONFIRMED,
     )
+    await save_chat_message(str(chat_id), "ai", strings.PAYMENT_CONFIRMED)
     logger.info("confirm_paid_ru", user_id=user_id)
 
 
@@ -222,6 +226,7 @@ async def handle_remind_later(callback: CallbackQuery, bot: Bot, **data: Any) ->
 
     await save_user_event(chat_id, "button_click", "remind_later", language, "funnel")
     await bot.send_message(chat_id, strings.REMIND_LATER, parse_mode="HTML")
+    await save_chat_message(str(chat_id), "ai", strings.REMIND_LATER)
 
 
 @router.callback_query(F.data == "none")
@@ -240,6 +245,7 @@ async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
 
     await save_user_event(chat_id, "button_click", "none", language, "funnel")
     await bot.send_message(chat_id, strings.NONE_RESPONSE, parse_mode="HTML")
+    await save_chat_message(str(chat_id), "ai", strings.NONE_RESPONSE)
 
 
 @router.callback_query(F.data.startswith("zone_"))
@@ -287,6 +293,7 @@ async def handle_zone_selection(callback: CallbackQuery, bot: Bot, **data: Any) 
     response_text = response_map.get(variant)
     if response_text:
         await bot.send_message(chat_id=chat_id, text=response_text, parse_mode="HTML")
+        await save_chat_message(str(chat_id), "ai", response_text)
 
     logger.info("zone_selected", user_id=user_id, variant=variant)
 
@@ -324,6 +331,7 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
         text=strings.WATCH_VIDEO_PROMPT,
         reply_markup=keyboard,
     )
+    await save_chat_message(str(chat_id), "ai", strings.WATCH_VIDEO_PROMPT)
     logger.info("video_workout_callback", user_id=user_id, language=language)
 
 
@@ -349,6 +357,7 @@ async def handle_learn_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
         chat_id=chat_id,
         text=strings.LEARN_WORKOUT_RESPONSE,
     )
+    await save_chat_message(str(chat_id), "ai", strings.LEARN_WORKOUT_RESPONSE)
     logger.info("learn_workout_callback", user_id=user_id, language=language)
 
 
@@ -437,6 +446,7 @@ async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     keyboard = _build_keyboard(next_msg)
     try:
         await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
+        await save_chat_message(str(chat_id), "ai", next_msg.text)
         await update_funnel_stage(chat_id, language="en", current_stage=next_stage)
         logger.info(
             "en_funnel_question_advance",
@@ -501,6 +511,7 @@ async def handle_ar_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     keyboard = _build_keyboard(next_msg)
     try:
         await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
+        await save_chat_message(str(chat_id), "ai", next_msg.text)
         await update_funnel_stage(chat_id, language="ar", current_stage=next_stage)
         logger.info(
             "ar_funnel_question_advance",

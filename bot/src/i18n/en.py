@@ -1,7 +1,5 @@
 """English localization strings."""
 
-SUBSCRIBE_MESSAGE = "To use the bot, please subscribe to the channel: https://t.me/ivanfit_health"
-
 ALREADY_CALCULATED = "Champion, I'm sorry. I cannot calculate your macros a second time."
 
 CALCULATING_MENU = "Got it! Calculating your calories and selecting a menu from the database, please wait a few seconds..."

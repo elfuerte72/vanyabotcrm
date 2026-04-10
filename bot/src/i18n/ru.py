@@ -1,10 +1,5 @@
 """Russian localization strings."""
 
-# --- Subscription ---
-SUBSCRIBE_MESSAGE = (
-    "Чтобы использовать бота, подпишись на канал: https://t.me/ivanfit_health"
-)
-
 # --- Already calculated ---
 ALREADY_CALCULATED = "Чемпион, извини. Я не могу второй раз тебе рассчитать КБЖУ."
 

@@ -1,42 +1,44 @@
-# Project: VanyaBot CRM
+# Project: MonitoringSQL (VanyaBot + CRM)
 
 ## Overview
-AI-powered Telegram bot for a fitness trainer that acts as a nutrition consultant. Collects user data through conversational AI (Gemini 3 Flash via OpenRouter), calculates KBJU (calories, protein, fats, carbs) using Mifflin-St Jeor formula, generates personalized meal plans, and runs a 5-day automated sales funnel. Includes a Telegram Mini App CRM for the trainer to view all clients, track buyer/lead status, and monitor the sales pipeline.
+AI-powered Telegram nutrition bot with sales funnel and Mini App CRM for fitness trainer client management. Two services (bot, CRM) share a single PostgreSQL database.
 
 ## Core Features
-- AI nutrition consultant via Telegram (conversational data collection)
-- KBJU calculation (Mifflin-St Jeor) with personalized meal plan generation
-- 5-day automated sales funnel (APScheduler, daily at 23:00 UTC)
-- Telegram channel subscription check (Russian-speaking users only, `language = ru`)
-- Multi-language support: Russian, English, Arabic
-- Payment integration (Ziina via webhook on port 8080)
-- Mini App CRM: client list, buyer/lead filtering, chat history, user events timeline
-- User events tracking (button clicks, bot responses, funnel events)
+- AI nutrition consultant via Telegram (collects user data, calculates KBJU via Harris-Benedict, generates meal plans)
+- Multi-language support: RU, EN, AR
+- Sales funnel system: RU (13 stages with zone branching), EN/AR (11 stages with upsells)
+- Telegram Mini App CRM for client management (user list, detail view, chat history, events)
+- Payment integration (Tribute for RU, Ziina for EN/AR with webhook verification)
+- Scheduled funnel message delivery via APScheduler (every 15 min)
 
 ## Tech Stack
-- **CRM:** Modular monolith — Express + React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui (server + client + shared types in `/crm`)
-- **Bot:** Python 3.11+ / aiogram 3.x (Telegram bot with AI agents)
-- **AI:** OpenRouter API (google/gemini-3-flash-preview) for conversation and meal plan generation
-- **Database:** PostgreSQL (shared across both services, schema in `db/schema.sql`)
-- **Auth:** Telegram `initData` validation via `@telegram-apps/init-data-node`
-- **Scheduler:** APScheduler (funnel cron job)
-- **Payments:** Ziina (webhook-based)
-- **Deployment:** Railway (Nixpacks builder)
+- **Bot Language:** Python 3.11+
+- **Bot Framework:** aiogram 3.x
+- **Bot AI:** OpenRouter (Gemini 3 Flash)
+- **Bot Async DB:** asyncpg
+- **Bot Scheduler:** APScheduler 3.x
+- **CRM Language:** TypeScript
+- **CRM Server:** Express 4.x
+- **CRM Client:** React 18 + Vite 5 + Tailwind CSS 3 + shadcn/ui
+- **CRM Testing:** Vitest + Supertest
+- **Database:** PostgreSQL (Supabase, project: dnzwpdcvrpfiipjwpxux)
+- **Deployment:** Railway (Nixpacks)
+- **Automation:** n8n (via MCP)
 
 ## Architecture Notes
-Two services share a single PostgreSQL database:
-1. **Bot** (Python/aiogram) — handles Telegram interactions, AI conversations, KBJU calculation, meal plan generation, funnel automation
-2. **CRM** (TypeScript modular monolith) — Express REST API + React Mini App in one project with shared types
+- Two independent services share one PostgreSQL database (shared contract in `db/schema.sql`)
+- CRM is a modular monolith: Express API + React SPA in a single TypeScript project with shared types
+- Bot uses factory pattern for Bot/Dispatcher creation with lazy config initialization
+- Funnel messages are zone-specific (belly, thighs, arms, glutes) for RU; universal for EN/AR
+- Real-time DB notifications via PostgreSQL NOTIFY triggers on `users_nutrition`
 
-The bot writes user data and chat history; the CRM reads it. Chat history uses `chat_histories` table.
+## Non-Functional Requirements
+- Logging: structlog (bot), pino (CRM), configurable via LOG_LEVEL
+- Error handling: structured error responses in CRM (zod validation)
+- Security: Telegram initData auth, helmet, rate limiting (100 req/min), Ziina webhook signature validation
+- Rate limits: Telegram API — 25 messages per batch with 1-sec delay
+- SSL: enabled for all database connections (Supabase)
 
 ## Architecture
 See `.ai-factory/ARCHITECTURE.md` for detailed architecture guidelines.
-Pattern: Modular Monolith (CRM = server + client + shared в одном проекте) + отдельный Python-сервис (Bot)
-
-## Non-Functional Requirements
-- Logging: Configurable via `LOG_LEVEL` (default: DEBUG) with structlog
-- Error handling: Structured error responses in API, graceful bot error handling
-- Security: Telegram initData auth (1hr expiry), SSL database connections, subscription gating for RU users
-- Testing: pytest for bot (340+ tests), vitest + supertest for CRM server (17 tests)
-- i18n: Three languages (ru, en, ar) with dedicated string modules
+Pattern: Modular Monolith (Dual-Service)

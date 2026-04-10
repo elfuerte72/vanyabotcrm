@@ -141,11 +141,12 @@ class TestConversationRoute:
 
 class TestGenerateRoute:
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
-    async def test_generate_full_flow(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food):
+    async def test_generate_full_flow(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat):
         """Agent returns is_finished=true → calculates macros → generates food → sends."""
         agent_json = json.dumps({
             "is_finished": True,
@@ -197,12 +198,13 @@ class TestGenerateRoute:
         assert msg.answer.call_count == 4
 
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_generate_calculates_correct_macros(
-        self, mock_agent_main, mock_agent_food, mock_save, mock_set_food
+        self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat
     ):
         """Check that calculator is called with correct params from agent data."""
         agent_json = json.dumps({
@@ -252,11 +254,12 @@ class TestGenerateRoute:
 
 class TestLanguageDetection:
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
-    async def test_russian_text_detected(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food):
+    async def test_russian_text_detected(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat):
         """Russian text is detected and saved to DB."""
         agent_json = json.dumps({
             "is_finished": True, "sex": "male", "weight": 80, "height": 180,
@@ -274,11 +277,12 @@ class TestLanguageDetection:
         assert mock_save.call_args.kwargs["language"] == "ru"
 
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
-    async def test_arabic_text_detected(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food):
+    async def test_arabic_text_detected(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat):
         """Arabic text is detected and saved to DB."""
         agent_json = json.dumps({
             "is_finished": True, "sex": "female", "weight": 60, "height": 165,

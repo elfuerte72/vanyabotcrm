@@ -8,8 +8,6 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Telegram
     bot_token: str
-    channel_id: int = -1002504147240
-    channel_username: str = "ivanfit_health"
 
     # Database
     database_url: str

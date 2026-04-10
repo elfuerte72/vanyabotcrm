@@ -56,12 +56,14 @@ describe('GET /api/chat/:sessionId', () => {
       type: 'human',
       content: 'Привет!',
       tool_calls: [],
+      created_at: null,
     });
     expect(res.body[1]).toEqual({
       id: 2,
       type: 'ai',
       content: 'Привет! Я Иван, твой помощник по питанию.',
       tool_calls: [],
+      created_at: null,
     });
   });
 

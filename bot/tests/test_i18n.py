@@ -5,7 +5,6 @@ from src.i18n import get_strings
 
 # Common attrs across all languages
 COMMON_ATTRS = [
-    "SUBSCRIBE_MESSAGE",
     "ALREADY_CALCULATED",
     "CALCULATING_MENU",
     "BUY_MESSAGE",

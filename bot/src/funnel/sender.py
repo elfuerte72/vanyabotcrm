@@ -11,6 +11,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from src.db.queries import (
     calculate_next_send_time,
     get_funnel_targets,
+    save_chat_message,
     save_user_event,
     update_funnel_stage,
 )
@@ -114,7 +115,8 @@ async def send_funnel_messages(bot: Bot) -> None:
             keyboard = _build_keyboard(msg)
             try:
                 await _send_single_funnel_message(bot, chat_id, msg, keyboard)
-                await save_user_event(chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel")
+                await save_chat_message(str(chat_id), "ai", msg.text)
+                await save_user_event(chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel", message_text=msg.text)
                 # Reschedule +24h, do NOT increment stage
                 next_send = calculate_next_send_time(0, "ru", has_variant=False)
                 pool = await get_pool()
@@ -145,7 +147,8 @@ async def send_funnel_messages(bot: Bot) -> None:
 
         try:
             await _send_single_funnel_message(bot, chat_id, msg, keyboard)
-            await save_user_event(chat_id, "funnel_message", f"stage_{stage}", language, "funnel")
+            await save_chat_message(str(chat_id), "ai", msg.text)
+            await save_user_event(chat_id, "funnel_message", f"stage_{stage}", language, "funnel", message_text=msg.text)
             await update_funnel_stage(chat_id, language=language, current_stage=stage, variant=variant)
             sent += 1
             logger.debug(

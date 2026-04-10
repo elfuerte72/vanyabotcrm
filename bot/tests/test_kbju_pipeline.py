@@ -44,12 +44,13 @@ class TestKBJUPipelineRU:
     """Russian user: male, 80kg, 180cm, 30yo, moderate, weight_loss."""
 
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_kbju_pipeline_ru(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat
     ):
         mock_agent_main.return_value = AGENT_RESPONSES["ru"]
         mock_agent_food.return_value = MEAL_PLANS["ru"]
@@ -95,12 +96,13 @@ class TestKBJUPipelineEN:
     """English user: female, 60kg, 165cm, 25yo, light, maintenance."""
 
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_kbju_pipeline_en(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat
     ):
         mock_agent_main.return_value = AGENT_RESPONSES["en"]
         mock_agent_food.return_value = MEAL_PLANS["en"]
@@ -129,12 +131,13 @@ class TestKBJUPipelineAR:
     """Arabic user: male, 75kg, 175cm, 28yo, high, muscle_gain."""
 
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_kbju_pipeline_ar(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat
     ):
         mock_agent_main.return_value = AGENT_RESPONSES["ar"]
         mock_agent_food.return_value = MEAL_PLANS["ar"]
@@ -164,12 +167,13 @@ class TestCalculateMacrosSavedToDB:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lang", ["ru", "en", "ar"])
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_macros_match_calculator(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, lang
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat, lang
     ):
         mock_agent_main.return_value = AGENT_RESPONSES[lang]
         mock_agent_food.return_value = MEAL_PLANS[lang]
@@ -196,12 +200,13 @@ class TestCalculateMacrosSavedToDB:
 
 class TestSetFoodReceivedStartsFunnel:
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_set_food_received_called_after_meal_plan_sent(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat
     ):
         mock_agent_main.return_value = AGENT_RESPONSES["en"]
         mock_agent_food.return_value = MEAL_PLANS["en"]
@@ -233,12 +238,13 @@ class TestLanguageDetectedAndSaved:
             ("مرحبا، أخبرني من فضلك", "ar"),
         ],
     )
+    @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
     async def test_language_detected_and_saved_to_db(
-        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food,
+        self, mock_agent_main, mock_agent_food, mock_save_user, mock_set_food, mock_save_chat,
         text, expected_lang
     ):
         mock_agent_main.return_value = AGENT_RESPONSES[expected_lang]
