@@ -425,10 +425,6 @@ async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
         logger.debug("en_funnel_q_no_user", user_id=user_id)
         return
 
-    # Skip if user is buyer or already past this stage
-    if db_user.is_buyer:
-        logger.debug("en_funnel_q_buyer_skip", user_id=user_id, stage=clicked_stage)
-        return
     if db_user.funnel_stage != clicked_stage:
         logger.debug(
             "en_funnel_q_stage_mismatch",
@@ -490,10 +486,6 @@ async def handle_ar_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
         logger.debug("ar_funnel_q_no_user", user_id=user_id)
         return
 
-    # Skip if user is buyer or already past this stage
-    if db_user.is_buyer:
-        logger.debug("ar_funnel_q_buyer_skip", user_id=user_id, stage=clicked_stage)
-        return
     if db_user.funnel_stage != clicked_stage:
         logger.debug(
             "ar_funnel_q_stage_mismatch",

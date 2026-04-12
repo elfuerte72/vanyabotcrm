@@ -211,8 +211,7 @@ async def get_funnel_targets() -> list[dict[str, Any]]:
         """
         SELECT chat_id, funnel_stage, language, funnel_variant
         FROM users_nutrition
-        WHERE (is_buyer IS FALSE OR is_buyer IS NULL)
-          AND get_food = TRUE
+        WHERE get_food = TRUE
           AND funnel_stage >= 0
           AND (
             -- New: use next_funnel_msg_at if set
