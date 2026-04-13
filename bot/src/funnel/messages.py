@@ -228,7 +228,7 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
             text=s.FUNNEL_ARMS_STAGE_1,
             buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_arms_stage_1", ""),
-            photo_first=True,
+            text_after=s.FUNNEL_ARMS_STAGE_1_AFTER,
         )
     elif stage == 2:
         return FunnelMessage(
@@ -236,6 +236,7 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
             buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_arms_stage_2a", ""),
             extra_photos=[funnel_photos.get("ru_arms_stage_2b", "")],
+            text_after=s.FUNNEL_ARMS_STAGE_2_AFTER,
         )
     elif stage == 3:
         return FunnelMessage(
@@ -279,6 +280,7 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
             text=s.FUNNEL_ARMS_STAGE_10,
             buttons=[(s.FUNNEL_LAST_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_arms_stage_10", ""),
+            text_after=s.FUNNEL_ARMS_STAGE_10_AFTER,
         )
     elif stage == 11:
         return FunnelMessage(
