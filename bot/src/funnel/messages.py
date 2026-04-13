@@ -28,6 +28,7 @@ class FunnelMessage:
     extra_photos: list[str] = field(default_factory=list)  # Additional photos for media group
     video_note_id: str = ""  # Google Drive file ID for video note (circle)
     photo_first: bool = False  # Send photo before text (default: text first)
+    text_after: str = ""  # Text sent after photo (text → photo → text_after+keyboard)
 
 
 def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelMessage | None:
@@ -75,13 +76,15 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
             text=s.FUNNEL_BELLY_STAGE_1,
             buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_belly_stage_1", ""),
+            text_after=s.FUNNEL_BELLY_STAGE_1_AFTER,
         )
     elif stage == 2:
         return FunnelMessage(
             text=s.FUNNEL_BELLY_STAGE_2,
             buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
-            photo_name=funnel_photos.get("ru_belly_stage_2a", ""),
-            extra_photos=[funnel_photos.get("ru_belly_stage_2b", "")],
+            photo_name=funnel_photos.get("ru_belly_stage_2b", ""),
+            extra_photos=[funnel_photos.get("ru_belly_stage_2a", "")],
+            text_after=s.FUNNEL_BELLY_STAGE_2_AFTER,
         )
     elif stage == 3:
         return FunnelMessage(
@@ -121,6 +124,7 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
             buttons=[(s.FUNNEL_READY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_belly_stage_9a", ""),
             extra_photos=[funnel_photos.get("ru_belly_stage_9b", "")],
+            text_after=s.FUNNEL_BELLY_STAGE_9_AFTER,
         )
     elif stage == 10:
         return FunnelMessage(
@@ -132,6 +136,7 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
             text=s.FUNNEL_BELLY_STAGE_11,
             buttons=[(s.FUNNEL_LAST_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_belly_stage_11", ""),
+            text_after=s.FUNNEL_BELLY_STAGE_11_AFTER,
         )
     elif stage == 12:
         return FunnelMessage(
