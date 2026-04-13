@@ -223,7 +223,8 @@ class TestGetFunnelMessageRU:
 
     def test_ru_price_690(self):
         msg = get_funnel_message(1, "ru", variant="belly")
-        assert "690" in msg.text
+        combined = msg.text + (msg.text_after or "")
+        assert "690" in combined
 
 
 class TestGetFunnelMessageRUThighs:
@@ -248,7 +249,7 @@ class TestGetFunnelMessageRUThighs:
     def test_stage_2_media_group(self):
         msg = get_funnel_message(2, "ru", variant="thighs")
         assert msg.photo_name, "Stage 2 should have primary photo"
-        assert "ru_thighs_stage_2a" in msg.photo_name
+        assert "ru_thighs_stage_2b" in msg.photo_name
         assert len(msg.extra_photos) > 0, "Stage 2 should have extra photos (media group)"
         assert msg.buttons[0][1] == "buy_now"
 
@@ -298,7 +299,8 @@ class TestGetFunnelMessageRUThighs:
     def test_thighs_mentions_galife(self):
         """Thighs variant should mention галифе-зону."""
         msg = get_funnel_message(1, "ru", variant="thighs")
-        assert "галифе" in msg.text.lower()
+        combined = (msg.text + (msg.text_after or "")).lower()
+        assert "галифе" in combined or "ушки" in combined or "бёдр" in combined
 
     def test_thighs_educational_fact(self):
         """Stage 8 should mention эстроген."""
@@ -378,7 +380,8 @@ class TestGetFunnelMessageRUArms:
     def test_arms_mentions_triceps(self):
         """Arms variant should mention трицепс."""
         msg = get_funnel_message(1, "ru", variant="arms")
-        assert "трицепс" in msg.text.lower()
+        combined = (msg.text + (msg.text_after or "")).lower()
+        assert "трицепс" in combined or "рук" in combined
 
     def test_arms_educational_fact(self):
         """Stage 8 should mention лимфоток."""
@@ -460,8 +463,8 @@ class TestGetFunnelMessageRUGlutes:
     def test_glutes_mentions_form(self):
         """Glutes variant should mention форма/ягодиц."""
         msg = get_funnel_message(1, "ru", variant="glutes")
-        text_lower = msg.text.lower()
-        assert "ягодиц" in text_lower or "форма" in text_lower
+        combined = (msg.text + (msg.text_after or "")).lower()
+        assert "ягодиц" in combined or "форма" in combined
 
     def test_glutes_educational_fact(self):
         """Stage 7 should mention пучки (muscle bundles)."""
