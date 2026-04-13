@@ -300,6 +300,7 @@ def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict
             text=s.FUNNEL_GLUTES_STAGE_1,
             buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_glutes_stage_1", ""),
+            text_after=s.FUNNEL_GLUTES_STAGE_1_AFTER,
         )
     elif stage == 2:
         return FunnelMessage(
@@ -307,6 +308,7 @@ def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict
             buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_glutes_stage_2a", ""),
             extra_photos=[funnel_photos.get("ru_glutes_stage_2b", "")],
+            text_after=s.FUNNEL_GLUTES_STAGE_2_AFTER,
         )
     elif stage == 3:
         return FunnelMessage(
@@ -336,11 +338,12 @@ def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict
             buttons=[],
         )
     elif stage == 8:
-        # Reviews photo + combined caption + button
+        # Reviews photo + text_after with button
         return FunnelMessage(
-            text=s.FUNNEL_GLUTES_STAGE_8 + "\n\n" + s.FUNNEL_GLUTES_STAGE_8_AFTER,
+            text=s.FUNNEL_GLUTES_STAGE_8,
             buttons=[(s.FUNNEL_READY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_glutes_stage_8", ""),
+            text_after=s.FUNNEL_GLUTES_STAGE_8_AFTER,
         )
     elif stage == 9:
         return FunnelMessage(
