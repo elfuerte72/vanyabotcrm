@@ -156,13 +156,15 @@ def _get_ru_thighs_message(stage: int, s, video_notes: dict, funnel_photos: dict
             text=s.FUNNEL_THIGHS_STAGE_1,
             buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_thighs_stage_1", ""),
+            text_after=s.FUNNEL_THIGHS_STAGE_1_AFTER,
         )
     elif stage == 2:
         return FunnelMessage(
             text=s.FUNNEL_THIGHS_STAGE_2,
             buttons=[(s.FUNNEL_GET_ACCESS_BUTTON, "buy_now")],
-            photo_name=funnel_photos.get("ru_thighs_stage_2a", ""),
-            extra_photos=[funnel_photos.get("ru_thighs_stage_2b", "")],
+            photo_name=funnel_photos.get("ru_thighs_stage_2b", ""),
+            extra_photos=[funnel_photos.get("ru_thighs_stage_2a", "")],
+            text_after=s.FUNNEL_THIGHS_STAGE_2_AFTER,
         )
     elif stage == 3:
         return FunnelMessage(
@@ -206,6 +208,7 @@ def _get_ru_thighs_message(stage: int, s, video_notes: dict, funnel_photos: dict
             text=s.FUNNEL_THIGHS_STAGE_10,
             buttons=[(s.FUNNEL_LAST_BUTTON, "buy_now")],
             photo_name=funnel_photos.get("ru_thighs_stage_10", ""),
+            text_after=s.FUNNEL_THIGHS_STAGE_10_AFTER,
         )
     elif stage == 11:
         return FunnelMessage(
