@@ -73,7 +73,10 @@ FUNNEL_STAGE_4 = (
     '→ Barbell + plates\n→ Dumbbells\n→ Space for bodyweight work\n\n'
     'The method works because of HOW you train —\n'
     'not what equipment you have.\n\n'
-    'Smart programming > expensive equipment.'
+    'Smart programming > expensive equipment.\n\n'
+    'And it helps not only to preserve muscles,\n'
+    'but also to grow muscles too —\n'
+    'even if you don\'t have excess weight.'
 )
 FUNNEL_STAGE_4_BUY = "✅ Get Access — 49 AED"
 FUNNEL_STAGE_4_QUESTION = "❓ I'm a beginner — will it work?"
