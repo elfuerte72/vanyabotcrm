@@ -33,8 +33,8 @@ def calculate_next_send_time(
       - glutes: stages 0-12 (Day 10 re-engagement after farewell)
       - thighs/arms: stages 0-11
       - Glutes variant: stage 5 → next day 10:00 MSK (no same-day 19:00)
-    EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
-    AR has 11 stages (0-10): same timing as EN (5min/1h/24h).
+    EN has 11 stages (0-10): 5min first, 24h for stages 1-8, 24h for upsell.
+    AR has 11 stages (0-10): same timing as EN (5min/24h/24h).
     Returns None if current_stage is the last stage.
     """
     now = datetime.now(timezone.utc)
@@ -46,12 +46,10 @@ def calculate_next_send_time(
         return None
 
     if language in ("en", "ar"):
-        # EN/AR: 5 min after stage 0, 1h for stages 1-8, 24h for upsell stage 9
+        # EN/AR: 5 min after stage 0, 24h for stages 1-8, 24h for upsell stage 9
         if current_stage == 0:
             return now + timedelta(minutes=5)
-        elif current_stage <= 8:
-            return now + timedelta(hours=1)
-        elif current_stage == 9:
+        elif current_stage <= 9:
             return now + timedelta(hours=24)
         return None
 

@@ -6,7 +6,7 @@ from src.db.queries import calculate_next_send_time, _MSK
 
 
 class TestCalculateNextSendTimeEN:
-    """EN: 5min first, 1h for stages 1-8, 24h for upsell."""
+    """EN: 5min first, 24h for stages 1-8, 24h for upsell."""
 
     def test_after_stage_0_is_5min(self):
         result = calculate_next_send_time(0, "en")
@@ -14,18 +14,18 @@ class TestCalculateNextSendTimeEN:
         diff = result - datetime.now(timezone.utc)
         assert timedelta(minutes=4, seconds=58) < diff < timedelta(minutes=5, seconds=2)
 
-    def test_after_stage_1_is_1h(self):
+    def test_after_stage_1_is_24h(self):
         result = calculate_next_send_time(1, "en")
         assert result is not None
         diff = result - datetime.now(timezone.utc)
-        assert timedelta(minutes=59, seconds=58) < diff < timedelta(hours=1, seconds=2)
+        assert timedelta(hours=23, minutes=59) < diff < timedelta(hours=24, minutes=1)
 
-    def test_after_stages_2_to_8_are_1h(self):
+    def test_after_stages_2_to_8_are_24h(self):
         for stage in range(2, 9):
             result = calculate_next_send_time(stage, "en")
             assert result is not None, f"Stage {stage} should have next send time"
             diff = result - datetime.now(timezone.utc)
-            assert timedelta(minutes=59) < diff < timedelta(hours=1, minutes=1), f"Stage {stage} should be ~1h"
+            assert timedelta(hours=23, minutes=59) < diff < timedelta(hours=24, minutes=1), f"Stage {stage} should be ~24h"
 
     def test_after_stage_9_is_24h(self):
         result = calculate_next_send_time(9, "en")
@@ -54,7 +54,7 @@ class TestCalculateNextSendTimeEN:
 
 
 class TestCalculateNextSendTimeAR:
-    """AR: same timing as EN (5min/1h/24h), 11 stages (0-10)."""
+    """AR: same timing as EN (5min/24h/24h), 11 stages (0-10)."""
 
     def test_after_stage_0_is_5min(self):
         result = calculate_next_send_time(0, "ar")
@@ -62,18 +62,18 @@ class TestCalculateNextSendTimeAR:
         diff = result - datetime.now(timezone.utc)
         assert timedelta(minutes=4, seconds=58) < diff < timedelta(minutes=5, seconds=2)
 
-    def test_after_stage_1_is_1h(self):
+    def test_after_stage_1_is_24h(self):
         result = calculate_next_send_time(1, "ar")
         assert result is not None
         diff = result - datetime.now(timezone.utc)
-        assert timedelta(minutes=59, seconds=58) < diff < timedelta(hours=1, seconds=2)
+        assert timedelta(hours=23, minutes=59) < diff < timedelta(hours=24, minutes=1)
 
-    def test_after_stages_2_to_8_are_1h(self):
+    def test_after_stages_2_to_8_are_24h(self):
         for stage in range(2, 9):
             result = calculate_next_send_time(stage, "ar")
             assert result is not None, f"Stage {stage} should have next send time"
             diff = result - datetime.now(timezone.utc)
-            assert timedelta(minutes=59) < diff < timedelta(hours=1, minutes=1), f"Stage {stage} should be ~1h"
+            assert timedelta(hours=23, minutes=59) < diff < timedelta(hours=24, minutes=1), f"Stage {stage} should be ~24h"
 
     def test_after_stage_9_is_24h(self):
         result = calculate_next_send_time(9, "ar")
