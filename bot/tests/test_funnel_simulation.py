@@ -1,6 +1,6 @@
 """Funnel simulation tests.
 
-RU: 13 stages (0-12) with zone branching (belly variant).
+RU: belly has 15 stages (0-14), other zones have 12 stages (0-11) with zone branching.
 EN: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 AR: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 """
@@ -40,8 +40,8 @@ EXPECTED_BUTTONS_AR = {
     10: [("buy_now",), ("upsell_decline",)],
 }
 
-# Expected button callbacks for RU (13 stages, belly variant)
-# Stage 0 is common (zone selection + URL), stages 1-12 are belly-specific
+# Expected button callbacks for RU (15 stages, belly variant)
+# Stage 0 is common (zone selection + URL), stages 1-14 are belly-specific
 EXPECTED_BUTTONS_RU = {
     0: [("zone_belly",), ("zone_thighs",), ("zone_arms",), ("zone_glutes",)],
     1: [("buy_now",)],
@@ -56,6 +56,8 @@ EXPECTED_BUTTONS_RU = {
     10: [("buy_now",)],
     11: [("buy_now",)],
     12: [],  # URL button (channel link), tested separately
+    13: [("buy_now",)],
+    14: [("buy_now",)],
 }
 
 
@@ -87,7 +89,7 @@ class TestFunnelMessageTextMatchesI18nRU:
         assert msg is not None
         assert msg.text == strings.FUNNEL_STAGE_0
 
-    @pytest.mark.parametrize("stage", range(1, 13))
+    @pytest.mark.parametrize("stage", range(1, 15))
     def test_belly_stage_text_matches(self, stage):
         strings = get_strings("ru")
         msg = get_funnel_message(stage, "ru", variant="belly")
@@ -138,7 +140,7 @@ class TestFunnelButtonsRU:
         assert actual == expected
         assert not msg.has_url_button  # wakeup sent separately
 
-    @pytest.mark.parametrize("stage", range(1, 13))
+    @pytest.mark.parametrize("stage", range(1, 15))
     def test_ru_belly_buttons_have_correct_callback_data(self, stage):
         msg = get_funnel_message(stage, "ru", variant="belly")
         assert msg is not None
@@ -162,8 +164,8 @@ class TestFunnelOutOfRange:
     def test_ar_stage_11_returns_none(self):
         assert get_funnel_message(11, "ar") is None
 
-    def test_ru_stage_13_returns_none(self):
-        assert get_funnel_message(13, "ru", variant="belly") is None
+    def test_ru_stage_15_returns_none(self):
+        assert get_funnel_message(15, "ru", variant="belly") is None
 
     def test_stage_minus_1_returns_none(self):
         assert get_funnel_message(-1, "en") is None

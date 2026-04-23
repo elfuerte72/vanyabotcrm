@@ -1,7 +1,7 @@
 """Funnel message definitions for all stages and languages.
 
 Maps funnel_stage → (text, buttons, media) per language.
-RU: 13 stages (0-12) with zone branching. Stage 0 common, 1-12 zone-specific.
+RU: belly has 15 stages (0-14), other zones have 12 stages (0-11). Stage 0 common, 1+ zone-specific.
 EN: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 AR: 9 stages (0-8) + 2 upsells (9-10) with photos and question buttons.
 """
@@ -32,10 +32,11 @@ class FunnelMessage:
 
 
 def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelMessage | None:
-    """RU funnel: 13 stages (0-12) with zone branching.
+    """RU funnel: zone branching with variable stage count per variant.
 
-    Stage 0 is common (zone selection). Stages 1-12 are zone-specific.
-    Currently only 'belly' variant is implemented.
+    Stage 0 is common (zone selection). Stages 1+ are zone-specific.
+    belly: 15 stages (0-14) — includes Day 10/11 re-engagement after farewell.
+    thighs/arms/glutes: 12 stages (0-11).
     """
     video_notes = media_config.get("video_notes", {})
     funnel_photos = media_config.get("photos", {}).get("funnel", {})
@@ -144,6 +145,20 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
             buttons=[(s.FUNNEL_CHANNEL_BUTTON, "")],
             has_url_button=True,
             url="https://t.me/ivanfit_health",
+        )
+    elif stage == 13:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_13,
+            buttons=[(s.FUNNEL_BUY_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_13", ""),
+            text_after=s.FUNNEL_BELLY_STAGE_13_AFTER,
+        )
+    elif stage == 14:
+        return FunnelMessage(
+            text=s.FUNNEL_BELLY_STAGE_14,
+            buttons=[(s.FUNNEL_WANT_SAME_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_belly_stage_14", ""),
+            text_after=s.FUNNEL_BELLY_STAGE_14_AFTER,
         )
 
     return None
@@ -479,7 +494,7 @@ def _get_ar_funnel_message(stage: int, s) -> FunnelMessage | None:
 def get_funnel_message(stage: int, language: str, variant: str | None = None) -> FunnelMessage | None:
     """Get funnel message for a given stage and language.
 
-    RU: 13 stages (0-12) with zone branching (variant required for stages 1+).
+    RU: belly has 15 stages (0-14), other zones have 12 stages (0-11); variant required for stages 1+.
     EN: 9 stages (0-8) + 2 upsells (9-10).
     AR: 9 stages (0-8) + 2 upsells (9-10).
     Returns None if stage is out of range.

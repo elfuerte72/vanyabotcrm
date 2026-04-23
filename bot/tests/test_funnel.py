@@ -132,7 +132,7 @@ class TestGetFunnelMessageAR:
 
 
 class TestGetFunnelMessageRU:
-    """RU funnel: 13 stages (0-12) with zone branching."""
+    """RU funnel: belly has 15 stages (0-14), other zones have 12 stages (0-11)."""
 
     def test_stage_0_common_exists(self):
         msg = get_funnel_message(0, "ru")
@@ -152,19 +152,19 @@ class TestGetFunnelMessageRU:
         assert not msg.has_url_button  # wakeup is sent separately
         assert len(msg.buttons) == 4
 
-    def test_stages_1_to_12_require_variant(self):
-        for stage in range(1, 13):
+    def test_stages_1_to_14_require_variant(self):
+        for stage in range(1, 15):
             msg = get_funnel_message(stage, "ru", variant=None)
             assert msg is None, f"Stage {stage} without variant should return None"
 
     def test_all_belly_stages_exist(self):
-        for stage in range(13):
+        for stage in range(15):
             msg = get_funnel_message(stage, "ru", variant="belly" if stage > 0 else None)
             assert msg is not None, f"Missing RU belly message for stage={stage}"
             assert msg.text, f"Empty text for stage={stage}"
 
     def test_ru_stage_out_of_range(self):
-        assert get_funnel_message(13, "ru", variant="belly") is None
+        assert get_funnel_message(15, "ru", variant="belly") is None
         assert get_funnel_message(-1, "ru") is None
 
     def test_stage_1_has_photo_and_buy(self):
@@ -220,6 +220,19 @@ class TestGetFunnelMessageRU:
         msg = get_funnel_message(12, "ru", variant="belly")
         assert msg.has_url_button
         assert "ivanfit_health" in msg.url
+
+    def test_stage_13_photo_and_buy(self):
+        msg = get_funnel_message(13, "ru", variant="belly")
+        assert msg.photo_name
+        assert msg.text_after
+        assert msg.buttons[0][1] == "buy_now"
+
+    def test_stage_14_photo_and_buy(self):
+        msg = get_funnel_message(14, "ru", variant="belly")
+        assert msg.photo_name
+        assert msg.text_after
+        assert msg.buttons[0][1] == "buy_now"
+        assert msg.buttons[0][0] == "✅ Хочу так же"
 
     def test_ru_price_690(self):
         msg = get_funnel_message(1, "ru", variant="belly")

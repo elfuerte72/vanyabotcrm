@@ -146,7 +146,7 @@ class TestFunnelMessageEdgeCases:
         assert get_funnel_message(-1, "en") is None
 
     def test_ru_stage_out_of_range_returns_none(self):
-        assert get_funnel_message(13, "ru", variant="belly") is None
+        assert get_funnel_message(15, "ru", variant="belly") is None
         assert get_funnel_message(-1, "ru") is None
 
     def test_unknown_language_falls_back_to_ar_default(self):
@@ -214,7 +214,7 @@ class TestFunnelSender:
 
         mock_pool.return_value = AsyncMock()
         mock_targets.return_value = [
-            {"chat_id": 111, "funnel_stage": 13, "language": "ru", "funnel_variant": "belly"},
+            {"chat_id": 111, "funnel_stage": 15, "language": "ru", "funnel_variant": "belly"},
         ]
         bot = AsyncMock()
         bot.send_message = AsyncMock()

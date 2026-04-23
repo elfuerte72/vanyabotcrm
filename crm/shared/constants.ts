@@ -96,6 +96,8 @@ export const funnelStageLabels: Record<string, string> = {
   stage_10: 'Этап 10 — Upsell повторный',
   stage_11: 'Этап 11 — Дожим',
   stage_12: 'Этап 12 — Финал',
+  stage_13: 'Этап 13 — Возврат (День 10)',
+  stage_14: 'Этап 14 — Последний шанс (День 11)',
 };
 
 // Human-readable labels for funnel_variant (zone)
@@ -107,13 +109,13 @@ export const funnelVariantLabels: Record<string, string> = {
 };
 
 // Max funnel stage by language
-// RU: 12 stages (belly), 11 stages (thighs/arms/glutes)
+// RU: 14 stages (belly), 11 stages (thighs/arms/glutes)
 // EN/AR: 10 stages
 export function getMaxFunnelStage(language?: string | null, variant?: string | null): number {
   if (!language || language === 'ru') {
-    if (variant === 'belly') return 12;
+    if (variant === 'belly') return 14;
     if (variant === 'thighs' || variant === 'arms' || variant === 'glutes') return 11;
-    return 12; // default for RU without variant
+    return 14; // default for RU without variant
   }
   return 10; // EN, AR
 }

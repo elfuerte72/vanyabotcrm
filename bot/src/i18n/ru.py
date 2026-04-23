@@ -6,7 +6,7 @@ ALREADY_CALCULATED = "Чемпион, извини. Я не могу второ�
 # --- Food generation ---
 CALCULATING_MENU = "Принял! Считаю твои калории и подбираю меню из базы, подожди пару секунд..."
 
-# --- Funnel messages (RU — 13 stages, 0-12, zone branching) ---
+# --- Funnel messages (RU — 15 stages for belly, 12 stages for other zones, zone branching) ---
 
 # Stage 0 message 1: "Разбуди тело" — sent once after KBJU (+30 min)
 FUNNEL_STAGE_0_WAKEUP = (
@@ -184,6 +184,29 @@ FUNNEL_BELLY_STAGE_12 = (
     "А если надумаешь насчёт тренировки — я здесь. Цена в боте всегда лучше 💛\n\n"
     "А тут делюсь полезным каждый день, все, что необходимо для красивого "
     "и здорового тела ☺️ ⬇️"
+)
+
+# Stage 13: Day 10, 10:00 — couldn't help it, photo + italic tagline + buy button
+FUNNEL_BELLY_STAGE_13 = (
+    "Обещал больше не писать про тренировку — но не удержался 🙈"
+)
+
+FUNNEL_BELLY_STAGE_13_AFTER = (
+    "Это Надя. Та же зона. Те же сомнения в начале.\n\n"
+    "Просто начала — и через 4 недели сама не верила фото.\n\n"
+    "<i>Питание у тебя уже есть. Осталось добавить то, что работает именно там</i> 👇"
+)
+
+# Stage 14: Day 11, 10:00 — final push, photo + italic/bold + buy button
+FUNNEL_BELLY_STAGE_14 = (
+    "<b>Последнее что покажу</b> — и молча уйду 🌸"
+)
+
+FUNNEL_BELLY_STAGE_14_AFTER = (
+    "<i>Две разные девушки. Одна зона. Один результат.</i>\n"
+    "❗️Не зал. Не тренер за 2000 в час. Дома. 40 минут.\n\n"
+    "<b>Если что-то внутри говорит «хочу так же» — не откладывай.</b>\n"
+    "Цена в боте остаётся лучшей. Но только пока ты здесь 💛"
 )
 
 # Zone callback instant response — thighs
@@ -633,6 +656,7 @@ FUNNEL_READY_BUTTON = "готова начать 🔥"
 FUNNEL_CHECKOUT_BUTTON = "✅ Забрать тренировку"
 FUNNEL_LAST_BUTTON = "забрать тренировку 🔥"
 FUNNEL_GLUTES_WANT_BUTTON = "хочу ягодицы 🍑"
+FUNNEL_WANT_SAME_BUTTON = "✅ Хочу так же"
 FUNNEL_CHANNEL_BUTTON = "📲 Подписаться на канал"
 
 # --- Callback responses ---

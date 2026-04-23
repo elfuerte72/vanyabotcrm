@@ -40,8 +40,8 @@ describe('funnelVariantLabels', () => {
 });
 
 describe('getMaxFunnelStage', () => {
-  it('returns 12 for RU belly', () => {
-    expect(getMaxFunnelStage('ru', 'belly')).toBe(12);
+  it('returns 14 for RU belly', () => {
+    expect(getMaxFunnelStage('ru', 'belly')).toBe(14);
   });
 
   it('returns 11 for RU thighs/arms/glutes', () => {
@@ -50,9 +50,9 @@ describe('getMaxFunnelStage', () => {
     expect(getMaxFunnelStage('ru', 'glutes')).toBe(11);
   });
 
-  it('returns 12 for RU without variant', () => {
-    expect(getMaxFunnelStage('ru', null)).toBe(12);
-    expect(getMaxFunnelStage('ru', undefined)).toBe(12);
+  it('returns 14 for RU without variant', () => {
+    expect(getMaxFunnelStage('ru', null)).toBe(14);
+    expect(getMaxFunnelStage('ru', undefined)).toBe(14);
   });
 
   it('returns 10 for EN and AR', () => {
@@ -61,7 +61,7 @@ describe('getMaxFunnelStage', () => {
   });
 
   it('defaults to RU when language is null/undefined', () => {
-    expect(getMaxFunnelStage(null, 'belly')).toBe(12);
-    expect(getMaxFunnelStage(undefined, null)).toBe(12);
+    expect(getMaxFunnelStage(null, 'belly')).toBe(14);
+    expect(getMaxFunnelStage(undefined, null)).toBe(14);
   });
 });

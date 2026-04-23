@@ -160,16 +160,18 @@ class TestCalculateNextSendTimeRU:
         assert result_msk.hour == 10
         assert result_msk.minute == 0
 
-    def test_after_stages_6_to_11_is_next_day_10am_msk(self):
-        for stage in range(6, 12):
-            result = calculate_next_send_time(stage, "ru")
+    def test_after_stages_6_to_13_is_next_day_10am_msk(self):
+        # Stages 6-13 schedule next at 10:00 MSK the following day
+        # (belly extends to stage 14; thighs/arms/glutes cap at 11 and return None earlier)
+        for stage in range(6, 14):
+            result = calculate_next_send_time(stage, "ru", variant="belly")
             assert result is not None, f"Stage {stage} should have next send time"
             result_msk = result.astimezone(_MSK)
             assert result_msk.hour == 10, f"Stage {stage} should be at 10:00 MSK, got {result_msk.hour}"
             assert result_msk.minute == 0
 
     def test_after_last_stage_belly_is_none(self):
-        assert calculate_next_send_time(12, "ru", variant="belly") is None
+        assert calculate_next_send_time(14, "ru", variant="belly") is None
 
     def test_after_last_stage_thighs_is_none(self):
         assert calculate_next_send_time(11, "ru", variant="thighs") is None
@@ -181,7 +183,7 @@ class TestCalculateNextSendTimeRU:
         assert calculate_next_send_time(11, "ru", variant="glutes") is None
 
     def test_beyond_last_stage_is_none(self):
-        assert calculate_next_send_time(13, "ru") is None
+        assert calculate_next_send_time(15, "ru") is None
         assert calculate_next_send_time(20, "ru") is None
         assert calculate_next_send_time(12, "ru", variant="thighs") is None
         assert calculate_next_send_time(12, "ru", variant="arms") is None

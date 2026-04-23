@@ -16,8 +16,8 @@ logger = structlog.get_logger()
 _MSK = timezone(timedelta(hours=3))
 
 # Max funnel stage per language (RU varies by zone variant)
-_MAX_STAGE = {"ru": 12, "en": 10, "ar": 10}
-_MAX_STAGE_RU_VARIANT = {"belly": 12, "thighs": 11, "arms": 11, "glutes": 11}
+_MAX_STAGE = {"ru": 14, "en": 10, "ar": 10}
+_MAX_STAGE_RU_VARIANT = {"belly": 14, "thighs": 11, "arms": 11, "glutes": 11}
 
 
 def calculate_next_send_time(
@@ -25,10 +25,12 @@ def calculate_next_send_time(
 ) -> datetime | None:
     """Calculate absolute UTC time for the NEXT funnel message after current_stage is sent.
 
-    RU has 13 stages (0-12) with zone branching:
+    RU zone branching (max stages vary by variant):
       - Stage 0 (no zone selected): resend +24h
       - Zone callback → stage 1: +1h
-      - Stages 1-12: MSK time schedule (see timing table)
+      - Stages 1+: MSK time schedule (see timing table)
+      - belly: stages 0-14 (Day 10 / Day 11 re-engagement after farewell)
+      - thighs/arms/glutes: stages 0-11
       - Glutes variant: stage 5 → next day 10:00 MSK (no same-day 19:00)
     EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
     AR has 11 stages (0-10): same timing as EN (5min/1h/24h).
@@ -86,8 +88,10 @@ def calculate_next_send_time(
         if target <= msk_now:
             target = datetime.combine(tomorrow, time(19, 0), tzinfo=_MSK)
         return target.astimezone(timezone.utc)
-    elif current_stage in (6, 7, 8, 9, 10, 11):
-        # Stages 7-12: tomorrow 10:00 MSK (one per day)
+    elif current_stage in (6, 7, 8, 9, 10, 11, 12, 13):
+        # Stages 7-14: tomorrow 10:00 MSK (one per day)
+        # Note: belly extends to stage 14 (Day 10/11 re-engagement);
+        # other zones cap at their _MAX_STAGE_RU_VARIANT and return None before reaching 12.
         return datetime.combine(tomorrow, time(10, 0), tzinfo=_MSK).astimezone(timezone.utc)
 
     return None
