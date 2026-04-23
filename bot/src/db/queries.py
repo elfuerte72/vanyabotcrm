@@ -17,7 +17,7 @@ _MSK = timezone(timedelta(hours=3))
 
 # Max funnel stage per language (RU varies by zone variant)
 _MAX_STAGE = {"ru": 14, "en": 10, "ar": 10}
-_MAX_STAGE_RU_VARIANT = {"belly": 14, "thighs": 11, "arms": 11, "glutes": 11}
+_MAX_STAGE_RU_VARIANT = {"belly": 14, "thighs": 11, "arms": 11, "glutes": 12}
 
 
 def calculate_next_send_time(
@@ -30,7 +30,8 @@ def calculate_next_send_time(
       - Zone callback → stage 1: +1h
       - Stages 1+: MSK time schedule (see timing table)
       - belly: stages 0-14 (Day 10 / Day 11 re-engagement after farewell)
-      - thighs/arms/glutes: stages 0-11
+      - glutes: stages 0-12 (Day 10 re-engagement after farewell)
+      - thighs/arms: stages 0-11
       - Glutes variant: stage 5 → next day 10:00 MSK (no same-day 19:00)
     EN has 11 stages (0-10): 5min first, 1h for stages 1-8, 24h for upsell.
     AR has 11 stages (0-10): same timing as EN (5min/1h/24h).

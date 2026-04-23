@@ -36,7 +36,8 @@ def _get_ru_funnel_message(stage: int, s, variant: str | None = None) -> FunnelM
 
     Stage 0 is common (zone selection). Stages 1+ are zone-specific.
     belly: 15 stages (0-14) — includes Day 10/11 re-engagement after farewell.
-    thighs/arms/glutes: 12 stages (0-11).
+    glutes: 13 stages (0-12) — includes Day 10 re-engagement after farewell.
+    thighs/arms: 12 stages (0-11).
     """
     video_notes = media_config.get("video_notes", {})
     funnel_photos = media_config.get("photos", {}).get("funnel", {})
@@ -309,7 +310,9 @@ def _get_ru_arms_message(stage: int, s, video_notes: dict, funnel_photos: dict) 
 
 
 def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict) -> FunnelMessage | None:
-    """RU glutes zone: 11 stages (1-11). No 'will_it_suit' video — hard sell on stage 5."""
+    """RU glutes zone: 12 stages (1-12). No 'will_it_suit' video — hard sell on stage 5.
+    Stage 12 (Day 10 10:00): re-engagement 'couldn't help it' with photo + buy button.
+    """
     if stage == 1:
         return FunnelMessage(
             text=s.FUNNEL_GLUTES_STAGE_1,
@@ -376,6 +379,13 @@ def _get_ru_glutes_message(stage: int, s, video_notes: dict, funnel_photos: dict
             buttons=[(s.FUNNEL_CHANNEL_BUTTON, "")],
             has_url_button=True,
             url="https://t.me/ivanfit_health",
+        )
+    elif stage == 12:
+        return FunnelMessage(
+            text=s.FUNNEL_GLUTES_STAGE_12,
+            buttons=[(s.FUNNEL_WANT_SAME_BUTTON, "buy_now")],
+            photo_name=funnel_photos.get("ru_glutes_stage_12", ""),
+            text_after=s.FUNNEL_GLUTES_STAGE_12_AFTER,
         )
 
     return None

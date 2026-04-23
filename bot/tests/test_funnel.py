@@ -403,17 +403,17 @@ class TestGetFunnelMessageRUArms:
 
 
 class TestGetFunnelMessageRUGlutes:
-    """RU glutes funnel: 11 stages (1-11) after zone selection."""
+    """RU glutes funnel: 12 stages (1-12) after zone selection."""
 
     def test_all_glutes_stages_exist(self):
-        for stage in range(1, 12):
+        for stage in range(1, 13):
             msg = get_funnel_message(stage, "ru", variant="glutes")
             assert msg is not None, f"Missing RU glutes message for stage={stage}"
             assert msg.text, f"Empty text for stage={stage}"
 
     def test_glutes_out_of_range(self):
-        assert get_funnel_message(12, "ru", variant="glutes") is None
         assert get_funnel_message(13, "ru", variant="glutes") is None
+        assert get_funnel_message(14, "ru", variant="glutes") is None
 
     def test_stage_1_has_photo_and_buy(self):
         msg = get_funnel_message(1, "ru", variant="glutes")
@@ -468,6 +468,15 @@ class TestGetFunnelMessageRUGlutes:
         msg = get_funnel_message(11, "ru", variant="glutes")
         assert msg.has_url_button
         assert "ivanfit_health" in msg.url
+
+    def test_stage_12_reengagement_photo_and_buy(self):
+        """Stage 12 (Day 10): 'couldn't help it' re-engagement with photo + buy button."""
+        msg = get_funnel_message(12, "ru", variant="glutes")
+        assert msg.photo_name
+        assert "ru_glutes_stage_12" in msg.photo_name
+        assert msg.text_after, "Stage 12 should have text_after (text below photo)"
+        assert msg.buttons[0][1] == "buy_now"
+        assert "не удержался" in msg.text.lower()
 
     def test_glutes_price_690(self):
         msg = get_funnel_message(5, "ru", variant="glutes")

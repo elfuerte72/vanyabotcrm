@@ -180,14 +180,14 @@ class TestCalculateNextSendTimeRU:
         assert calculate_next_send_time(11, "ru", variant="arms") is None
 
     def test_after_last_stage_glutes_is_none(self):
-        assert calculate_next_send_time(11, "ru", variant="glutes") is None
+        assert calculate_next_send_time(12, "ru", variant="glutes") is None
 
     def test_beyond_last_stage_is_none(self):
         assert calculate_next_send_time(15, "ru") is None
         assert calculate_next_send_time(20, "ru") is None
         assert calculate_next_send_time(12, "ru", variant="thighs") is None
         assert calculate_next_send_time(12, "ru", variant="arms") is None
-        assert calculate_next_send_time(12, "ru", variant="glutes") is None
+        assert calculate_next_send_time(13, "ru", variant="glutes") is None
 
     def test_all_results_are_utc(self):
         for stage in range(12):
