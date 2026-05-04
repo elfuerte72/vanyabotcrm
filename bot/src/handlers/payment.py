@@ -56,7 +56,7 @@ async def handle_ziina_webhook(request: web.Request) -> web.Response:
 
     logger.info(
         "ziina_webhook_received",
-        event=event,
+        webhook_event=event,
         intent_id=payment_intent_id,
         status=payment_status,
     )
