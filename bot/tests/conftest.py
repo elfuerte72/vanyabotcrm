@@ -26,13 +26,19 @@ from tests.helpers import (  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _mock_save_user_event():
-    """Auto-mock save_user_event and save_chat_message to prevent DB connections in all tests."""
+    """Auto-mock save_user_event and save_chat_message to prevent DB connections in all tests.
+
+    Also auto-allows the RU channel-subscription gate so tests that exercise
+    KBJU generation aren't blocked. Tests that need to assert the unsubscribed
+    path can patch ``src.handlers.message.is_subscribed`` themselves.
+    """
     with patch("src.handlers.callbacks.save_user_event", new_callable=AsyncMock), \
          patch("src.handlers.callbacks.save_chat_message", new_callable=AsyncMock), \
          patch("src.handlers.message.save_user_event", new_callable=AsyncMock), \
          patch("src.handlers.start.save_user_event", new_callable=AsyncMock), \
          patch("src.funnel.sender.save_user_event", new_callable=AsyncMock), \
-         patch("src.funnel.sender.save_chat_message", new_callable=AsyncMock):
+         patch("src.funnel.sender.save_chat_message", new_callable=AsyncMock), \
+         patch("src.handlers.message.is_subscribed", new_callable=AsyncMock, return_value=True):
         yield
 
 

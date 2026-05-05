@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     openrouter_temperature_food: float = 0.8
     openrouter_max_retries: int = 2
 
+    # Telegram channel (RU users must be subscribed to receive KBJU)
+    telegram_channel_id: str = "@ivanfit_health"
+    telegram_channel_url: str = "https://t.me/ivanfit_health"
+
     # Payment
     tribute_link: str = "https://t.me/tribute/app?startapp=pnvi"
     ziina_link: str = ""  # Fallback static Ziina link (used if API unavailable)

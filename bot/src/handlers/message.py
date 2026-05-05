@@ -25,9 +25,10 @@ from aiogram.types import (
 
 from pydantic import ValidationError
 
+from config.settings import settings
 from src.db.queries import save_chat_message, save_user_data, save_user_event, set_food_received
 from src.handlers.start import LANGUAGE_CHOOSE_MESSAGE, _make_language_keyboard
-from src.i18n import get_strings
+from src.i18n import get_strings, ru as ru_strings
 from src.models.user import User
 from src.models.user_data import CollectedUserData
 from src.services.ai_agent import run_agent_main
@@ -40,6 +41,7 @@ from src.services.formatter import (
     validate_meal_plan,
 )
 from src.services.language import detect_language
+from src.services.subscription import is_subscribed
 
 logger = structlog.get_logger()
 
@@ -47,6 +49,26 @@ router = Router()
 
 # Test account — always allow recalculation (skip get_food check)
 TEST_CHAT_ID = 379336096
+
+# Pending KBJU calculations awaiting channel subscription (RU users only).
+# Keyed by chat_id; value is everything needed to resume the meal-plan flow
+# after the user confirms they subscribed.
+_PENDING_SUBSCRIPTION: dict[int, dict[str, object]] = {}
+
+
+def _build_subscription_keyboard() -> InlineKeyboardMarkup:
+    """Subscribe + verify keyboard shown to RU users before KBJU."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=ru_strings.SUBSCRIPTION_SUBSCRIBE_BUTTON,
+            url=settings.telegram_channel_url,
+        )],
+        [InlineKeyboardButton(
+            text=ru_strings.SUBSCRIPTION_CHECK_BUTTON,
+            callback_data="check_subscription",
+        )],
+    ])
+
 
 # Confirmation button labels per language
 _CONFIRM_BUTTONS = {
@@ -214,7 +236,52 @@ async def _process_text_message(
         age=user_data.age,
     )
 
-    # Calculate KBJU
+    first_name = override_first_name or (message.from_user.first_name if message.from_user else "")
+
+    # RU users must be subscribed to Ivan's channel before we generate KBJU.
+    # Test account is exempt so funnel testing isn't blocked.
+    if detected_lang == "ru" and chat_id != TEST_CHAT_ID:
+        if not await is_subscribed(bot, chat_id):
+            logger.info("subscription_required", chat_id=chat_id)
+            _PENDING_SUBSCRIPTION[chat_id] = {
+                "user_data": user_data,
+                "username": username,
+                "first_name": first_name,
+            }
+            await save_user_event(
+                chat_id, "subscription_gate", "shown", "ru", "subscription"
+            )
+            await message.answer(
+                ru_strings.SUBSCRIPTION_REQUIRED,
+                parse_mode="HTML",
+                reply_markup=_build_subscription_keyboard(),
+            )
+            return
+
+    await _calculate_and_send_meal_plan(
+        message, bot, chat_id, user_data,
+        username=username,
+        first_name=first_name,
+        detected_lang=detected_lang,
+    )
+
+
+async def _calculate_and_send_meal_plan(
+    message: Message,
+    bot: Bot,
+    chat_id: int,
+    user_data: CollectedUserData,
+    *,
+    username: str,
+    first_name: str,
+    detected_lang: str,
+) -> None:
+    """Run KBJU calc + meal plan generation and post-send actions.
+
+    Extracted so it can be invoked both from the normal text flow and from
+    the subscription-check callback once the RU user confirms they joined
+    the channel.
+    """
     macros = calculate_macros(
         sex=user_data.sex,
         weight=user_data.weight,
@@ -224,14 +291,13 @@ async def _process_text_message(
         goal=user_data.goal,
     )
 
-    # Send "calculating..." message and save to database in parallel
     strings = get_strings(detected_lang)
 
     async def _save() -> None:
         await save_user_data(
             chat_id=chat_id,
             username=username,
-            first_name=override_first_name or (message.from_user.first_name if message.from_user else ""),
+            first_name=first_name,
             sex=user_data.sex,
             age=user_data.age,
             weight=user_data.weight,
@@ -252,7 +318,6 @@ async def _process_text_message(
 
     await asyncio.gather(_save(), _notify())
 
-    # Generate meal plan
     try:
         menu_data = await run_agent_food(
             calories=macros.calories,
@@ -270,7 +335,6 @@ async def _process_text_message(
 
     logger.info("agent_food_result", chat_id=chat_id, meals_count=len(menu_data) if isinstance(menu_data, list) else 1)
 
-    # Validate
     target_stats = {
         "calories": macros.calories,
         "protein": macros.protein,
@@ -285,20 +349,15 @@ async def _process_text_message(
     if not is_valid:
         logger.warning("meal_plan_validation_failed", error=error, chat_id=chat_id)
 
-    # Format, save to chat history, and send
     html = format_meal_plan_html(menu_data, calc_stats, target_stats, language=detected_lang)
     await save_chat_message(str(chat_id), "ai", html)
     await message.answer(html, parse_mode="HTML")
 
-    # Mark as food received → starts funnel (skip for test account)
     if chat_id != TEST_CHAT_ID:
         await set_food_received(chat_id, language=detected_lang)
 
-        # RU: send "Разбуди тело" + zone selection (5 sec apart)
         if detected_lang == "ru":
             try:
-                ru_strings = get_strings("ru")
-                # Message 1: wakeup
                 wakeup_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(
                         text=ru_strings.FUNNEL_STAGE_0_WAKEUP_BUTTON,
@@ -312,7 +371,6 @@ async def _process_text_message(
                 await save_user_event(chat_id, "funnel_message", "wakeup_sent", "ru", "funnel")
                 logger.info("wakeup_message_sent", chat_id=chat_id)
 
-                # Message 2: zone selection (5 sec later)
                 await asyncio.sleep(5)
                 from src.funnel.messages import get_funnel_message
                 from src.funnel.sender import _build_keyboard
@@ -397,3 +455,47 @@ async def handle_fix_data(callback: CallbackQuery, bot: Bot, db_user: User | Non
 
     fix_prompt = _FIX_PROMPTS.get(lang, _FIX_PROMPTS["en"])
     await bot.send_message(chat_id, fix_prompt)
+
+
+@router.callback_query(F.data == "check_subscription")
+async def handle_check_subscription(callback: CallbackQuery, bot: Bot, db_user: User | None) -> None:
+    """RU user clicked "Я подписалась" — verify and resume KBJU flow."""
+    await callback.answer()
+    if not callback.message or not callback.from_user:
+        return
+
+    chat_id = callback.from_user.id
+    logger.info("check_subscription_callback", chat_id=chat_id)
+    await save_user_event(chat_id, "button_click", "check_subscription", "ru", "subscription")
+
+    if not await is_subscribed(bot, chat_id):
+        await save_user_event(chat_id, "subscription_gate", "not_subscribed", "ru", "subscription")
+        await bot.send_message(chat_id, ru_strings.SUBSCRIPTION_NOT_FOUND)
+        return
+
+    pending = _PENDING_SUBSCRIPTION.pop(chat_id, None)
+    if pending is None:
+        # Cache lost (bot restart, etc.) — ask the user to start over.
+        logger.warning("subscription_pending_missing", chat_id=chat_id)
+        await bot.send_message(chat_id, ru_strings.SUBSCRIPTION_EXPIRED)
+        return
+
+    await save_user_event(chat_id, "subscription_gate", "passed", "ru", "subscription")
+
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+
+    await bot.send_message(chat_id, ru_strings.SUBSCRIPTION_CONFIRMED, parse_mode="HTML")
+
+    user_data = pending["user_data"]
+    username = pending["username"] or (callback.from_user.username or "unknown")
+    first_name = pending["first_name"] or (callback.from_user.first_name or "")
+
+    await _calculate_and_send_meal_plan(
+        callback.message, bot, chat_id, user_data,
+        username=username,
+        first_name=first_name,
+        detected_lang="ru",
+    )
