@@ -33,6 +33,7 @@ photos:
     stage_2: "before_after_2.jpg"
     # EN funnel photos
     en_stage_0: "en_funnel_stage_0.jpg"
+    en_stage_5: "en_funnel_stage_5.jpg"
     en_stage_6: "en_funnel_stage_6.png"
     # RU belly zone funnel photos
     ru_belly_stage_1: "ru_belly_stage_1.png"

@@ -88,7 +88,10 @@ FUNNEL_STAGE_5 = (
     '→ What to do\n→ How to do it\n→ Why it works for fat loss + muscle retention\n\n'
     'No guessing. No confusion. No wasted sessions.\n\n'
     'Most men waste months doing the wrong thing.\n'
-    "You won't."
+    "You won't.\n\n"
+    'And it helps not only to preserve muscles,\n'
+    'but also to grow muscles too —\n'
+    "even if you don't have excess weight."
 )
 FUNNEL_STAGE_5_BUY = "✅ Get Access — 49 AED"
 FUNNEL_STAGE_5_QUESTION = "❓ What do I get after paying?"

@@ -413,6 +413,8 @@ def _get_en_funnel_message(stage: int, s) -> FunnelMessage | None:
         photo_name = ""
         if stage == 0:
             photo_name = funnel_photos.get("en_stage_0", "")
+        elif stage == 5:
+            photo_name = funnel_photos.get("en_stage_5", "")
         elif stage == 6:
             photo_name = funnel_photos.get("en_stage_6", "")
 
@@ -468,6 +470,8 @@ def _get_ar_funnel_message(stage: int, s) -> FunnelMessage | None:
         photo_name = ""
         if stage == 0:
             photo_name = funnel_photos.get("en_stage_0", "")
+        elif stage == 5:
+            photo_name = funnel_photos.get("en_stage_5", "")
         elif stage == 6:
             photo_name = funnel_photos.get("en_stage_6", "")
 
