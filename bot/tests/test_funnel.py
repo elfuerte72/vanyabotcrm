@@ -34,8 +34,13 @@ class TestGetFunnelMessageEN:
         assert msg.photo_name, "Stage 6 should have a photo"
         assert "en_funnel_stage_6" in msg.photo_name
 
+    def test_stage_5_has_photo(self):
+        msg = get_funnel_message(5, "en")
+        assert msg.photo_name, "Stage 5 should have a photo"
+        assert "en_funnel_stage_5" in msg.photo_name
+
     def test_stages_without_photos(self):
-        for stage in [1, 2, 3, 4, 5, 7, 8]:
+        for stage in [1, 2, 3, 4, 7, 8]:
             msg = get_funnel_message(stage, "en")
             assert not msg.photo_name, f"Stage {stage} should not have a photo"
 
@@ -95,8 +100,12 @@ class TestGetFunnelMessageAR:
         msg = get_funnel_message(6, "ar")
         assert msg.photo_name, "AR stage 6 should have a photo"
 
+    def test_stage_5_has_photo(self):
+        msg = get_funnel_message(5, "ar")
+        assert msg.photo_name, "AR stage 5 should have a photo"
+
     def test_stages_without_photos(self):
-        for stage in [1, 2, 3, 4, 5, 7, 8]:
+        for stage in [1, 2, 3, 4, 7, 8]:
             msg = get_funnel_message(stage, "ar")
             assert not msg.photo_name, f"AR stage {stage} should not have a photo"
 

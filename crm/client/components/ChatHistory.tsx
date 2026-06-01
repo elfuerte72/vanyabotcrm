@@ -1,8 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useChatHistory, useUserEvents, eventButtonLabels, funnelStageLabels } from '../hooks/useApi';
-import type { ChatMessage, UserEvent } from '../../shared/types';
+import type { ChatMessage, UserEvent, FunnelMedia } from '../../shared/types';
 import { Button } from './ui/button';
-import { MousePointerClick, Bot, ClipboardList, Megaphone } from 'lucide-react';
+import { MousePointerClick, Bot, ClipboardList, Megaphone, Video } from 'lucide-react';
+
+/** Public Supabase Storage bucket holding funnel photos (overridable per env). */
+const FUNNEL_MEDIA_BASE =
+  import.meta.env.VITE_FUNNEL_MEDIA_BASE ||
+  'https://dnzwpdcvrpfiipjwpxux.supabase.co/storage/v1/object/public/funnel-media';
 
 interface ChatHistoryProps {
   sessionId: string;
@@ -108,6 +113,41 @@ function CollapsibleText({ text, html, limit = 400 }: { text?: string; html?: st
   );
 }
 
+/** Photos + video-note plate attached to a funnel message */
+function FunnelMediaView({ media }: { media: FunnelMedia }) {
+  const photos = media.photos ?? [];
+  const hasContent = photos.length > 0 || media.video_note;
+  if (!hasContent) return null;
+
+  return (
+    <div className="mt-2 space-y-1.5">
+      {photos.length > 0 && (
+        <div className={`grid gap-1.5 ${photos.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {photos.map((name) => {
+            const url = `${FUNNEL_MEDIA_BASE}/${encodeURIComponent(name)}`;
+            return (
+              <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                <img
+                  src={url}
+                  alt={name}
+                  loading="lazy"
+                  className="w-full max-h-52 object-cover rounded-lg border border-border bg-muted active:opacity-80"
+                />
+              </a>
+            );
+          })}
+        </div>
+      )}
+      {media.video_note && (
+        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5">
+          <Video className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="text-xs text-muted-foreground">Видео-кружок</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Funnel message from bot */
 function FunnelCard({ event }: { event: UserEvent }) {
   const stageLabel = funnelStageLabels[event.event_data] || event.event_data;
@@ -127,6 +167,7 @@ function FunnelCard({ event }: { event: UserEvent }) {
         ) : (
           <div className="text-xs text-muted-foreground italic">Текст не сохранён</div>
         )}
+        {event.media && <FunnelMediaView media={event.media} />}
       </div>
     </div>
   );

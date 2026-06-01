@@ -11,7 +11,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from src.db.queries import (
     calculate_next_send_time,
     get_funnel_targets,
-    save_chat_message,
     save_user_event,
     update_funnel_stage,
 )
@@ -42,6 +41,20 @@ def _build_keyboard(msg) -> InlineKeyboardMarkup | None:
         else:
             rows.append([InlineKeyboardButton(text=label, callback_data=callback_data)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _build_media_payload(msg) -> dict | None:
+    """Collect a funnel message's attachments for the CRM.
+
+    Returns {"photos": [filenames], "video_note": bool} or None when there is no
+    media. Photo filenames match the objects uploaded to the `funnel-media`
+    Supabase Storage bucket, so the CRM can build public image URLs from them.
+    """
+    photos = [p for p in ([msg.photo_name, *msg.extra_photos]) if p]
+    has_video_note = bool(msg.video_note_id)
+    if not photos and not has_video_note:
+        return None
+    return {"photos": photos, "video_note": has_video_note}
 
 
 async def _send_single_funnel_message(bot: Bot, chat_id: int, msg, keyboard) -> None:
@@ -126,8 +139,12 @@ async def send_funnel_messages(bot: Bot) -> None:
             keyboard = _build_keyboard(msg)
             try:
                 await _send_single_funnel_message(bot, chat_id, msg, keyboard)
-                await save_chat_message(str(chat_id), "ai", msg.text)
-                await save_user_event(chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel", message_text=msg.text)
+                # Funnel messages live in user_events only (single source of truth
+                # for the CRM timeline) — do NOT also write to chat_histories.
+                await save_user_event(
+                    chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel",
+                    message_text=msg.text, media=_build_media_payload(msg),
+                )
                 # Reschedule +24h, do NOT increment stage
                 next_send = calculate_next_send_time(0, "ru", has_variant=False)
                 pool = await get_pool()
@@ -158,8 +175,12 @@ async def send_funnel_messages(bot: Bot) -> None:
 
         try:
             await _send_single_funnel_message(bot, chat_id, msg, keyboard)
-            await save_chat_message(str(chat_id), "ai", msg.text)
-            await save_user_event(chat_id, "funnel_message", f"stage_{stage}", language, "funnel", message_text=msg.text)
+            # Funnel messages live in user_events only (single source of truth
+            # for the CRM timeline) — do NOT also write to chat_histories.
+            await save_user_event(
+                chat_id, "funnel_message", f"stage_{stage}", language, "funnel",
+                message_text=msg.text, media=_build_media_payload(msg),
+            )
             await update_funnel_stage(chat_id, language=language, current_stage=stage, variant=variant)
             sent += 1
             logger.debug(
