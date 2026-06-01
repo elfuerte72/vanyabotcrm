@@ -375,15 +375,21 @@ async def save_user_event(
     language: str | None = None,
     workflow_name: str | None = None,
     message_text: str | None = None,
+    media: dict | None = None,
 ) -> None:
-    """Save a user interaction event (button click, funnel message, etc.) to user_events."""
+    """Save a user interaction event (button click, funnel message, etc.) to user_events.
+
+    `media` holds funnel attachments as {"photos": [...], "video_note": bool} so the
+    CRM can render images; stored as JSONB (NULL when the message has no media).
+    """
     pool = await get_pool()
+    media_json = json.dumps(media) if media else None
     await pool.execute(
         """
-        INSERT INTO user_events (chat_id, event_type, event_data, language, workflow_name, message_text)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO user_events (chat_id, event_type, event_data, language, workflow_name, message_text, media)
+        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
         """,
-        chat_id, event_type, event_data, language, workflow_name, message_text,
+        chat_id, event_type, event_data, language, workflow_name, message_text, media_json,
     )
     logger.debug(
         "user_event_saved",

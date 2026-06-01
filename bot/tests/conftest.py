@@ -37,7 +37,6 @@ def _mock_save_user_event():
          patch("src.handlers.message.save_user_event", new_callable=AsyncMock), \
          patch("src.handlers.start.save_user_event", new_callable=AsyncMock), \
          patch("src.funnel.sender.save_user_event", new_callable=AsyncMock), \
-         patch("src.funnel.sender.save_chat_message", new_callable=AsyncMock), \
          patch("src.handlers.message.is_subscribed", new_callable=AsyncMock, return_value=True):
         yield
 

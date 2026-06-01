@@ -49,6 +49,12 @@ export interface Stats {
   funnel_distribution: { stage: number; count: number }[];
 }
 
+/** Funnel message attachments (photos stored in Supabase Storage by filename). */
+export interface FunnelMedia {
+  photos: string[];
+  video_note: boolean;
+}
+
 export interface UserEvent {
   id: number;
   chat_id: number;
@@ -57,6 +63,7 @@ export interface UserEvent {
   language: string | null;
   workflow_name: string | null;
   message_text: string | null;
+  media: FunnelMedia | null;
   created_at: string;
 }
 

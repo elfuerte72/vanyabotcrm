@@ -65,6 +65,8 @@ CREATE TABLE public.user_events (
     event_data character varying(255) NOT NULL,
     language character varying(10),
     workflow_name character varying(100),
+    message_text text,
+    media jsonb,
     created_at timestamp without time zone DEFAULT now()
 );
 

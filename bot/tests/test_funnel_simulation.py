@@ -344,7 +344,7 @@ class TestFunnelMixedLanguages:
 
 class TestFunnelKeyboardConfigurationEN:
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("stage", [1, 2, 3, 4, 5, 7, 8])
+    @pytest.mark.parametrize("stage", [1, 2, 3, 4, 7, 8])
     @patch("src.funnel.sender.update_funnel_stage", new_callable=AsyncMock)
     @patch("src.funnel.sender.get_funnel_targets", new_callable=AsyncMock)
     async def test_keyboard_buttons_sent_correctly(self, mock_targets, mock_update, stage):

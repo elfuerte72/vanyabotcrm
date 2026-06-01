@@ -16,7 +16,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from config.settings import settings, media_config
 from src.db.queries import get_user, mark_as_buyer, save_chat_message, save_user_event, save_ziina_payment, set_funnel_variant, update_funnel_stage
 from src.funnel.messages import get_funnel_message
-from src.funnel.sender import _build_keyboard, _send_single_funnel_message
+from src.funnel.sender import _build_keyboard, _build_media_payload, _send_single_funnel_message
 from src.i18n import get_strings
 from src.models.user import User
 from src.services.ziina import ZiinaAPIError, create_payment_intent
@@ -442,7 +442,11 @@ async def handle_en_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     keyboard = _build_keyboard(next_msg)
     try:
         await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
-        await save_chat_message(str(chat_id), "ai", next_msg.text)
+        # Funnel messages go to user_events only (single CRM source of truth, with media)
+        await save_user_event(
+            chat_id, "funnel_message", f"stage_{next_stage}", "en", "funnel",
+            message_text=next_msg.text, media=_build_media_payload(next_msg),
+        )
         await update_funnel_stage(chat_id, language="en", current_stage=next_stage)
         logger.info(
             "en_funnel_question_advance",
@@ -503,7 +507,11 @@ async def handle_ar_funnel_question(callback: CallbackQuery, bot: Bot, **data: A
     keyboard = _build_keyboard(next_msg)
     try:
         await _send_single_funnel_message(bot, chat_id, next_msg, keyboard)
-        await save_chat_message(str(chat_id), "ai", next_msg.text)
+        # Funnel messages go to user_events only (single CRM source of truth, with media)
+        await save_user_event(
+            chat_id, "funnel_message", f"stage_{next_stage}", "ar", "funnel",
+            message_text=next_msg.text, media=_build_media_payload(next_msg),
+        )
         await update_funnel_stage(chat_id, language="ar", current_stage=next_stage)
         logger.info(
             "ar_funnel_question_advance",

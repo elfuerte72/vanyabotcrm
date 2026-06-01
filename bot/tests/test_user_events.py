@@ -65,7 +65,7 @@ class TestSaveUserEvent:
         query = args[0][0]
         params = args[0][1:]
         assert "INSERT INTO user_events" in query
-        assert params == (12345, "button_click", "buy_now", "ru", "funnel", None)
+        assert params == (12345, "button_click", "buy_now", "ru", "funnel", None, None)
 
     @pytest.mark.asyncio
     @patch("src.db.queries.get_pool")
@@ -80,7 +80,7 @@ class TestSaveUserEvent:
 
         args = mock_pool.execute.call_args
         params = args[0][1:]
-        assert params == (99999, "funnel_message", "stage_3", None, None, None)
+        assert params == (99999, "funnel_message", "stage_3", None, None, None, None)
 
 
 # ─── Callback handlers save events ──────────────────────────────────────
@@ -179,7 +179,12 @@ class TestCallbacksSaveEvents:
 
         await handle_en_funnel_question(callback, bot, db_user=db_user)
 
-        mock_save_event.assert_called_once_with(12345, "button_click", "en_funnel_q_2", "en", "funnel")
+        # Button click + the instantly-sent funnel message (single source of truth in user_events)
+        assert mock_save_event.call_count == 2
+        mock_save_event.assert_any_call(12345, "button_click", "en_funnel_q_2", "en", "funnel")
+        mock_save_event.assert_any_call(
+            12345, "funnel_message", "stage_3", "en", "funnel", message_text="Next", media=None
+        )
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.save_user_event", new_callable=AsyncMock)
@@ -201,4 +206,9 @@ class TestCallbacksSaveEvents:
 
         await handle_ar_funnel_question(callback, bot, db_user=db_user)
 
-        mock_save_event.assert_called_once_with(12345, "button_click", "ar_funnel_q_5", "ar", "funnel")
+        # Button click + the instantly-sent funnel message (single source of truth in user_events)
+        assert mock_save_event.call_count == 2
+        mock_save_event.assert_any_call(12345, "button_click", "ar_funnel_q_5", "ar", "funnel")
+        mock_save_event.assert_any_call(
+            12345, "funnel_message", "stage_6", "ar", "funnel", message_text="Next", media=None
+        )
