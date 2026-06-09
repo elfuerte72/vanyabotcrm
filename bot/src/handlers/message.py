@@ -357,34 +357,27 @@ async def _calculate_and_send_meal_plan(
         await set_food_received(chat_id, language=detected_lang)
 
         if detected_lang == "ru":
+            # After the meal plan, RU users get a single CTA message that sends
+            # them to the results site. There is no scheduled RU funnel anymore.
             try:
-                wakeup_kb = InlineKeyboardMarkup(inline_keyboard=[
+                cta_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(
-                        text=ru_strings.FUNNEL_STAGE_0_WAKEUP_BUTTON,
-                        url=ru_strings.FUNNEL_STAGE_0_WAKEUP_URL,
+                        text=ru_strings.MEAL_PLAN_CTA_BUTTON,
+                        url=ru_strings.MEAL_PLAN_CTA_URL,
                     )]
                 ])
                 await message.answer(
-                    ru_strings.FUNNEL_STAGE_0_WAKEUP,
-                    reply_markup=wakeup_kb,
+                    ru_strings.MEAL_PLAN_CTA,
+                    reply_markup=cta_kb,
+                    parse_mode="HTML",
                 )
-                await save_user_event(chat_id, "funnel_message", "wakeup_sent", "ru", "funnel")
-                logger.info("wakeup_message_sent", chat_id=chat_id)
-
-                await asyncio.sleep(5)
-                from src.funnel.messages import get_funnel_message
-                from src.funnel.sender import _build_keyboard
-                zone_msg = get_funnel_message(0, "ru")
-                if zone_msg:
-                    zone_kb = _build_keyboard(zone_msg)
-                    await message.answer(
-                        zone_msg.text,
-                        reply_markup=zone_kb,
-                    )
-                    await save_user_event(chat_id, "funnel_message", "stage_0_zone_ask", "ru", "funnel")
-                    logger.info("zone_selection_sent", chat_id=chat_id)
+                await save_user_event(
+                    chat_id, "funnel_message", "meal_plan_cta", "ru", "funnel",
+                    message_text=ru_strings.MEAL_PLAN_CTA,
+                )
+                logger.info("meal_plan_cta_sent", chat_id=chat_id)
             except Exception as e:
-                logger.error("wakeup_message_failed", chat_id=chat_id, error=str(e))
+                logger.error("meal_plan_cta_failed", chat_id=chat_id, error=str(e))
 
     logger.info("meal_plan_sent", chat_id=chat_id, calories=macros.calories)
 

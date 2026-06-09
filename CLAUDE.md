@@ -37,16 +37,16 @@ psql "$DATABASE_URL"
 # Migrations: db/migrations/ (sequential SQL files, applied manually)
 ```
 
-### Funnel Testing Scripts (`/scripts/`, `/scripts_en/`, `/scripts_ar/`)
+### Funnel Testing Scripts (`/scripts_en/`, `/scripts_ar/`)
 ```bash
-./scripts/run.sh belly/stage_0.py     # Send RU belly funnel stage to test user
-./scripts/run.sh arms/stage_1.py      # Send RU arms funnel stage to test user
-./scripts/run.sh glutes/stage_5.py    # Send RU glutes funnel stage to test user
-./scripts/run.sh belly/reset.py       # Reset test user RU funnel state
 ./scripts_en/run.sh stage_0.py       # Send EN funnel stage message to test user
 ./scripts_ar/run.sh stage_0.py       # Send AR funnel stage message to test user
-# RU scripts organized by zone variant: scripts/belly/, scripts/thighs/, etc.
+# Preview the RU post-plan CTA message (exact ru.MEAL_PLAN_CTA + URL button):
+cd bot && uv run python -m scripts.send_cta_preview <chat_id>
 ```
+> The RU funnel was removed. The old RU zone testers under `/scripts/` (`belly/`,
+> `thighs/`, `arms/`, `glutes/`, `run.sh`, `test_formatting.py`) are obsolete and
+> non-functional (they reference deleted strings) — safe to delete.
 
 No lint commands are configured.
 
@@ -62,7 +62,7 @@ Two services share the same PostgreSQL database:
 
 **CRM** (`/crm`): Modular monolith — Express API + React SPA in a single TypeScript project. Shared types between server and client in `shared/`. Server modules in `server/modules/{users,chat,stats,events}/routes.ts`. Client is a Telegram Mini App with two views (list/detail) and two tabs (clients/recent). `server/app.ts` creates Express app; `server/index.ts` calls `app.listen()` (split for supertest). Auth middleware in `server/auth.ts` validates Telegram `initData`. In production, server serves client SPA via catch-all `*` route from `public/`.
 
-**Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Harris-Benedict), generates meal plans, and runs a sales funnel. Supports RU/EN/AR languages. Entry point: `src/main.py` starts 3 concurrent services: polling + APScheduler (funnel sender every 15 min) + aiohttp webhook server (Ziina payments on port 8080).
+**Telegram Bot** (`/bot`): Python 3.11+ / aiogram 3.x. AI nutrition consultant that collects user data via conversation (Gemini 3 Flash via OpenRouter), calculates KBJU (Harris-Benedict), generates meal plans, and runs a sales funnel (EN/AR only; RU gets a single post-plan CTA link). Supports RU/EN/AR languages. Entry point: `src/main.py` starts 3 concurrent services: polling + APScheduler (funnel sender every 15 min, EN/AR) + aiohttp webhook server (Ziina payments on port 8080).
 
 **Deployment**: Both services deploy on Railway. CRM: `crm/railway.toml` (build: `npm run build`, start: `npm start`, health check: `/health`). Bot: `bot/railway.toml` (build: `uv sync --no-dev`, start: `uv run python -m src.main`). Database is on Supabase (project: `dnzwpdcvrpfiipjwpxux`).
 
@@ -128,9 +128,11 @@ config/              → Pydantic Settings (.env) + media.yaml (Google Drive fil
 
 **Chat history**: Bot reads/writes to `chat_histories` table. `session_id` = `str(chat_id)`, `message` is JSONB with `type` (human/ai) and `content`. ALL bot messages are saved via `save_chat_message()` — funnel messages (in sender.py) and callback responses (in callbacks.py). This ensures the CRM timeline shows the complete conversation.
 
-**Funnel system**: RU funnel has **13 stages (0→12)** with zone branching. After meal plan delivery, bot sends two messages: "Разбуди тело" (wakeup with Yandex Disk URL) + zone selection (4 buttons: belly/thighs/arms/glutes) with 5-sec delay. Zone selection repeats every 24h until user picks. Zone callback (`zone_*`) sets `funnel_variant`, sends instant response, advances to stage 1 (+1h). Stages 1+ are zone-specific (`belly` has 12 stages 1-12, `thighs` has 11 stages 1-11, `arms` has 11 stages 1-11; `glutes` has 11 stages 1-11). EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 1h for stages 1-8, 24h for upsell stage 9. The scheduler (every 15 min) checks `next_funnel_msg_at` column and sends messages when the time has arrived. Timing logic is in `src/db/queries.py:calculate_next_send_time()` — accepts `variant` param for zone-specific timing. RU messages are scheduled at specific Moscow times (10:00, 19:00 MSK), while EN/AR use interval delays (5min/1h/24h). Key difference: belly/thighs/arms have stage 5 (video note) → stage 6 (same day 19:00 MSK), but glutes has stage 5 (hard sell directly) → stage 6 (next day 10:00 MSK). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when user is already at stage N+1.
+**Funnel system**: **RU has NO scheduled funnel.** After meal plan delivery, a RU user gets a single CTA message (`ru.MEAL_PLAN_CTA`) with one URL button "Смотреть результаты" → results site (`ru.MEAL_PLAN_CTA_URL`), sent inline from `handlers/message.py:_calculate_and_send_meal_plan`. `set_food_received("ru")` leaves `next_funnel_msg_at = NULL`, and `get_funnel_targets()` filters `language IN ('en','ar')`, so the scheduler never touches RU. There are no RU funnel stages, zone branching, or buy/zone callbacks anymore.
 
-**Media** (`config/media.yaml` + `bot/media/photos/`): RU funnel messages include local photos (`photo_name` field), media groups (`extra_photos` for album stages 2 and 9), and video notes (circles from Google Drive via `video_note_id`). EN and AR funnels include photos at stages 0 and 6 (shared `en_stage_0`/`en_stage_6` photos) plus question buttons for instant next-stage delivery. Video notes are sent as separate messages after the main content.
+EN and AR funnels have **11 stages (0→10)**: 9 main stages (0-8) with buy + question buttons, plus 2 upsells (9-10) after purchase. Timing: 5min after stage 0, 24h for stages 1-9. The scheduler (every 15 min) checks `next_funnel_msg_at` and sends when due. Timing logic is in `src/db/queries.py:calculate_next_send_time()` (EN/AR only — returns None for RU). Batch sending: 25 messages per batch with 1-second delay between batches (Telegram rate limit). Stage is incremented *after* sending, so callback buttons from stage N arrive when the user is already at stage N+1. EN/AR pay via Ziina (`buy_now` → Payment Intent); RU has no in-bot payment.
+
+**Media** (`config/media.yaml` + `bot/media/photos/`): EN and AR funnel messages include photos at stages 0 and 6 (shared `en_stage_0`/`en_stage_6` photos) plus question buttons for instant next-stage delivery. The `FunnelMessage` dataclass still supports `photo_name`, `extra_photos` (media groups), and `video_note_id` (Google Drive circles), but only EN/AR define funnel messages now; RU has none. Video notes are sent as separate messages after the main content.
 
 ## Bot Testing Patterns
 
@@ -158,7 +160,7 @@ Default sort (no `sort` param): `updated_at DESC NULLS LAST, created_at DESC`.
 
 ### Key Tables
 
-**`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-12 for RU, 0-10 for EN/AR), `funnel_variant` (belly/thighs/arms/glutes/NULL — zone for RU branching), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`, `funnel_start_at`, `last_funnel_msg_at`, `next_funnel_msg_at` (UTC, calculated by `calculate_next_send_time()`).
+**`users_nutrition`** — User profiles with nutrition data. PK: `chat_id` (bigint, Telegram ID). Key columns: `username`, `first_name`, `sex`, `age`, `weight`, `height`, `activity_level`, `goal` (weight_loss/weight_gain/maintenance/muscle_gain), `calories`/`protein`/`fats`/`carbs`, `funnel_stage` (0-10 for EN/AR; stays 0 for RU — no scheduled funnel), `funnel_variant` (belly/thighs/arms/glutes/NULL — legacy RU zone column, no longer written; kept for historical rows), `is_buyer`, `get_food`, `language`, `id_ziina`, `type_ziina`, `funnel_start_at`, `last_funnel_msg_at`, `next_funnel_msg_at` (UTC, calculated by `calculate_next_send_time()`; NULL for RU).
 
 **`chat_histories`** — Chat messages. PK: `id` (auto-increment). `session_id` = chat_id as string. `message` is JSONB with `type` (human/ai), `content`, `tool_calls`. `created_at` is `timestamptz DEFAULT now()`.
 
@@ -202,7 +204,7 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 | `VITE_API_URL` | crm | API base URL (empty = relative URLs with Vite proxy) |
 | `OPENROUTER_API_KEY` | bot | OpenRouter API key for AI agents |
 | `OPENROUTER_MODEL` | bot | LLM model (default: google/gemini-3-flash-preview) |
-| `TRIBUTE_LINK` | bot | Payment link for Tribute (RU users) |
+| `TRIBUTE_LINK` | bot | Legacy Tribute payment link; now only a fallback URL (RU funnel removed, so no longer used in the RU flow) |
 | `ZIINA_LINK` | bot | Payment link for Ziina (EN/AR users, falls back to TRIBUTE_LINK) |
 | `ZIINA_WEBHOOK_SECRET` | bot | Ziina payment webhook secret (optional) |
 | `LOG_LEVEL` | crm, bot | Logging level (CRM default: info, Bot default: INFO) |
@@ -212,10 +214,7 @@ Tests use Vitest + Supertest in `crm/server/__tests__/`. Database is mocked via 
 
 - `AGENTS.md` — AI agent project map
 - `db/migrations/` — 8 sequential migrations (rename chat_histories, funnel timing, scheduler index, upsell price types, funnel_variant, event message text, chat_histories created_at, user_events timestamptz)
-- `new_ru(низ_живота).md` — RU belly zone funnel content spec (ТЗ)
-- `ушки_на_бедрах.md` — RU thighs zone funnel content spec (ТЗ)
-- `дряблость_рук.md` — RU arms zone funnel content spec (ТЗ)
-- `форма_ягодиц.md` — RU glutes zone funnel content spec (ТЗ)
+- `new_ru(низ_живота).md`, `ушки_на_бедрах.md`, `дряблость_рук.md`, `форма_ягодиц.md` — historical RU zone funnel content specs (ТЗ). The RU funnel was removed; kept only as reference.
 
 ## Security Notes
 

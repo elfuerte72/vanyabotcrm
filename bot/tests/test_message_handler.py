@@ -141,12 +141,13 @@ class TestConversationRoute:
 
 class TestGenerateRoute:
     @pytest.mark.asyncio
+    @patch("src.handlers.message.save_user_event", new_callable=AsyncMock)
     @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)
     @patch("src.handlers.message.set_food_received", new_callable=AsyncMock)
     @patch("src.handlers.message.save_user_data", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_food", new_callable=AsyncMock)
     @patch("src.handlers.message.run_agent_main", new_callable=AsyncMock)
-    async def test_generate_full_flow(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat):
+    async def test_generate_full_flow(self, mock_agent_main, mock_agent_food, mock_save, mock_set_food, mock_save_chat, mock_save_event):
         """Agent returns is_finished=true → calculates macros → generates food → sends."""
         agent_json = json.dumps({
             "is_finished": True,
@@ -194,8 +195,25 @@ class TestGenerateRoute:
         # set_food_received called
         mock_set_food.assert_called_once()
 
-        # Four calls: 1) "calculating..." 2) meal plan HTML 3) wakeup 4) zone selection (RU)
-        assert msg.answer.call_count == 4
+        # Three calls: 1) "calculating..." 2) meal plan HTML 3) RU meal-plan CTA
+        assert msg.answer.call_count == 3
+
+        # The third message is the RU CTA with a single URL button to the results site
+        from src.i18n.ru import MEAL_PLAN_CTA, MEAL_PLAN_CTA_BUTTON, MEAL_PLAN_CTA_URL
+
+        cta_call = msg.answer.call_args_list[2]
+        assert cta_call.args[0] == MEAL_PLAN_CTA
+        assert cta_call.kwargs["parse_mode"] == "HTML"
+        cta_markup = cta_call.kwargs["reply_markup"]
+        cta_btn = cta_markup.inline_keyboard[0][0]
+        assert cta_btn.text == MEAL_PLAN_CTA_BUTTON
+        assert cta_btn.url == MEAL_PLAN_CTA_URL
+
+        # CTA event recorded for the CRM timeline
+        mock_save_event.assert_any_call(
+            2001, "funnel_message", "meal_plan_cta", "ru", "funnel",
+            message_text=MEAL_PLAN_CTA,
+        )
 
     @pytest.mark.asyncio
     @patch("src.handlers.message.save_chat_message", new_callable=AsyncMock)

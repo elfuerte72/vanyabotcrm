@@ -1,8 +1,11 @@
 """Callback query handlers — inline button presses.
 
-Callbacks: buy_now, confirm_paid_ru, show_info, show_results, check_suitability,
-           remind_later, none, video_workout, learn_workout, video_circle,
+Callbacks: buy_now, show_info, show_results, check_suitability,
+           remind_later, none, video_workout, learn_workout,
            en_funnel_q_<stage>, ar_funnel_q_<stage>, upsell_decline
+
+RU has no scheduled funnel — its buttons/zone callbacks were removed; RU users
+get a single CTA URL message right after the meal plan (handlers/message.py).
 """
 
 from __future__ import annotations
@@ -14,7 +17,7 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config.settings import settings, media_config
-from src.db.queries import get_user, mark_as_buyer, save_chat_message, save_user_event, save_ziina_payment, set_funnel_variant, update_funnel_stage
+from src.db.queries import get_user, mark_as_buyer, save_chat_message, save_user_event, save_ziina_payment, update_funnel_stage
 from src.funnel.messages import get_funnel_message
 from src.funnel.sender import _build_keyboard, _build_media_payload, _send_single_funnel_message
 from src.i18n import get_strings
@@ -24,7 +27,6 @@ from src.services.media import (
     send_info_video,
     send_random_result_photo,
     send_suitability_video,
-    send_video_note_from_drive,
 )
 
 logger = structlog.get_logger()
@@ -79,77 +81,36 @@ async def handle_buy_now(callback: CallbackQuery, bot: Bot, **data: Any) -> None
 
     await save_user_event(chat_id, "button_click", "buy_now", language, "funnel")
 
-    payment_url = _get_payment_url(language)
-
-    if language == "ru":
-        # RU: two-step confirmation — Tribute has no webhook,
-        # so we don't mark as buyer until user confirms payment
+    # EN/AR only (RU has no buy buttons): create Ziina payment intent —
+    # don't mark buyer until the webhook confirms.
+    amount_aed = _get_payment_amount(db_user)
+    try:
+        intent_id, redirect_url = await create_payment_intent(
+            amount_aed, message=f"Workout access — {amount_aed} AED",
+        )
+        await save_ziina_payment(user_id, intent_id, amount_aed)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)],
-            [InlineKeyboardButton(text=strings.CONFIRM_PAID_BUTTON, callback_data="confirm_paid_ru")],
+            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=redirect_url)]
         ])
         await bot.send_message(
             chat_id=chat_id,
-            text=strings.BUY_MESSAGE_WITH_CONFIRM,
+            text=strings.BUY_MESSAGE,
             reply_markup=keyboard,
         )
-        await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE_WITH_CONFIRM)
-        logger.info("buy_now_link_sent", user_id=user_id, language="ru", marked_buyer=False)
-    else:
-        # EN/AR: create Ziina payment intent — don't mark buyer until webhook confirms
-        amount_aed = _get_payment_amount(db_user)
-        try:
-            intent_id, redirect_url = await create_payment_intent(
-                amount_aed, message=f"Workout access — {amount_aed} AED",
-            )
-            await save_ziina_payment(user_id, intent_id, amount_aed)
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=strings.BUY_BUTTON, url=redirect_url)]
-            ])
-            await bot.send_message(
-                chat_id=chat_id,
-                text=strings.BUY_MESSAGE,
-                reply_markup=keyboard,
-            )
-            await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
-            logger.info("buy_now_ziina_intent", user_id=user_id, language=language, intent_id=intent_id, amount=amount_aed)
-        except (ZiinaAPIError, Exception) as exc:
-            # Fallback: static link only (webhook will still confirm if user pays)
-            logger.error("buy_now_ziina_fallback", user_id=user_id, error=str(exc))
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=strings.BUY_BUTTON, url=payment_url)]
-            ])
-            await bot.send_message(
-                chat_id=chat_id,
-                text=strings.BUY_MESSAGE,
-                reply_markup=keyboard,
-            )
-            await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
-
-
-@router.callback_query(F.data == "confirm_paid_ru")
-async def handle_confirm_paid_ru(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    """RU user confirms they paid on Tribute."""
-    try:
-        await callback.answer()
-    except Exception:
-        pass
-
-    if not callback.message:
-        return
-    chat_id = callback.message.chat.id
-    user_id = callback.from_user.id
-
-    await mark_as_buyer(user_id)
-    await save_user_event(chat_id, "button_click", "confirm_paid_ru", "ru", "funnel")
-
-    strings = get_strings("ru")
-    await bot.send_message(
-        chat_id=chat_id,
-        text=strings.PAYMENT_CONFIRMED,
-    )
-    await save_chat_message(str(chat_id), "ai", strings.PAYMENT_CONFIRMED)
-    logger.info("confirm_paid_ru", user_id=user_id)
+        await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
+        logger.info("buy_now_ziina_intent", user_id=user_id, language=language, intent_id=intent_id, amount=amount_aed)
+    except (ZiinaAPIError, Exception) as exc:
+        # Fallback: static link only (webhook will still confirm if user pays)
+        logger.error("buy_now_ziina_fallback", user_id=user_id, error=str(exc))
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=strings.BUY_BUTTON, url=_get_payment_url(language))]
+        ])
+        await bot.send_message(
+            chat_id=chat_id,
+            text=strings.BUY_MESSAGE,
+            reply_markup=keyboard,
+        )
+        await save_chat_message(str(chat_id), "ai", strings.BUY_MESSAGE)
 
 
 @router.callback_query(F.data == "show_info")
@@ -248,56 +209,6 @@ async def handle_none(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     await save_chat_message(str(chat_id), "ai", strings.NONE_RESPONSE)
 
 
-@router.callback_query(F.data.startswith("zone_"))
-async def handle_zone_selection(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    """Zone selection callback: set funnel_variant, send instant response, advance to stage 1."""
-    try:
-        await callback.answer()
-    except Exception:
-        pass
-
-    if not callback.message:
-        return
-    chat_id = callback.message.chat.id
-    user_id = callback.from_user.id
-
-    # Parse zone from callback data: zone_belly → belly
-    variant = callback.data.replace("zone_", "")
-    valid_variants = ("belly", "thighs", "arms", "glutes")
-    if variant not in valid_variants:
-        logger.error("zone_invalid_variant", data=callback.data, user_id=user_id)
-        return
-
-    db_user = data.get("db_user")
-    if not db_user:
-        db_user = await get_user(user_id)
-
-    # Skip if user already has a variant set (already chose zone)
-    if db_user and db_user.funnel_variant:
-        logger.debug("zone_already_set", user_id=user_id, existing=db_user.funnel_variant)
-        return
-
-    await save_user_event(chat_id, "button_click", f"zone_{variant}", "ru", "funnel")
-
-    # Set variant in DB + advance to stage 1 + schedule +1h
-    await set_funnel_variant(user_id, variant)
-
-    # Send instant response based on zone
-    strings = get_strings("ru")
-    response_map = {
-        "belly": strings.ZONE_BELLY_RESPONSE,
-        "thighs": strings.ZONE_THIGHS_RESPONSE,
-        "arms": strings.ZONE_ARMS_RESPONSE,
-        "glutes": strings.ZONE_GLUTES_RESPONSE,
-    }
-    response_text = response_map.get(variant)
-    if response_text:
-        await bot.send_message(chat_id=chat_id, text=response_text, parse_mode="HTML")
-        await save_chat_message(str(chat_id), "ai", response_text)
-
-    logger.info("zone_selected", user_id=user_id, variant=variant)
-
-
 @router.callback_query(F.data == "video_workout")
 async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
     """Stage 0 button: send free 7-min workout video link."""
@@ -316,11 +227,7 @@ async def handle_video_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
 
     await save_user_event(chat_id, "button_click", "video_workout", language, "funnel")
 
-    # RU uses Yandex Disk link for morning activation; EN/AR use Google Drive
-    if language == "ru":
-        workout_url = getattr(strings, "FUNNEL_STAGE_0_WAKEUP_URL", "") or media_config["videos"].get("workout_url", "")
-    else:
-        workout_url = media_config["videos"].get("workout_url", "")
+    workout_url = media_config["videos"].get("workout_url", "")
     rows = []
     if workout_url:
         rows.append([InlineKeyboardButton(text=strings.WATCH_VIDEO_BUTTON, url=workout_url)])
@@ -359,39 +266,6 @@ async def handle_learn_workout(callback: CallbackQuery, bot: Bot, **data: Any) -
     )
     await save_chat_message(str(chat_id), "ai", strings.LEARN_WORKOUT_RESPONSE)
     logger.info("learn_workout_callback", user_id=user_id, language=language)
-
-
-@router.callback_query(F.data == "video_circle")
-async def handle_video_circle(callback: CallbackQuery, bot: Bot, **data: Any) -> None:
-    """Stage 3 button (RU): send 'how it works' video note (circle)."""
-    try:
-        await callback.answer()
-    except Exception:
-        pass
-
-    if not callback.message:
-        return
-    chat_id = callback.message.chat.id
-    user_id = callback.from_user.id
-
-    db_user = data.get("db_user")
-    language = _get_language(db_user, fallback="ru")
-    await save_user_event(chat_id, "button_click", "video_circle", language, "funnel")
-
-    video_notes = media_config.get("video_notes", {})
-    file_id = video_notes.get("how_it_works", "")
-
-    if not file_id:
-        logger.error("video_circle_no_file_id", user_id=user_id)
-        return
-
-    try:
-        await send_video_note_from_drive(bot, chat_id, file_id)
-        logger.info("video_circle_callback", user_id=user_id)
-    except Exception as e:
-        strings = get_strings(language)
-        logger.error("video_circle_failed", error=str(e), chat_id=chat_id)
-        await bot.send_message(chat_id, strings.VIDEO_UNAVAILABLE)
 
 
 @router.callback_query(F.data.startswith("en_funnel_q_"))

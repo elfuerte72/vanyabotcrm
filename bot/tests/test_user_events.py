@@ -14,7 +14,6 @@ import pytest
 
 from src.handlers.callbacks import (
     handle_buy_now,
-    handle_confirm_paid_ru,
     handle_remind_later,
     handle_none,
     handle_video_workout,
@@ -103,17 +102,6 @@ class TestCallbacksSaveEvents:
         await handle_buy_now(callback, bot, db_user=db_user)
 
         mock_save_event.assert_called_once_with(12345, "button_click", "buy_now", "en", "funnel")
-
-    @pytest.mark.asyncio
-    @patch("src.handlers.callbacks.save_user_event", new_callable=AsyncMock)
-    @patch("src.handlers.callbacks.mark_as_buyer", new_callable=AsyncMock)
-    async def test_confirm_paid_ru_saves_event(self, mock_mark, mock_save_event):
-        callback = _make_callback(data="confirm_paid_ru")
-        bot = _make_bot_mock()
-
-        await handle_confirm_paid_ru(callback, bot)
-
-        mock_save_event.assert_called_once_with(12345, "button_click", "confirm_paid_ru", "ru", "funnel")
 
     @pytest.mark.asyncio
     @patch("src.handlers.callbacks.save_user_event", new_callable=AsyncMock)
