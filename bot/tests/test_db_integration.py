@@ -228,15 +228,15 @@ async def test_set_food_received(chat_id: int):
 
 @pytest.mark.asyncio
 async def test_get_funnel_targets():
-    """get_funnel_targets returns only non-buyers with funnel_stage 0-4."""
-    # user_A: non-buyer, stage 0 → included
+    """get_funnel_targets returns only EN/AR non-buyers (RU has no scheduled funnel)."""
+    # user_A: non-buyer, EN, stage 0 → included
     await save_user_data(
         chat_id=TEST_CHAT_IDS[0], username="a", sex="male", age=30,
         weight=80.0, height=180.0, activity_level="moderate", goal="weight_loss",
         allergies="none", excluded_foods="none",
-        calories=2000, protein=120, fats=80, carbs=200, language="ru",
+        calories=2000, protein=120, fats=80, carbs=200, language="en",
     )
-    await set_food_received(TEST_CHAT_IDS[0])
+    await set_food_received(TEST_CHAT_IDS[0], language="en")
 
     # user_B: non-buyer, stage 4 → included
     await save_user_data(
@@ -260,24 +260,22 @@ async def test_get_funnel_targets():
     await set_food_received(TEST_CHAT_IDS[2])
     await mark_as_buyer(TEST_CHAT_IDS[2])
 
-    # user_D: non-buyer, stage 5 → excluded (>= 5)
+    # user_D: RU non-buyer, stage 0 → excluded (RU has no scheduled funnel)
     await save_user_data(
         chat_id=TEST_CHAT_IDS[3], username="d", sex="female", age=28,
         weight=55.0, height=160.0, activity_level="sedentary", goal="weight_loss",
         allergies="none", excluded_foods="none",
         calories=1400, protein=83, fats=55, carbs=155, language="ru",
     )
-    await set_food_received(TEST_CHAT_IDS[3])
-    for _ in range(5):
-        await update_funnel_stage(TEST_CHAT_IDS[3])
+    await set_food_received(TEST_CHAT_IDS[3], language="ru")
 
     targets = await get_funnel_targets()
     target_ids = {t["chat_id"] for t in targets}
 
-    assert TEST_CHAT_IDS[0] in target_ids, "Non-buyer stage 0 should be included"
-    assert TEST_CHAT_IDS[1] in target_ids, "Non-buyer stage 4 should be included"
+    assert TEST_CHAT_IDS[0] in target_ids, "Non-buyer EN stage 0 should be included"
+    assert TEST_CHAT_IDS[1] in target_ids, "Non-buyer EN stage 4 should be included"
     assert TEST_CHAT_IDS[2] not in target_ids, "Buyer should be excluded"
-    assert TEST_CHAT_IDS[3] not in target_ids, "Stage 5 should be excluded"
+    assert TEST_CHAT_IDS[3] not in target_ids, "RU should be excluded (no scheduled funnel)"
 
 
 @pytest.mark.asyncio

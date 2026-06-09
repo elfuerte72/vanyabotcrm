@@ -40,25 +40,7 @@ EXPECTED_BUTTONS_AR = {
     10: [("buy_now",), ("upsell_decline",)],
 }
 
-# Expected button callbacks for RU (15 stages, belly variant)
-# Stage 0 is common (zone selection + URL), stages 1-14 are belly-specific
-EXPECTED_BUTTONS_RU = {
-    0: [("zone_belly",), ("zone_thighs",), ("zone_arms",), ("zone_glutes",)],
-    1: [("buy_now",)],
-    2: [("buy_now",)],
-    3: [],  # video note only
-    4: [("buy_now",)],
-    5: [],  # video note only
-    6: [("buy_now",)],
-    7: [],  # no buttons
-    8: [],  # no buttons
-    9: [("buy_now",)],
-    10: [("buy_now",)],
-    11: [("buy_now",)],
-    12: [],  # URL button (channel link), tested separately
-    13: [("buy_now",)],
-    14: [("buy_now",)],
-}
+# RU no longer has a scheduled funnel — no RU button expectations.
 
 
 # ─── EN funnel text matches i18n ─────────────────────────────────────
@@ -83,19 +65,10 @@ class TestFunnelMessageTextMatchesI18nEN:
 
 
 class TestFunnelMessageTextMatchesI18nRU:
-    def test_stage_0_text_matches(self):
-        strings = get_strings("ru")
-        msg = get_funnel_message(0, "ru")
-        assert msg is not None
-        assert msg.text == strings.FUNNEL_STAGE_0
-
-    @pytest.mark.parametrize("stage", range(1, 15))
-    def test_belly_stage_text_matches(self, stage):
-        strings = get_strings("ru")
-        msg = get_funnel_message(stage, "ru", variant="belly")
-        assert msg is not None
-        expected_text = getattr(strings, f"FUNNEL_BELLY_STAGE_{stage}")
-        assert msg.text == expected_text
+    @pytest.mark.parametrize("stage", range(0, 15))
+    def test_ru_has_no_funnel_messages(self, stage):
+        assert get_funnel_message(stage, "ru") is None
+        assert get_funnel_message(stage, "ru", variant="belly") is None
 
 
 # ─── Button callback_data verification ──────────────────────────────────
@@ -129,29 +102,6 @@ class TestFunnelButtonsEN:
         ]
         actual_labels = [btn[0] for btn in msg.buttons]
         assert actual_labels == expected_labels
-
-
-class TestFunnelButtonsRU:
-    def test_stage_0_buttons(self):
-        msg = get_funnel_message(0, "ru")
-        assert msg is not None
-        expected = EXPECTED_BUTTONS_RU[0]
-        actual = [(btn[1],) for btn in msg.buttons]
-        assert actual == expected
-        assert not msg.has_url_button  # wakeup sent separately
-
-    @pytest.mark.parametrize("stage", range(1, 15))
-    def test_ru_belly_buttons_have_correct_callback_data(self, stage):
-        msg = get_funnel_message(stage, "ru", variant="belly")
-        assert msg is not None
-        expected = EXPECTED_BUTTONS_RU[stage]
-        actual = [(btn[1],) for btn in msg.buttons]
-        if stage == 12:
-            # Stage 12 has URL button (channel link)
-            assert msg.has_url_button
-            assert "ivanfit_health" in msg.url
-        else:
-            assert actual == expected
 
 
 # ─── Out of range ───────────────────────────────────────────────────────

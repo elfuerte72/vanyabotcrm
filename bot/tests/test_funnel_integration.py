@@ -85,30 +85,10 @@ class TestFunnelMessageContentAR:
 
 
 class TestFunnelMessageContentRU:
-    def test_stage_0_zone_buttons(self):
-        msg = get_funnel_message(0, "ru")
-        callbacks = [b[1] for b in msg.buttons]
-        assert "zone_belly" in callbacks
-        assert not msg.has_url_button  # wakeup sent separately
-
-    def test_stage_1_buy_with_photo(self):
-        msg = get_funnel_message(1, "ru", variant="belly")
-        assert msg.buttons[0][1] == "buy_now"
-        assert msg.photo_name
-
-    def test_stage_3_video_note(self):
-        msg = get_funnel_message(3, "ru", variant="belly")
-        assert msg.video_note_id
-        assert len(msg.buttons) == 0
-
-    def test_stage_6_hard_sell(self):
-        msg = get_funnel_message(6, "ru", variant="belly")
-        assert msg.buttons[0][1] == "buy_now"
-
-    def test_stage_12_channel_url(self):
-        msg = get_funnel_message(12, "ru", variant="belly")
-        assert msg.has_url_button
-        assert "ivanfit_health" in msg.url
+    def test_ru_has_no_funnel_messages(self):
+        for stage in range(0, 16):
+            assert get_funnel_message(stage, "ru") is None
+            assert get_funnel_message(stage, "ru", variant="belly") is None
 
 
 class TestFunnelMessageText:
@@ -123,17 +103,6 @@ class TestFunnelMessageText:
         msg = get_funnel_message(stage, "ar")
         assert msg is not None
         assert len(msg.text) > 50
-
-    def test_ru_stage_0_text_not_empty(self):
-        msg = get_funnel_message(0, "ru")
-        assert msg is not None
-        assert len(msg.text) > 50
-
-    @pytest.mark.parametrize("stage", range(1, 13))
-    def test_ru_belly_message_text_not_empty(self, stage):
-        msg = get_funnel_message(stage, "ru", variant="belly")
-        assert msg is not None
-        assert len(msg.text) > 20
 
     def test_en_stage_0_mentions_49_aed(self):
         msg = get_funnel_message(0, "en")
