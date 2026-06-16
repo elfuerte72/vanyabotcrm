@@ -12,6 +12,7 @@ import urllib.request
 from pathlib import Path
 
 from src.i18n import ru as ru_strings
+from src.services.tracking import build_cta_url
 
 
 def _load_token() -> str:
@@ -26,6 +27,11 @@ def main() -> None:
     chat_id = int(sys.argv[1]) if len(sys.argv) > 1 else 379336096
     token = _load_token()
 
+    # Route the button through the /go tracking endpoint (signed) so the preview
+    # exercises the real click-through tracking, not the bare results-site link.
+    cta_url = build_cta_url(chat_id)
+    print("cta_url:", cta_url)
+
     payload = {
         "chat_id": chat_id,
         "text": ru_strings.MEAL_PLAN_CTA,
@@ -34,7 +40,7 @@ def main() -> None:
             "inline_keyboard": [[
                 {
                     "text": ru_strings.MEAL_PLAN_CTA_BUTTON,
-                    "url": ru_strings.MEAL_PLAN_CTA_URL,
+                    "url": cta_url,
                 }
             ]]
         },

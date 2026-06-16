@@ -13,6 +13,7 @@ export const usersQuery = z.object({
   status: z.enum(['buyer', 'lead']).optional(),
   goal: z.string().max(50).optional(),
   funnel_stage: z.coerce.number().int().min(0).max(6).optional(),
+  visited_site: z.enum(['true', 'false']).optional(),
   sort: z.enum(['name', 'calories', 'funnel', 'age', 'weight']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
 });

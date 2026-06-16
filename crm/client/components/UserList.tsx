@@ -10,7 +10,7 @@ interface UserListProps {
   onSelectUser: (user: User) => void;
 }
 
-type StatusFilter = 'all' | 'buyer';
+type View = 'all' | 'buyer' | 'visited';
 
 const goalOptions = [
   { value: '', label: 'Все цели' },
@@ -36,7 +36,7 @@ function SkeletonCard() {
 
 export function UserList({ onSelectUser }: UserListProps) {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [view, setView] = useState<View>('all');
   const [goal, setGoal] = useState('');
   const [funnelStage, setFunnelStage] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -45,10 +45,11 @@ export function UserList({ onSelectUser }: UserListProps) {
 
   const filters: UserFilters = useMemo(() => ({
     search: debouncedSearch || undefined,
-    status: status !== 'all' ? status : undefined,
+    status: view === 'buyer' ? 'buyer' : undefined,
+    visited_site: view === 'visited' ? true : undefined,
     goal: goal || undefined,
     funnel_stage: funnelStage || undefined,
-  }), [debouncedSearch, status, goal, funnelStage]);
+  }), [debouncedSearch, view, goal, funnelStage]);
 
   const { users, loading, error } = useUsers(filters);
 
@@ -82,13 +83,14 @@ export function UserList({ onSelectUser }: UserListProps) {
 
         {/* Status tabs */}
         <div className="px-4 pb-2">
-          <Tabs value={status} onValueChange={(v) => {
+          <Tabs value={view} onValueChange={(v) => {
             window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
-            setStatus(v as StatusFilter);
+            setView(v as View);
           }}>
             <TabsList>
               <TabsTrigger value="all">Все</TabsTrigger>
               <TabsTrigger value="buyer">Покупатели</TabsTrigger>
+              <TabsTrigger value="visited">Перешли</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
