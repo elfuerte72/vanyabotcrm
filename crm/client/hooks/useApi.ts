@@ -39,6 +39,7 @@ function buildQueryString(filters: UserFilters): string {
   if (filters.status && filters.status !== 'all') params.set('status', filters.status);
   if (filters.goal) params.set('goal', filters.goal);
   if (filters.funnel_stage) params.set('funnel_stage', filters.funnel_stage);
+  if (filters.visited_site) params.set('visited_site', 'true');
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -80,7 +81,7 @@ export function useUsers(filters: UserFilters = {}) {
 
   useEffect(() => {
     fetchUsers(filters);
-  }, [filters.search, filters.status, filters.goal, filters.funnel_stage, fetchUsers]);
+  }, [filters.search, filters.status, filters.goal, filters.funnel_stage, filters.visited_site, fetchUsers]);
 
   return { users, loading, error, refetch: () => fetchUsers(filters) };
 }

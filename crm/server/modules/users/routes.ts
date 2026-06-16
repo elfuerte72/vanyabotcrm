@@ -13,7 +13,7 @@ router.get('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid query parameters', details: parsed.error.flatten() });
     }
 
-    const { search, status, goal, funnel_stage, sort, order } = parsed.data;
+    const { search, status, goal, funnel_stage, visited_site, sort, order } = parsed.data;
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -53,6 +53,14 @@ router.get('/', async (req: Request, res: Response) => {
       conditions.push(`funnel_stage = $${paramIdx}`);
       params.push(funnel_stage);
       paramIdx++;
+    }
+
+    // Фильтр «перешли на сайт»: только те, у кого есть событие cta_click
+    if (visited_site === 'true') {
+      conditions.push(`chat_id IN (
+        SELECT chat_id FROM user_events
+        WHERE event_type = 'cta_click' AND event_data = 'meal_plan_cta'
+      )`);
     }
 
     const whereClause = conditions.length > 0

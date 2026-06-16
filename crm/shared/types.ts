@@ -35,6 +35,8 @@ export interface UserFilters {
   status?: 'all' | 'buyer' | 'lead';
   goal?: string;
   funnel_stage?: string;
+  /** Only users who clicked through to the results site (have a cta_click event). */
+  visited_site?: boolean;
 }
 
 export interface Stats {
