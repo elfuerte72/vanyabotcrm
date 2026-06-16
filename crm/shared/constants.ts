@@ -48,6 +48,7 @@ export const eventButtonLabels: Record<string, { label: string; botResponse: str
   confirm_data: { label: 'Подтвердил данные', botResponse: 'Запущен расчёт КБЖУ и генерация рациона' },
   fix_data: { label: 'Хочет исправить данные', botResponse: 'Предложено указать что исправить' },
   // RU-only callbacks
+  meal_plan_cta: { label: 'Перешёл на сайт результатов', botResponse: 'Открыт сайт результатов' },
   confirm_paid_ru: { label: 'Подтвердил оплату (RU)', botResponse: 'Пользователь отмечен как покупатель' },
   video_workout: { label: 'Бесплатная тренировка', botResponse: 'Отправлена ссылка на видео тренировки' },
   learn_workout: { label: 'Узнать о тренировке', botResponse: 'Отправлена информация о тренировке + ссылка' },
@@ -81,6 +82,7 @@ export const eventButtonLabels: Record<string, { label: string; botResponse: str
 
 // Labels for funnel_message events (event_data = "stage_N" or special keys)
 export const funnelStageLabels: Record<string, string> = {
+  meal_plan_cta: 'CTA: ссылка на сайт результатов',
   wakeup_sent: 'Разбуди тело (утренняя зарядка)',
   stage_0_zone_ask: 'Выбор проблемной зоны',
   stage_0: 'Этап 0 — Знакомство',

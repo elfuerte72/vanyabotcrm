@@ -23,8 +23,12 @@ class Settings(BaseSettings):
     telegram_channel_id: str = "@ivanfit_health"
     telegram_channel_url: str = "https://t.me/ivanfit_health"
 
+    # Public base URL of the bot's webhook server (serves /webhook/ziina and /go).
+    # Used to build the signed CTA redirect link that tracks site click-throughs.
+    public_base_url: str = "https://bot.mxpkn8ns.ru"
+
     # Payment
-    tribute_link: str = "https://t.me/tribute/app?startapp=pnvi"
+    tribute_link: str = "https://web.tribute.tg/p/nvi"
     ziina_link: str = ""  # Fallback static Ziina link (used if API unavailable)
     ziina_api_key: str = ""  # Ziina API Bearer token for Payment Intent creation
     ziina_webhook_secret: str = ""

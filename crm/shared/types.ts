@@ -47,6 +47,10 @@ export interface Stats {
   avg_carbs: number;
   goal_distribution: { goal: string; count: number }[];
   funnel_distribution: { stage: number; count: number }[];
+  /** Distinct users sent the post-KBJU results-site CTA. */
+  cta_sent: number;
+  /** Distinct users who clicked through to the results site (via /go redirect). */
+  cta_clicked: number;
 }
 
 /** Funnel message attachments (photos stored in Supabase Storage by filename). */

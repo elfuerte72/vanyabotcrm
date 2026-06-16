@@ -35,6 +35,7 @@ from src.services.ai_agent import run_agent_main
 from src.services.ai_client import get_ai_client
 from src.services.ai_food import run_agent_food
 from src.services.calculator import calculate_macros
+from src.services.tracking import build_cta_url
 from src.services.formatter import (
     format_meal_plan_html,
     parse_agent_output,
@@ -363,7 +364,9 @@ async def _calculate_and_send_meal_plan(
                 cta_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(
                         text=ru_strings.MEAL_PLAN_CTA_BUTTON,
-                        url=ru_strings.MEAL_PLAN_CTA_URL,
+                        # Route through our /go endpoint so the click-through to the
+                        # results site is tracked (cta_click event) before redirect.
+                        url=build_cta_url(chat_id),
                     )]
                 ])
                 await message.answer(

@@ -7,7 +7,7 @@ const router = Router();
 // GET /api/stats - агрегированная статистика
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const [totals, goalDist, funnelDist] = await Promise.all([
+    const [totals, goalDist, funnelDist, ctaStats] = await Promise.all([
       pool.query(`
         SELECT
           COUNT(*)::int AS total_users,
@@ -30,6 +30,19 @@ router.get('/', async (req: Request, res: Response) => {
         FROM users_nutrition
         GROUP BY funnel_stage
         ORDER BY stage
+      `),
+      // Post-KBJU results-site CTA: distinct users who were sent it vs who clicked
+      // through. The bot's /go redirect endpoint records cta_click events.
+      pool.query(`
+        SELECT
+          COUNT(DISTINCT chat_id) FILTER (
+            WHERE event_type = 'funnel_message' AND event_data = 'meal_plan_cta'
+          )::int AS cta_sent,
+          COUNT(DISTINCT chat_id) FILTER (
+            WHERE event_type = 'cta_click' AND event_data = 'meal_plan_cta'
+          )::int AS cta_clicked
+        FROM user_events
+        WHERE event_data = 'meal_plan_cta'
       `)
     ]);
 
@@ -37,6 +50,8 @@ router.get('/', async (req: Request, res: Response) => {
       ...totals.rows[0],
       goal_distribution: goalDist.rows,
       funnel_distribution: funnelDist.rows,
+      cta_sent: ctaStats.rows[0]?.cta_sent ?? 0,
+      cta_clicked: ctaStats.rows[0]?.cta_clicked ?? 0,
     });
   } catch (error) {
     logger.error({ err: error }, 'Error fetching stats');
