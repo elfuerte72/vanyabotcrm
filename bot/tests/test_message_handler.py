@@ -198,8 +198,10 @@ class TestGenerateRoute:
         # Three calls: 1) "calculating..." 2) meal plan HTML 3) RU meal-plan CTA
         assert msg.answer.call_count == 3
 
-        # The third message is the RU CTA with a single URL button to the results site
-        from src.i18n.ru import MEAL_PLAN_CTA, MEAL_PLAN_CTA_BUTTON, MEAL_PLAN_CTA_URL
+        # The third message is the RU CTA with a single button that routes through
+        # our /go tracking endpoint (which logs the click then redirects to the site)
+        from src.i18n.ru import MEAL_PLAN_CTA, MEAL_PLAN_CTA_BUTTON
+        from src.services.tracking import build_cta_url
 
         cta_call = msg.answer.call_args_list[2]
         assert cta_call.args[0] == MEAL_PLAN_CTA
@@ -207,7 +209,7 @@ class TestGenerateRoute:
         cta_markup = cta_call.kwargs["reply_markup"]
         cta_btn = cta_markup.inline_keyboard[0][0]
         assert cta_btn.text == MEAL_PLAN_CTA_BUTTON
-        assert cta_btn.url == MEAL_PLAN_CTA_URL
+        assert cta_btn.url == build_cta_url(2001)
 
         # CTA event recorded for the CRM timeline
         mock_save_event.assert_any_call(

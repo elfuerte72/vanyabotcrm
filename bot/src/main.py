@@ -13,6 +13,7 @@ from src.bot import create_bot, create_dispatcher
 from src.db.pool import close_pool, get_pool
 from src.funnel.scheduler import setup_scheduler
 from src.handlers.payment import setup_payment_routes
+from src.handlers.tracking import setup_tracking_routes
 
 
 def configure_logging() -> None:
@@ -40,6 +41,7 @@ async def start_webhook_server(bot) -> web.AppRunner:
     app = web.Application()
     app["bot"] = bot
     setup_payment_routes(app)
+    setup_tracking_routes(app)
 
     runner = web.AppRunner(app)
     await runner.setup()
